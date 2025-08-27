@@ -1,0 +1,147 @@
+{% extends "templates2/index.html" %}
+{% block content %}
+
+<!-- Select2 CSS & JS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<style>
+/* Semua material-item disembunyikan dulu */
+.material-item {
+    display: none;
+}
+
+/* Indentasi berdasarkan level */
+.level-1 { margin-left: 1em; }
+.level-2 { margin-left: 2em; }
+.level-3 { margin-left: 3em; }
+.level-4 { margin-left: 4em; }
+.level-5 { margin-left: 5em; }
+.level-6 { margin-left: 6em; }
+.level-7 { margin-left: 7em; }
+.level-8 { margin-left: 8em; }
+.level-9 { margin-left: 9em; }
+.level-10 { margin-left: 10em; }
+</style>
+
+<div class="container mt-4">
+    <h3 class="mb-4">Data Materials</h3>
+    <!-- Form Dropdown -->
+    <form method="get" action="daftar_materials" class="mb-4">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label for="sfc" class="form-label fw-bold">Semi Finishing :</label>
+                <select name="sfc_code" id="sfc" class="form-select" onchange="this.form.submit()">
+                    <option value="">-- Pilih SFC --</option>
+                    {% for sfc in sfc_list %}
+                        <option value="{{ sfc.SFC_CODE }}" {% if sfc.SFC_CODE == selected_sfc %}selected{% endif %}>
+                            {{ sfc.SFC_CODE }} - {{ sfc.SFC_DESC }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="mat" class="form-label fw-bold">IP Materials :</label>
+                <select name="mat_info" id="mat" class="form-select" onchange="this.form.submit()">
+                    <option value="">-- Pilih Material --</option>
+                    {% for m in materials %}
+                        <option value="{{ m.MAT_CODE }}|{{ m.MAT_SAP_CODE }}|{{ m.MAT_VARIANT }}|{{ m.CNT_CODE }}"
+                            {% if selected_mat_info == m.MAT_CODE|stringformat:"s"|add:"|"|add:m.MAT_SAP_CODE|add:"|"|add:m.MAT_VARIANT|add:"|"|add:m.CNT_CODE %}selected{% endif %}>
+                            {{ m.MAT_CODE }} - {{ m.MAT_SAP_CODE }} - {{ m.CNT_CODE }} - {{ m.MAT_VARIANT }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </form>
+
+    <!-- Detail Material -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Informasi Material</h5> 
+            <form>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Deskripsi</label>
+                        <input type="text" class="form-control" value="{{ material_detail.mat_desc }}" readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">IP Code</label>
+                        <input type="text" class="form-control" value="{{ material_detail.ip_code }}" readonly>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Spesification</label>
+                        <input type="text" class="form-control" value="{{ material_detail.spec }}" readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Status BOM</label>
+                        <input type="text" class="form-control" value="{{ material_detail.bom_status }}" readonly>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+   
+    <!-- Tabel Material -->
+    {% if material_data %}
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Daftar Material</h5>
+            <div id="material-tree">
+                {% for row in material_data %}
+               <div class="material-item level-{{ row.level|add:1 }} mb-1">
+                    <button class="toggle-btn" data-id="{{ forloop.counter }}">▶</button>
+                    <strong>{{ row.MT_CODE }}</strong> - {{ row.SFC_CODE }} ({{ row.SFC_DESC }}) - {{ row.MAT_CODE }} - 
+                    {{ row.CHILD_MAT_SAP_CODE }} - {{ row.CHILD_CNT_CODE }} - {{ row.MAT_VARIANT }} - {{ row.MAT_DESC }} - 
+                    {{ row.BOM_QUANTITY }} {{ row.MAT_MEASURE_UNIT }} -     
+                    <small class="text-muted">({{ row.BV_STATUS }})</small>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- JS UNTUK LINE DATA MATERIAL -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Tampilkan semua level-1 (root)
+    document.querySelectorAll(".material-item.level-1").forEach(item => item.style.display = "block");
+
+    document.querySelectorAll(".toggle-btn").forEach(btn => {
+        btn.addEventListener("click", function() {
+            let currentItem = this.parentElement;
+            let currentLevel = parseInt(currentItem.className.match(/level-(\d+)/)[1]);
+            let next = currentItem.nextElementSibling;
+            let isExpanding = this.textContent === "▶";
+
+            this.textContent = isExpanding ? "▼" : "▶";
+
+            while (next && next.classList.contains("material-item")) {
+                let level = parseInt(next.className.match(/level-(\d+)/)[1]);
+                if (level <= currentLevel) break;
+                if (level === currentLevel + 1) {
+                    next.style.display = isExpanding ? "block" : "none";
+                }
+                if (!isExpanding && level > currentLevel) {
+                    next.querySelector(".toggle-btn").textContent = "▶";
+                }
+                next = next.nextElementSibling;
+            }
+        });
+    });
+});
+</script>
+
+<!-- JS UNTUK FORM -->
+<script>
+    $('#sfc').select2();
+    $('#mat').select2();
+</script>
+
+{% endblock %}

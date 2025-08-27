@@ -1,0 +1,176 @@
+{% extends "templates2/index.html" %}
+{% block content %}
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+<link rel="stylesheet" href="https://cdn.datatables.net/2.3.2/css/dataTables.dataTables.css" />
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.2.4/css/buttons.dataTables.css" />
+
+<div class="container mt-4"> 
+    <h3 class="mb-4">Data Produksi</h3>
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Filter Data Produksi</h5>
+
+            <!-- form sfc dan ip materials -->
+            <form method="get" action="{% url 'data_produksi' %}" class="row g-3" id="filterForm">
+                <!-- Pilih SFC -->
+                <div class="col-md-4">
+                    <label for="sfc" class="form-label fw-bold">Semi Finished :</label>
+                    <select name="sfc_code" id="sfc" class="form-select" onchange="this.form.submit()">
+                        <option value="">-- Pilih SFC --</option>
+                        {% for sfc in sfc_list %}
+                            <option value="{{ sfc.SFC_CODE }}" {% if sfc.SFC_CODE == selected_sfc %}selected{% endif %}>
+                                {{ sfc.SFC_CODE }} - {{ sfc.SFC_DESC }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <!-- Pilih IP Materials -->
+                <div class="col-md-4">
+                    <label for="mat" class="form-label fw-bold">IP Materials :</label>
+                    <select name="mat_info" id="mat" class="form-select" onchange="this.form.submit()">
+                        <option value="">-- Pilih IP Materials --</option>
+                        {% for m in materials %}
+                            <option value="{{ m.MAT_SAP_CODE }}" {% if selected_mat_info == m.MAT_SAP_CODE %}selected{% endif %}>
+                                {{ m.MAT_CODE }} - {{ m.MAT_SAP_CODE }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Form Tanggal -->
+                <div class="col-md-2">
+                    <label for="start_date" class="form-label fw-bold">Tanggal Awal:</label>
+                    <input type="date" name="start_date" id="start_date" class="form-control"
+                        value="{{ selected_start_date|default:'' }}">
+                </div>
+                <div class="col-md-2">
+                    <label for="end_date" class="form-label fw-bold">Tanggal Akhir:</label>
+                    <input type="date" name="end_date" id="end_date" class="form-control"
+                        value="{{ selected_end_date|default:'' }}">
+                </div>
+            </form>
+
+            <!-- Tombol Reset -->
+            <div class="col-12 mt-3">
+                <a href="{% url 'data_produksi'%}" class="btn btn-secondary">Reset</a>
+            </div>
+        </div>
+    </div>
+
+    {% if error_message %}
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        {{ error_message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    <!-- CARD TABEL -->
+    {% if selected_sfc %}
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Tabel Produksi</h5>
+            <div class="table-responsive mt-3"> 
+                <table id="dataTable" class="table table-bordered table-striped align-middle mb-3" width="100%">
+                    <thead class="table-light">
+                        <tr>
+                            <th>NO</th>
+                            <th>MAT_CODE</th>
+                            <th>MAT_SAP_CODE</th>
+                            <th>PP_CODE</th>
+                            <th>MCH_CODE</th>
+                            <th>SHF_CODE</th>
+                            <th>PS_QUANTITY</th>
+                            <th>PS_END_PROD</th>
+                            <th>PS_START_PROD</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in production_list %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ row.MAT_CODE }}</td>
+                            <td>{{ row.MAT_SAP_CODE }}</td>
+                            <td>{{ row.PP_CODE }}</td>
+                            <td>{{ row.MCH_CODE }}</td>
+                            <td>{{ row.SHF_CODE }}</td>
+                            <td>{{ row.PS_QUANTITY|floatformat:"0" }}</td>
+                            <td>{{ row.PS_END_PROD}}</td>
+                            <td>{{ row.PS_START_PROD}}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- JS  -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/2.3.2/js/dataTables.js"></script>
+<script src="https://cdn.datatables.net/buttons/3.2.4/js/dataTables.buttons.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/3.2.4/js/buttons.html5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<!-- DATA TABLE -->
+<script>
+new DataTable('#dataTable', {
+    dom: '<"d-flex justify-content-between align-items-center mb-2"lBf>rt<"d-flex justify-content-between align-items-center mt-2"ip>', // 'B' for Buttons
+    buttons: [
+        'excelHtml5',
+        'pdfHtml5'
+    ],
+    lengthMenu: [
+        [10, 25, 50, -1],
+        [10, 25, 50, "All"]
+    ],
+    language: {
+        emptyTable: 'Tidak ada data produksi yang tersedia',
+        zeroRecords: 'Tidak ditemukan data yang sesuai',
+        info: 'Menampilkan _START_ sampai _END_ dari _TOTAL_ data',
+        infoEmpty: 'Menampilkan 0 sampai 0 dari 0 data',
+        lengthMenu: 'Tampilkan _MENU_ data',
+        search: 'Cari:'
+    }
+});
+</scripT>
+
+<!-- SELECT 2 -->
+<script>
+$( '#mat' ).select2( {
+    theme: "bootstrap-5",
+    width: $( this ).data( 'width' ) ? $( this ).data( 'width' ) : $( this ).hasClass( 'w-100' ) ? '100%' : 'style',
+    placeholder: $( this ).data( 'placeholder' ),
+} );
+
+$( '#sfc' ).select2( {
+    theme: "bootstrap-5",
+    width: $( this ).data( 'width' ) ? $( this ).data( 'width' ) : $( this ).hasClass( 'w-100' ) ? '100%' : 'style',
+    placeholder: $( this ).data( 'placeholder' ),
+} );
+</script>
+
+<!-- UNTUK JS TANGGAL -->
+<script>
+    // Ambil elemen input tanggal
+    const startDateInput = document.getElementById('start_date');
+    const endDateInput = document.getElementById('end_date');
+    const filterForm = document.getElementById('filterForm');
+
+    // Submit form otomatis saat tanggal berubah
+    startDateInput.addEventListener('change', () => {
+        filterForm.submit();
+    });
+
+    endDateInput.addEventListener('change', () => {
+        filterForm.submit();
+    });
+</script>
+
+{% endblock %}
