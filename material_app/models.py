@@ -24,7 +24,7 @@ class MD_MATERIALS(models.Model):
     MAT_SPEC_CODE = models.CharField(max_length=10)
     MAT_MEASURE_UNIT = models.CharField(max_length=10)
     SFC_CODE = models.ForeignKey('MD_SEMI_FINISHED_CLASSES', db_column='SFC_CODE', on_delete=models.SET_NULL, null=True)
-    MAT_MEASURE_UNIT = models.CharField(max_length=3)
+
 
     class Meta:
         managed = False
@@ -55,7 +55,7 @@ class MD_BOM(models.Model):
         )
 
 
-# -------------- Model Data Produksi --------------
+# -------------- Model Produksi --------------
 class DC_PRODUCTION_DATA(models.Model):
     MAT_SAP_CODE = models.CharField(max_length=9, primary_key=True)
     PP_CODE = models.CharField(max_length=3)
@@ -75,4 +75,41 @@ class DC_PRODUCTION_DATA(models.Model):
         db_table = 'DC_PRODUCTION_DATA'
         unique_together = (
             ('MAT_SAP_CODE', 'MAT_VARIANT', 'CNT_CODE'),
+        )
+
+# -------------- Model MD_PRODUCTION_PHASES --------------
+class DC_PRODUCTION_DATA(models.Model):
+    PP_CODE = models.CharField(max_length=9, primary_key=True)
+    PP_DESC = models.CharField(max_length=8)
+    
+    class Meta:
+        managed = False
+
+
+
+# -------------- Model MD_WORKERS --------------
+class MD_WORKERS(models.Model):
+    WM_CODE = models.CharField(max_length=9, primary_key=True)
+    WM_NAME = models.CharField(max_length=3)
+
+    class Meta:
+        managed = False
+
+# -------------- Model WMS_TRACEABILITY --------------
+class WMS_TRACEABILITY(models.Model):
+    TRC_PP_CODE = models.CharField (max_length=3, primary_key=True)
+    TRC_MCH_CODE = models.CharField (max_length=8)
+    TRC_SO_CODE = models.CharField (max_length=4)
+    TRC_CU_EXT_PROGR = models.CharField (max_length=6)
+    TRC_START_TIME = models.DateTimeField(max_length=8)
+    TRC_END_TIME = models.CharField (max_length=8)
+    TRC_MAT_SAP_CODE = models.CharField (max_length=9)
+    TRC_WM_CODE = models.CharField (max_length=8)
+    TRC_FL_PHASE = models.CharField (max_length=1)
+
+    class Meta:
+        managed = False
+        db_table = 'WMS_TRACEABILITY'
+        unique_together = (
+            ('TRC_PP_CODE', 'TRC_MCH_CODE','TRC_SO_CODE','TRC_CU_EXT_PROGR', 'TRC_START_TIME'),
         )

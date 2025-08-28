@@ -7,12 +7,12 @@
     <!-- Navbar -->
     <nav>
         <div class="nav nav-tabs" id="nav-tab" role="tablist">
-            
+
             <button class="nav-link active" id="nav-RBMachine-tab" data-bs-toggle="tab" data-bs-target="#nav-RBMachine"
                 type="button" role="tab" aria-controls="nav-RBMachine" aria-selected="true">By RBMachine</button>
 
-            <button class="nav-link" id="nav-CU-tab" data-bs-toggle="tab" data-bs-target="#nav-CU"
-                type="button" role="tab" aria-controls="nav-CU" aria-selected="false">By CU</button>
+            <button class="nav-link" id="nav-CU-tab" data-bs-toggle="tab" data-bs-target="#nav-CU" type="button"
+                role="tab" aria-controls="nav-CU" aria-selected="false">By CU</button>
 
             <button class="nav-link" id="nav-Material-tab" data-bs-toggle="tab" data-bs-target="#nav-Material"
                 type="button" role="tab" aria-controls="nav-Material" aria-selected="false">By Material</button>
@@ -38,9 +38,10 @@
                                 <select name="sfc_code" id="sfc" class="form-select" onchange="this.form.submit()">
                                     <option value="">-- Pilih Phase --</option>
                                     {% for sfc in sfc_list %}
-                                        <option value="{{ sfc.SFC_CODE }}" {% if sfc.SFC_CODE == selected_sfc %}selected{% endif %}>
-                                            {{ sfc.SFC_CODE }} - {{ sfc.SFC_DESC }}
-                                        </option>
+                                    <option value="{{ sfc.SFC_CODE }}"
+                                        {% if sfc.SFC_CODE == selected_sfc %}selected{% endif %}>
+                                        {{ sfc.SFC_CODE }} - {{ sfc.SFC_DESC }}
+                                    </option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -50,10 +51,11 @@
                                 <select name="mat_info" id="mat" class="form-select" onchange="this.form.submit()">
                                     <option value="">-- Pilih Machine --</option>
                                     {% for m in materials %}
-                                        <option value="{{ m.MAT_CODE }}|{{ m.MAT_SAP_CODE }}|{{ m.MAT_VARIANT }}|{{ m.CNT_CODE }}"
-                                            {% if selected_mat_info == m.MAT_CODE|stringformat:"s"|add:"|"|add:m.MAT_SAP_CODE|add:"|"|add:m.MAT_VARIANT|add:"|"|add:m.CNT_CODE %}selected{% endif %}>
-                                            {{ m.MAT_CODE }} - {{ m.MAT_SAP_CODE }} - {{ m.CNT_CODE }} - {{ m.MAT_VARIANT }}
-                                        </option>
+                                    <option
+                                        value="{{ m.MAT_CODE }}|{{ m.MAT_SAP_CODE }}|{{ m.MAT_VARIANT }}|{{ m.CNT_CODE }}"
+                                        {% if selected_mat_info == m.MAT_CODE|stringformat:"s"|add:"|"|add:m.MAT_SAP_CODE|add:"|"|add:m.MAT_VARIANT|add:"|"|add:m.CNT_CODE %}selected{% endif %}>
+                                        {{ m.MAT_CODE }} - {{ m.MAT_SAP_CODE }} - {{ m.CNT_CODE }} - {{ m.MAT_VARIANT }}
+                                    </option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -92,8 +94,10 @@
                             {% for row in material_data %}
                             <div class="material-item level-{{ row.level|add:1 }} mb-1">
                                 <button class="toggle-btn" data-id="{{ forloop.counter }}">▶</button>
-                                <strong>{{ row.MT_CODE }}</strong> - {{ row.SFC_CODE }} ({{ row.SFC_DESC }}) - {{ row.MAT_CODE }} -
-                                {{ row.CHILD_MAT_SAP_CODE }} - {{ row.CHILD_CNT_CODE }} - {{ row.MAT_VARIANT }} - {{ row.MAT_DESC }} -
+                                <strong>{{ row.MT_CODE }}</strong> - {{ row.SFC_CODE }} ({{ row.SFC_DESC }}) -
+                                {{ row.MAT_CODE }} -
+                                {{ row.CHILD_MAT_SAP_CODE }} - {{ row.CHILD_CNT_CODE }} - {{ row.MAT_VARIANT }} -
+                                {{ row.MAT_DESC }} -
                                 {{ row.BOM_QUANTITY }} {{ row.MAT_MEASURE_UNIT }} -
                                 <small class="text-muted">({{ row.BV_STATUS }})</small>
                             </div>
@@ -125,9 +129,10 @@
                                 <select name="sfc_code" id="sfc" class="form-select" onchange="this.form.submit()">
                                     <option value="">-- Pilih Source --</option>
                                     {% for sfc in sfc_list %}
-                                        <option value="{{ sfc.SFC_CODE }}" {% if sfc.SFC_CODE == selected_sfc %}selected{% endif %}>
-                                            {{ sfc.SFC_CODE }} - {{ sfc.SFC_DESC }}
-                                        </option>
+                                    <option value="{{ sfc.SFC_CODE }}"
+                                        {% if sfc.SFC_CODE == selected_sfc %}selected{% endif %}>
+                                        {{ sfc.SFC_CODE }} - {{ sfc.SFC_DESC }}
+                                    </option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -137,10 +142,11 @@
                                 <select name="mat_info" id="mat" class="form-select" onchange="this.form.submit()">
                                     <option value="">-- Pilih Containment --</option>
                                     {% for m in materials %}
-                                        <option value="{{ m.MAT_CODE }}|{{ m.MAT_SAP_CODE }}|{{ m.MAT_VARIANT }}|{{ m.CNT_CODE }}"
-                                            {% if selected_mat_info == m.MAT_CODE|stringformat:"s"|add:"|"|add:m.MAT_SAP_CODE|add:"|"|add:m.MAT_VARIANT|add:"|"|add:m.CNT_CODE %}selected{% endif %}>
-                                            {{ m.MAT_CODE }} - {{ m.MAT_SAP_CODE }} - {{ m.CNT_CODE }} - {{ m.MAT_VARIANT }}
-                                        </option>
+                                    <option
+                                        value="{{ m.MAT_CODE }}|{{ m.MAT_SAP_CODE }}|{{ m.MAT_VARIANT }}|{{ m.CNT_CODE }}"
+                                        {% if selected_mat_info == m.MAT_CODE|stringformat:"s"|add:"|"|add:m.MAT_SAP_CODE|add:"|"|add:m.MAT_VARIANT|add:"|"|add:m.CNT_CODE %}selected{% endif %}>
+                                        {{ m.MAT_CODE }} - {{ m.MAT_SAP_CODE }} - {{ m.CNT_CODE }} - {{ m.MAT_VARIANT }}
+                                    </option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -170,11 +176,13 @@
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <label class="form-label">CU</label>
-                                    <input type="text" class="form-control" value="{{ material_detail.mat_desc }}" readonly>
+                                    <input type="text" class="form-control" value="{{ material_detail.mat_desc }}"
+                                        readonly>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Material</label>
-                                    <input type="text" class="form-control" value="{{ material_detail.ip_code }}" readonly>
+                                    <input type="text" class="form-control" value="{{ material_detail.ip_code }}"
+                                        readonly>
                                 </div>
                             </div>
                         </form>
@@ -189,8 +197,10 @@
                             {% for row in material_data %}
                             <div class="material-item level-{{ row.level|add:1 }} mb-1">
                                 <button class="toggle-btn" data-id="{{ forloop.counter }}">▶</button>
-                                <strong>{{ row.MT_CODE }}</strong> - {{ row.SFC_CODE }} ({{ row.SFC_DESC }}) - {{ row.MAT_CODE }} -
-                                {{ row.CHILD_MAT_SAP_CODE }} - {{ row.CHILD_CNT_CODE }} - {{ row.MAT_VARIANT }} - {{ row.MAT_DESC }} -
+                                <strong>{{ row.MT_CODE }}</strong> - {{ row.SFC_CODE }} ({{ row.SFC_DESC }}) -
+                                {{ row.MAT_CODE }} -
+                                {{ row.CHILD_MAT_SAP_CODE }} - {{ row.CHILD_CNT_CODE }} - {{ row.MAT_VARIANT }} -
+                                {{ row.MAT_DESC }} -
                                 {{ row.BOM_QUANTITY }} {{ row.MAT_MEASURE_UNIT }} -
                                 <small class="text-muted">({{ row.BV_STATUS }})</small>
                             </div>
@@ -215,9 +225,10 @@
                                 <select name="sfc_code" id="sfc" class="form-select" onchange="this.form.submit()">
                                     <option value="">-- Pilih SF --</option>
                                     {% for sfc in sfc_list %}
-                                        <option value="{{ sfc.SFC_CODE }}" {% if sfc.SFC_CODE == selected_sfc %}selected{% endif %}>
-                                            {{ sfc.SFC_CODE }} - {{ sfc.SFC_DESC }}
-                                        </option>
+                                    <option value="{{ sfc.SFC_CODE }}"
+                                        {% if sfc.SFC_CODE == selected_sfc %}selected{% endif %}>
+                                        {{ sfc.SFC_CODE }} - {{ sfc.SFC_DESC }}
+                                    </option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -227,10 +238,11 @@
                                 <select name="mat_info" id="mat" class="form-select" onchange="this.form.submit()">
                                     <option value="">-- Pilih Materiale --</option>
                                     {% for m in materials %}
-                                        <option value="{{ m.MAT_CODE }}|{{ m.MAT_SAP_CODE }}|{{ m.MAT_VARIANT }}|{{ m.CNT_CODE }}"
-                                            {% if selected_mat_info == m.MAT_CODE|stringformat:"s"|add:"|"|add:m.MAT_SAP_CODE|add:"|"|add:m.MAT_VARIANT|add:"|"|add:m.CNT_CODE %}selected{% endif %}>
-                                            {{ m.MAT_CODE }} - {{ m.MAT_SAP_CODE }} - {{ m.CNT_CODE }} - {{ m.MAT_VARIANT }}
-                                        </option>
+                                    <option
+                                        value="{{ m.MAT_CODE }}|{{ m.MAT_SAP_CODE }}|{{ m.MAT_VARIANT }}|{{ m.CNT_CODE }}"
+                                        {% if selected_mat_info == m.MAT_CODE|stringformat:"s"|add:"|"|add:m.MAT_SAP_CODE|add:"|"|add:m.MAT_VARIANT|add:"|"|add:m.CNT_CODE %}selected{% endif %}>
+                                        {{ m.MAT_CODE }} - {{ m.MAT_SAP_CODE }} - {{ m.CNT_CODE }} - {{ m.MAT_VARIANT }}
+                                    </option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -269,8 +281,10 @@
                             {% for row in material_data %}
                             <div class="material-item level-{{ row.level|add:1 }} mb-1">
                                 <button class="toggle-btn" data-id="{{ forloop.counter }}">▶</button>
-                                <strong>{{ row.MT_CODE }}</strong> - {{ row.SFC_CODE }} ({{ row.SFC_DESC }}) - {{ row.MAT_CODE }} -
-                                {{ row.CHILD_MAT_SAP_CODE }} - {{ row.CHILD_CNT_CODE }} - {{ row.MAT_VARIANT }} - {{ row.MAT_DESC }} -
+                                <strong>{{ row.MT_CODE }}</strong> - {{ row.SFC_CODE }} ({{ row.SFC_DESC }}) -
+                                {{ row.MAT_CODE }} -
+                                {{ row.CHILD_MAT_SAP_CODE }} - {{ row.CHILD_CNT_CODE }} - {{ row.MAT_VARIANT }} -
+                                {{ row.MAT_DESC }} -
                                 {{ row.BOM_QUANTITY }} {{ row.MAT_MEASURE_UNIT }} -
                                 <small class="text-muted">({{ row.BV_STATUS }})</small>
                             </div>
@@ -285,38 +299,38 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q"
-    crossorigin="anonymous"></script>
+    integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous">
+</script>
 
 <!-- JS UNTUK LINE DATA MATERIAL -->
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    // Tampilkan semua level-1 (root)
-    document.querySelectorAll(".material-item.level-1").forEach(item => item.style.display = "block");
+    document.addEventListener("DOMContentLoaded", function () {
+        // Tampilkan semua level-1 (root)
+        document.querySelectorAll(".material-item.level-1").forEach(item => item.style.display = "block");
 
-    document.querySelectorAll(".toggle-btn").forEach(btn => {
-        btn.addEventListener("click", function() {
-            let currentItem = this.parentElement;
-            let currentLevel = parseInt(currentItem.className.match(/level-(\d+)/)[1]);
-            let next = currentItem.nextElementSibling;
-            let isExpanding = this.textContent === "▶";
+        document.querySelectorAll(".toggle-btn").forEach(btn => {
+            btn.addEventListener("click", function () {
+                let currentItem = this.parentElement;
+                let currentLevel = parseInt(currentItem.className.match(/level-(\d+)/)[1]);
+                let next = currentItem.nextElementSibling;
+                let isExpanding = this.textContent === "▶";
 
-            this.textContent = isExpanding ? "▼" : "▶";
+                this.textContent = isExpanding ? "▼" : "▶";
 
-            while (next && next.classList.contains("material-item")) {
-                let level = parseInt(next.className.match(/level-(\d+)/)[1]);
-                if (level <= currentLevel) break;
-                if (level === currentLevel + 1) {
-                    next.style.display = isExpanding ? "block" : "none";
+                while (next && next.classList.contains("material-item")) {
+                    let level = parseInt(next.className.match(/level-(\d+)/)[1]);
+                    if (level <= currentLevel) break;
+                    if (level === currentLevel + 1) {
+                        next.style.display = isExpanding ? "block" : "none";
+                    }
+                    if (!isExpanding && level > currentLevel) {
+                        next.querySelector(".toggle-btn").textContent = "▶";
+                    }
+                    next = next.nextElementSibling;
                 }
-                if (!isExpanding && level > currentLevel) {
-                    next.querySelector(".toggle-btn").textContent = "▶";
-                }
-                next = next.nextElementSibling;
-            }
+            });
         });
     });
-});
 </script>
 
 <!-- JS UNTUK FORM -->
