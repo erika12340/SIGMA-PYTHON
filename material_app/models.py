@@ -1,6 +1,6 @@
 from django.db import models
 
-# -------------- Model SF ------------
+# -------------- 1. Model SF ------------
 class MD_SEMI_FINISHED_CLASSES(models.Model):
     SFC_CODE = models.CharField(max_length=9, primary_key=True)
     SFC_DESC = models.CharField(max_length=3)
@@ -13,14 +13,13 @@ class MD_SEMI_FINISHED_CLASSES(models.Model):
         return f"{self.SFC_CODE} - {self.SFC_DESC}"
 
 
-# -------------- Model Material -------------
+# -------------- 2. Model Material -------------
 class MD_MATERIALS(models.Model):
     MAT_SAP_CODE = models.CharField(max_length=9, primary_key=True)
     MAT_VARIANT = models.CharField(max_length=10)
     CNT_CODE = models.CharField(max_length=3)
     MAT_CODE = models.CharField(max_length=50)
     MAT_DESC = models.CharField(max_length=100)
-    MAT_IP_CODE = models.CharField(max_length=50)
     MAT_SPEC_CODE = models.CharField(max_length=10)
     MAT_MEASURE_UNIT = models.CharField(max_length=10)
     SFC_CODE = models.ForeignKey('MD_SEMI_FINISHED_CLASSES', db_column='SFC_CODE', on_delete=models.SET_NULL, null=True)
@@ -34,7 +33,7 @@ class MD_MATERIALS(models.Model):
         )
 
 
-# -------------- Model BOM --------------
+# -------------- 3. Model BOM --------------
 class MD_BOM(models.Model):
     MAT_SAP_CODE = models.CharField(max_length=9, primary_key=True)
     MAT_VARIANT = models.CharField(max_length=10)
@@ -55,7 +54,7 @@ class MD_BOM(models.Model):
         )
 
 
-# -------------- Model Produksi --------------
+# -------------- 4. Model Produksi --------------
 class DC_PRODUCTION_DATA(models.Model):
     MAT_SAP_CODE = models.CharField(max_length=9, primary_key=True)
     PP_CODE = models.CharField(max_length=3)
@@ -77,25 +76,27 @@ class DC_PRODUCTION_DATA(models.Model):
             ('MAT_SAP_CODE', 'MAT_VARIANT', 'CNT_CODE'),
         )
 
-# -------------- Model MD_PRODUCTION_PHASES --------------
-class DC_PRODUCTION_DATA(models.Model):
-    PP_CODE = models.CharField(max_length=9, primary_key=True)
+
+
+# -------------- Model 5. MD_PRODUCTION_PHASES --------------
+class MD_PRODUCTION_PHASES(models.Model):
+    PP_CODE = models.CharField(max_length=3, primary_key=True)
     PP_DESC = models.CharField(max_length=8)
-    
+
     class Meta:
         managed = False
+        db_table = 'MD_PRODUCTION_PHASES'
 
-
-
-# -------------- Model MD_WORKERS --------------
+# -------------- 6. Model MD_WORKERS --------------
 class MD_WORKERS(models.Model):
     WM_CODE = models.CharField(max_length=9, primary_key=True)
     WM_NAME = models.CharField(max_length=3)
 
     class Meta:
         managed = False
+        db_table = 'MD_WORKERS'
 
-# -------------- Model WMS_TRACEABILITY --------------
+# -------------- 7. Model WMS_TRACEABILITY --------------
 class WMS_TRACEABILITY(models.Model):
     TRC_PP_CODE = models.CharField (max_length=3, primary_key=True)
     TRC_MCH_CODE = models.CharField (max_length=8)
@@ -113,3 +114,22 @@ class WMS_TRACEABILITY(models.Model):
         unique_together = (
             ('TRC_PP_CODE', 'TRC_MCH_CODE','TRC_SO_CODE','TRC_CU_EXT_PROGR', 'TRC_START_TIME'),
         )
+
+# -------------- 8. Model MD_CONTAINERS --------------
+class MD_CONTAINERS(models.Model):
+    CNT_CODE = models.CharField (max_length=3, primary_key=True)
+    CNT_DESC = models.CharField (max_length=8)
+
+    class Meta:
+        managed = False
+        db_table = 'MD_CONTAINERS'
+
+# -------------- 9. Model MD_SOURCES --------------
+class MD_SOURCES(models.Model):
+    SO_CODE = models.CharField (max_length=3, primary_key=True)
+    SO_DESC = models.CharField (max_length=8)
+
+    class Meta:
+        managed = False
+        db_table = 'MD_SOURCES'
+
