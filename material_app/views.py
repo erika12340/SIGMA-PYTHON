@@ -1,6 +1,10 @@
 from django.shortcuts import render
-from material_app.models import MD_MATERIALS, MD_SEMI_FINISHED_CLASSES, MD_BOM, DC_PRODUCTION_DATA, WMS_TRACEABILITY, MD_PRODUCTION_PHASES
+from material_app.models import MD_MATERIALS, MD_SEMI_FINISHED_CLASSES, MD_BOM, DC_PRODUCTION_DATA, WMS_TRACEABILITY, MD_PRODUCTION_PHASES, WMS_TRACEABILITY_CU
 from datetime import datetime, timedelta
+from django.db.models import OuterRef, Subquery
+from django.utils.timezone import now
+from django.db.models.functions import TruncDate
+
 
 
 # =================== MENU DASHBOARD ========================
@@ -100,9 +104,11 @@ def get_all_related_material_data(mat_sap_code, visited=None, level=0):
                 'MAT_MEASURE_UNIT': child_mat.MAT_MEASURE_UNIT,
                 'BOM_QUANTITY': bom.BOM_QUANTITY,
             })
-           
             data += get_all_related_material_data(child_code, visited, level + 1)
     return data
+
+
+
 
 # ================== MENU DAFTAR MATERIALS ==================
 def daftar_materials(request):
@@ -136,6 +142,9 @@ def daftar_materials(request):
         'material_detail': material_detail,
         'material_data': material_data
     })
+
+
+
 
 # ================= MENU PRODUCTIONS ==================
 def data_produksi(request):
@@ -226,11 +235,6 @@ def data_produksi(request):
     }
     return render(request, 'data_produksi.html', context)
 
-# ================= MENU TRACEABILITY ==================
-# def traceability(request):
-#     return render(request, 'traceability.html', {'title': 'Traceability'})
-
-# sfc_list = MD_SEMI_FINISHED_CLASSES.objects.filter(SFC_CODE__in=['AL', 'AX'])
 
 
 
@@ -238,91 +242,163 @@ def data_produksi(request):
 
 
 
-
+# ===============TRACEABILITY ==========================
 
 def traceability(request):
-    trc_pp_code = request.GET.get('trc_code')  # sesuai name di form
-    mat_info = request.GET.get('mch_info')
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
+    trc_code = request.GET.get('trc_code')
+    mch_info = request.GET.get('mch_info')
+    start_date_raw = request.GET.get('start_date')  # format: 2025-09-01|2
+    end_date_raw = request.GET.get('end_date')
+    trc_fl_phase = request.GET.get('trc_fl_phase')
     error_message = None
 
-    # Ambil semua traceability Phase untuk dropdown
-    trc_list = MD_PRODUCTION_PHASES.objects.all().values('PP_CODE', 'PP_DESC')
+    # Subquery: ambil PP_DESC dari kode
+    pp_desc_subquery = MD_PRODUCTION_PHASES.objects.filter(
+        PP_CODE=OuterRef('TRC_PP_CODE')
+    ).values('PP_DESC')[:1]
 
-    machines = WMS_TRACEABILITY.objects.values('TRC_PP_CODE', 'TRC_MCH_CODE').distinct().order_by('TRC_PP_CODE', 'TRC_MCH_CODE')
+    # List Production Phase
+    trc_list = (
+        WMS_TRACEABILITY.objects
+        .annotate(PP_DESC=Subquery(pp_desc_subquery))
+        .values('TRC_PP_CODE', 'PP_DESC')
+        .distinct()
+        .order_by('TRC_PP_CODE')
+    )
 
+    # List mesin
+    machines = []
+    if trc_code:
+        machines = (
+            WMS_TRACEABILITY.objects
+            .filter(TRC_PP_CODE=trc_code)
+            .values('TRC_PP_CODE', 'TRC_MCH_CODE')
+            .distinct()
+            .order_by('TRC_MCH_CODE')
+        )
 
-    # Validasi tanggal
-    if start_date and end_date:
+    # List phase untuk dropdown
+    phase = (
+        WMS_TRACEABILITY.objects
+        .values('TRC_FL_PHASE')
+        .distinct()
+        .order_by('TRC_FL_PHASE')
+    )
+
+    # Dropdown date + shift
+    date_shift_raw = (
+        WMS_TRACEABILITY.objects
+        .annotate(date=TruncDate('TRC_START_TIME'))
+        .values('TRC_START_TIME', 'date')
+        .annotate(shift=Subquery(
+            DC_PRODUCTION_DATA.objects.filter(
+                TRC_START_TIME=OuterRef('TRC_START_TIME')
+            ).values('SHF_CODE')[:1]
+        ))
+        .values('date', 'shift')
+        .distinct()
+        .order_by('-date')
+    )
+
+    date_shift_choices = [
+        {
+            'value': f"{item['date']}|{item['shift']}",
+            'label': f"{item['date'].strftime('%d/%m/%Y')} - {item['shift']}"
+        }
+        for item in date_shift_raw if item['shift']
+    ]
+
+    # Parse input tanggal dari dropdown
+    def parse_date_shift(raw_value):
         try:
-            start_dt = datetime.strptime(start_date, "%Y-%m-%d")
-            end_dt = datetime.strptime(end_date, "%Y-%m-%d")
-            delta_days = (end_dt - start_dt).days
-            if delta_days > 30:
-                error_message = "Data tidak boleh lebih dari 30 hari!"
-                start_date = end_date = None
-        except ValueError:
-            error_message = "Format tanggal salah!"
+            date_part, shift_part = raw_value.split('|')
+            return date_part, shift_part
+        except:
+            return None, None
 
-    # Query produksi
-    if trc_pp_code or mat_info or start_date or end_date:
-        traceability_list_query = DC_PRODUCTION_DATA.objects.all()
-    else:
-        traceability_list_query = DC_PRODUCTION_DATA.objects.all().order_by('-PS_DATE')[:10]
+    start_date, start_shift = parse_date_shift(start_date_raw)
+    end_date, end_shift = parse_date_shift(end_date_raw)
 
-    materials = []
-    if trc_pp_code:
-        # Cari semua kode material SAP dari WMS_TRACEABILITY sesuai TRC_PP_CODE yang dipilih
-        related_materials = WMS_TRACEABILITY.objects.filter(TRC_PP_CODE=trc_pp_code)
-        sap_codes = related_materials.values_list('TRC_MAT_SAP_CODE', flat=True).distinct()
-
-        # Ambil detail material dari MD_MATERIALS berdasar SAP code yang ada
-        materials_qs = MD_MATERIALS.objects.filter(MAT_SAP_CODE__in=sap_codes)
-        materials = [{'MAT_SAP_CODE': m.MAT_SAP_CODE, 'MAT_CODE': m.MAT_CODE} for m in materials_qs]
-
-        # Filter produksi sesuai phase dan material SAP code
-        traceability_list_query = traceability_list_query.filter(PP_CODE=trc_pp_code, MAT_SAP_CODE__in=sap_codes)
-
-    if mat_info:
-        traceability_list_query = traceability_list_query.filter(MAT_SAP_CODE=mat_info)
-
-    # Default filter 3 hari terakhir jika ada filter tapi tanggal kosong
-    if (trc_pp_code or mat_info) and not start_date and not end_date:
-        end_dt = datetime.now()
+    # Default: jika tidak ada input, pakai 3 hari terakhir
+    if not start_date or not end_date:
+        end_dt = now()
         start_dt = end_dt - timedelta(days=2)
         start_date = start_dt.strftime("%Y-%m-%d")
         end_date = end_dt.strftime("%Y-%m-%d")
 
-    if start_date:
-        traceability_list_query = traceability_list_query.filter(PS_DATE__date__gte=start_date)
-    if end_date:
-        traceability_list_query = traceability_list_query.filter(PS_DATE__date__lte=end_date)
+    # Validasi tanggal range
+    try:
+        start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+        end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+        if (end_dt - start_dt).days > 30:
+            error_message = "Data tidak boleh lebih dari 30 hari!"
+            start_date = end_date = None
+    except ValueError:
+        error_message = "Format tanggal salah!"
+        start_date = end_date = None
 
-    traceability_list_query = traceability_list_query.values(
-        'MAT_SAP_CODE', 'PP_CODE', 'MCH_CODE', 'SHF_CODE',
-        'PS_QUANTITY', 'PS_START_PROD', 'PS_END_PROD', 'PS_DATE'
-    )
+    traceability_raw = []
 
-    traceability_list = list(traceability_list_query)
+    if start_date and end_date:
+        traceability_qs = WMS_TRACEABILITY.objects.filter(
+            TRC_START_TIME__date__range=[start_date, end_date]
+        )
 
-    # Ambil PP_DESC untuk tiap traceability record
-    pp_desc_map = dict(MD_PRODUCTION_PHASES.objects.values_list('PP_CODE', 'PP_DESC'))
+        if trc_code:
+            traceability_qs = traceability_qs.filter(TRC_PP_CODE=trc_code)
 
-    for p in traceability_list:
-        mat = MD_MATERIALS.objects.filter(MAT_SAP_CODE=p['MAT_SAP_CODE']).first()
-        p['MAT_CODE'] = mat.MAT_CODE if mat else ""
-        p['PP_DESC'] = pp_desc_map.get(p['PP_CODE'], "-")
+        if trc_fl_phase:
+            traceability_qs = traceability_qs.filter(TRC_FL_PHASE=trc_fl_phase)
+
+        if mch_info:
+            try:
+                trc_pp, trc_mch = mch_info.split("|")
+                traceability_qs = traceability_qs.filter(TRC_PP_CODE=trc_pp, TRC_MCH_CODE=trc_mch)
+            except ValueError:
+                pass
+
+        traceability_raw = list(
+            traceability_qs.values(
+                'TRC_PP_CODE', 'TRC_MCH_CODE', 'TRC_SO_CODE',
+                'TRC_MAT_SAP_CODE', 'TRC_WM_CODE', 'TRC_START_TIME'
+            ).order_by('TRC_SO_CODE', 'TRC_START_TIME')
+        )
+
+    # Tree mapping
+    so_codes = {item['TRC_SO_CODE'] for item in traceability_raw}
+    cu_data = WMS_TRACEABILITY_CU.objects.filter(
+        SO_CODE__in=so_codes
+    ).values('SO_CODE', 'CU_EXT_PROGR', 'CHILD_CU_CODE')
+
+    cu_map = {}
+    for cu in cu_data:
+        key = f"{cu['SO_CODE']} - {cu['CU_EXT_PROGR']}"
+        cu_map.setdefault(key, []).append(cu['CHILD_CU_CODE'])
+
+    tree = []
+    for key in cu_map:
+        tree.append({'type': 'root', 'key': key, 'children': []})
+        so_code = key.split(" - ")[0]
+        related_traces = [item for item in traceability_raw if item['TRC_SO_CODE'] == so_code]
+        for item in related_traces:
+            tree.append({
+                'type': 'child',
+                'parent_key': key,
+                **item
+            })
 
     context = {
         'trc_list': trc_list,
-        'materials': materials,
         'machines': machines,
-        'traceability_list': traceability_list,
-        'selected_trc': trc_pp_code,
-        'selected_mat_info': mat_info,
-        'selected_start_date': start_date,
-        'selected_end_date': end_date,
+        'phase': phase,
+        'date_shift_choices': date_shift_choices,
+        'traceability_tree': tree,
+        'selected_trc': trc_code,
+        'selected_mch_info': mch_info,
+        'selected_start_date': start_date_raw,
+        'selected_end_date': end_date_raw,
+        'selected_phase': trc_fl_phase,
         'error_message': error_message,
     }
+
     return render(request, 'traceability.html', context)

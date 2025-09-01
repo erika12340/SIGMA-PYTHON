@@ -49,8 +49,6 @@
     }
 </style>
 
-
-
 <div class="container">
     <h3 style="margin-left: 30px ;">Traceability Views</h3>
 
@@ -83,22 +81,23 @@
 
                 <div class="card mb-4 shadow-sm">
                     <div class="card-body">
-                        <!-- Filter Form -->
+
+                        <!-- Form Produksi  -->
                         <form method="get" action="{% url 'traceability' %}" class="row g-3" id="filterForm">
                             <div class="col-md-4">
                                 <label for="trc" class="form-label fw-bold">Production Phase :</label>
                                 <select name="trc_code" id="trc" class="form-select" onchange="this.form.submit()">
                                     <option value="">-- Pilih Fase --</option>
                                     {% for trc in trc_list %}
-                                    <option value="{{ trc.PP_CODE }}"
-                                        {% if trc.PP_CODE == selected_trc %}selected{% endif %}>
-                                        {{ trc.PP_CODE }} - {{ trc.PP_DESC }}
+                                    <option value="{{ trc.TRC_PP_CODE }}"
+                                        {% if trc.TRC_PP_CODE == selected_trc %}selected{% endif %}>
+                                        {{ trc.TRC_PP_CODE }} - {{ trc.PP_DESC }}
                                     </option>
                                     {% endfor %}
                                 </select>
                             </div>
 
-
+                            <!-- Form Mesin -->
                             <div class="col-md-4">
                                 <label for="mch_info" class="form-label fw-bold">Machine :</label>
                                 <select name="mch_info" id="mch_info" class="form-select" onchange="this.form.submit()">
@@ -113,46 +112,68 @@
                                 </select>
                             </div>
 
+                            <div class="col-md-4">
+                                <label for="mch_info" class="form-label fw-bold">Traceability Phase :</label>
+                                <select name="mch_info" id="mch_info" class="form-select" onchange="this.form.submit()">
+                                    <option value="">-- Pilih Traceability Phase --</option>
+                                    {% for p in phase %}
+                                    <option value="{{ p.TRC_FL_PHASE }}"
+                                        {% if p.TRC_FL_PHASE == selected_phase %}selected{% endif %}>
+                                        {{ p.TRC_FL_PHASE }}
+                                    </option>
+                                    {% endfor %}
 
-                            <div class="col-md-2">
+                                </select>
+                            </div>
+
+                            <!-- Tanggal dan Shift -->
+                            <div class="col-md-4">
                                 <label for="start_date" class="form-label fw-bold">From :</label>
-                                <input type="date" name="start_date" id="start_date" class="form-control"
-                                    value="{{ selected_start_date|default:'' }}" onchange="this.form.submit()">
+                                <select name="start_date" id="start_date" class="form-select"
+                                    onchange="this.form.submit()">
+                                    <option value="">-- Pilih Tanggal & Shift --</option>
+                                    {% for opt in date_shift_choices %}
+                                    <option value="{{ opt.value }}"
+                                        {% if selected_start_date == opt.value %}selected{% endif %}>
+                                        {{ opt.label }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
                             </div>
 
-                            <div class="col-md-2">
+                            <div class="col-md-4">
                                 <label for="end_date" class="form-label fw-bold">To :</label>
-                                <input type="date" name="end_date" id="end_date" class="form-control"
-                                    value="{{ selected_end_date|default:'' }}" onchange="this.form.submit()">
-                            </div>
-
-                            <!-- Tombol Reset tetap ada jika mau hapus semua filter -->
-                            <div class="col-12 mt-3">
-                                <a href="{% url 'traceability' %}" class="btn btn-secondary">Reset</a>
+                                <select name="end_date" id="end_date" class="form-select" onchange="this.form.submit()">
+                                    <option value="">-- Pilih Tanggal & Shift --</option>
+                                    {% for opt in date_shift_choices %}
+                                    <option value="{{ opt.value }}"
+                                        {% if selected_end_date == opt.value %}selected{% endif %}>
+                                        {{ opt.label }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
                             </div>
                         </form>
-
                     </div>
                 </div>
 
-                {% if error_message %}
-                <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                    {{ error_message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                {% endif %}
+                <!-- DEBUG: Print JSON tree -->
+                <pre>{{ traceability_tree|safe|json_script:"traceData" }}</pre>
 
-                {% if traceability_list %}
+                <!-- Daftar Traceability Berdasarkan Mesin-->
+                {% if traceability_tree %}
                 <div class="card">
                     <div class="card-body">
-                        <h5 class="card-title mb-3">Daftar Material</h5>
+                        <h5 class="card-title mb-3">Traceability Views By Machine</h5>
                         <div id="material-tree">
-                            {% for row in traceability_list %}
+                            {% for row in traceability_tree %}
+
                             <div class="material-item level-{{ row.level|add:1 }} mb-1">
                                 <button class="toggle-btn" data-id="{{ forloop.counter }}">▶</button>
-                                <strong>{{ row.TRC_SO_CODE }}</strong> - {{ row.MAT_CODE }} - {{ row.TRC_MAT_SAP_CODE }}
-                                <small class="text-muted">({{ row.TRC_START_TIME }})</small> - <small
-                                    class="text-muted">({{ row.TRC_WM_CODE }})</small>
+                                <strong>{{ row.TRC_SO_CODE }}</strong> - {{ row.TRC_MAT_SAP_CODE }}
+                                <small class="text-muted">({{ row.TRC_START_TIME|date:"Y-m-d H:i" }})</small> -
+                                <small class="text-muted">({{ row.TRC_WM_CODE }})</small>
+
                             </div>
                             {% endfor %}
                         </div>
@@ -190,7 +211,7 @@
 
                 <div class="card mb-4 shadow-sm">
                     <div class="card-body">
-                        <form method="get" action="{% url 'data_produksi' %}" class="row g-3" id="filterForm">
+                        <form method="get" action="{% url 'traceability' %}" class="row g-3" id="filterForm">
                             <div class="col-md-4">
                                 <label for="sfc" class="form-label fw-bold">Source:</label>
                                 <select name="sfc_code" id="sfc" class="form-select" onchange="this.form.submit()">
@@ -256,26 +277,22 @@
                     </div>
                 </div>
 
-                {% if material_data %}
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title mb-3">Daftar Material</h5>
-                        <div id="material-tree">
-                            {% for row in material_data %}
-                            <div class="material-item level-{{ row.level|add:1 }} mb-1">
-                                <button class="toggle-btn" data-id="{{ forloop.counter }}">▶</button>
-                                <strong>{{ row.MT_CODE }}</strong> - {{ row.SFC_CODE }} ({{ row.SFC_DESC }}) -
-                                {{ row.MAT_CODE }} -
-                                {{ row.CHILD_MAT_SAP_CODE }} - {{ row.CHILD_CNT_CODE }} - {{ row.MAT_VARIANT }} -
-                                {{ row.MAT_DESC }} -
-                                {{ row.BOM_QUANTITY }} {{ row.MAT_MEASURE_UNIT }} -
-                                <small class="text-muted">({{ row.BV_STATUS }})</small>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
+                {% for row in traceability_tree %}
+                {% if row.type == 'root' %}
+                <div class="root-node" style="font-weight: bold; margin-top: 10px;">
+                    {{ row.key }}
+                </div>
+                {% elif row.type == 'child' %}
+                <div class="material-item level-2 mb-1">
+                    <button class="toggle-btn" data-id="{{ forloop.counter }}">▶</button>
+                    <strong>{{ row.TRC_SO_CODE }}</strong> - {{ row.TRC_PP_CODE }} - {{ row.TRC_MCH_CODE }} -
+                    {{ row.TRC_MAT_SAP_CODE }}
+                    <small class="text-muted">({{ row.TRC_START_TIME|date:"Y-m-d H:i" }})</small> -
+                    <small class="text-muted">({{ row.TRC_WM_CODE }})</small>
                 </div>
                 {% endif %}
+                {% endfor %}
+
             </div>
         </div>
 
@@ -384,33 +401,27 @@
 <!-- JS UNTUK LINE DATA MATERIAL -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        // Tampilkan semua level-1 (root)
-        document.querySelectorAll(".material-item.level-1").forEach(item => item.style.display = "block");
-
-        document.querySelectorAll(".toggle-btn").forEach(btn => {
-            btn.addEventListener("click", function () {
-                let currentItem = this.parentElement;
-                let currentLevel = parseInt(currentItem.className.match(/level-(\d+)/)[1]);
-                let next = currentItem.nextElementSibling;
-                let isExpanding = this.textContent === "▶";
-
-                this.textContent = isExpanding ? "▼" : "▶";
-
-                while (next && next.classList.contains("material-item")) {
-                    let level = parseInt(next.className.match(/level-(\d+)/)[1]);
-                    if (level <= currentLevel) break;
-                    if (level === currentLevel + 1) {
-                        next.style.display = isExpanding ? "block" : "none";
-                    }
-                    if (!isExpanding && level > currentLevel) {
-                        next.querySelector(".toggle-btn").textContent = "▶";
-                    }
+        const toggleButtons = document.querySelectorAll('.toggle-btn');
+        toggleButtons.forEach(btn => {
+            btn.addEventListener('click', function () {
+                const current = this.closest('.material-item');
+                let next = current.nextElementSibling;
+                while (next && parseInt(next.className.match(/level-(\d+)/)[1]) > parseInt(
+                        current.className.match(/level-(\d+)/)[1])) {
+                    next.style.display = next.style.display === 'none' ? 'block' : 'none';
                     next = next.nextElementSibling;
                 }
+                this.textContent = this.textContent === '▶' ? '▼' : '▶';
             });
         });
+
+        // Tampilkan level 1 saat load
+        const firstLevels = document.querySelectorAll('.level-1');
+        firstLevels.forEach(el => el.style.display = 'block');
     });
 </script>
+
+
 
 <!-- JS UNTUK FORM -->
 <script>
