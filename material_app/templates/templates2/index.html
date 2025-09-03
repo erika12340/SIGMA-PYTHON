@@ -19,7 +19,8 @@
   <meta name="description" content="" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&ampdisplay=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&ampdisplay=swap"
+    rel="stylesheet" />
 
   <!-- boostrap di folder static -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
@@ -29,6 +30,14 @@
   <link rel="stylesheet" href="{% static '/assets/css/demo.css' %}" />
   <link rel="stylesheet" href="{% static 'assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css' %}" />
   <link rel="stylesheet" href="{% static 'assets/vendor/libs/apex-charts/apex-charts.css' %}" />
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+
+
 </head>
 
 <body>
@@ -39,7 +48,8 @@
         style="background-color: rgb(255, 255, 255);">
         <div class="app-brand demo">
           <a href="index.html" class="app-brand-link">
-            <span class="app-brand-text demo menu-text fw-semibold mt-8" style="text-align: center;">SIGMA<hr style="width: 195px;"></span>
+            <span class="app-brand-text demo menu-text fw-semibold mt-8" style="text-align: center;">SIGMA
+              <hr style="width: 195px;"></span>
           </a>
         </div>
         <div class="menu-inner-shadow"></div>
@@ -85,11 +95,11 @@
           </div>
           <div class="navbar-nav-right d-flex align-items-center justify-content-end" id="navbar-collapse">
           </div>
-        </nav> 
+        </nav>
         <!-- /NAVBAR-->
 
         {% block content %} {% endblock %}
-      
+
       </div>
     </div>
   </div>
@@ -112,11 +122,17 @@
   <!-- Aktif Menu -->
   <script>
     const currentUrl = window.location.pathname;
-    if (currentUrl == '/') { document.getElementById('menu-dashboard').classList.add('active'); }
-    else if (currentUrl == '/daftar_materials') { document.getElementById('daftar_materials').classList.add('active'); }
-    else if (currentUrl == '/data_produksi') { document.getElementById('data_produksi').classList.add('active'); }
-    else if (currentUrl == '/traceability') { document.getElementById('traceability').classList.add('active'); }
+    if (currentUrl == '/') {
+      document.getElementById('menu-dashboard').classList.add('active');
+    } else if (currentUrl == '/daftar_materials') {
+      document.getElementById('daftar_materials').classList.add('active');
+    } else if (currentUrl == '/data_produksi') {
+      document.getElementById('data_produksi').classList.add('active');
+    } else if (currentUrl == '/traceability') {
+      document.getElementById('traceability').classList.add('active');
+    }
   </script>
 
 </body>
+
 </html>

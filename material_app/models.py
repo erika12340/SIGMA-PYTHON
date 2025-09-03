@@ -75,7 +75,6 @@ class DC_PRODUCTION_DATA(models.Model):
         unique_together = (
             ('MAT_SAP_CODE', 'MAT_VARIANT', 'CNT_CODE'),
         )
-        
 # -------------- Model 5. MD_PRODUCTION_PHASES --------------
 class MD_PRODUCTION_PHASES(models.Model):
     PP_CODE = models.CharField(max_length=3, primary_key=True)
@@ -106,6 +105,7 @@ class WMS_TRACEABILITY(models.Model):
     TRC_MAT_SAP_CODE = models.CharField (max_length=9)
     TRC_WM_CODE = models.CharField (max_length=8)
     TRC_FL_PHASE = models.CharField (max_length=1)
+    TRC_CNT_CODE = models.CharField (max_length=3)
 
     class Meta:
         managed = False
@@ -119,6 +119,8 @@ class WMS_TRACEABILITY_CU(models.Model):
     SO_CODE = models.CharField (max_length=4, primary_key=True)
     CU_EXT_PROGR = models.CharField (max_length=6)
     CHILD_CU_CODE = models.CharField (max_length=20)
+    CHILD_SO_CODE = models.CharField (max_length=4)
+    CHILD_CU_EXT_PROGR = models.CharField (max_length=6)
     
     class Meta:
         managed = False

@@ -1,35 +1,73 @@
 .nav-tabs {
-  background-color: #f1f1f1; /* Warna background menu */
-  border-radius: 12px; /* Membuat sisi kiri dan kanan melengkung */
-  padding: 5px; /* Supaya ada jarak di dalam */
+    background-color: #f1f1f1;
+    /* Warna background menu */
+    border-radius: 12px;
+    /* Membuat sisi kiri dan kanan melengkung */
+    padding: 5px;
+    /* Supaya ada jarak di dalam */
 }
 
 /* Menu Traceability and Materials */
- .nav {
-        background-color: rgb(228, 198, 255);
-        width: 95%;
-        margin: 20px auto;
-    }
+.nav {
+    background-color: rgb(228, 198, 255);
+    width: 95%;
+    margin: 20px auto;
+}
 
-    td[class^="indent-"] { padding-left: 0; }
-    td.indent-1 { padding-left: 5px; }
-    td.indent-2 { padding-left: 10px; }
-    td.indent-3 { padding-left: 15px; }
-    td.indent-4 { padding-left: 20px; }
-    td.indent-5 { padding-left: 25px; }
-    td.indent-6 { padding-left: 30px; }
-    td.indent-7 { padding-left: 35px; }
-    td.indent-8 { padding-left: 40px; }
-    td.indent-9 { padding-left: 45px; }
-    td.indent-10 { padding-left: 50px; }
+td[class^="indent-"] {
+    padding-left: 0;
+}
 
-    .material-item { display: none; }
-    .toggle-btn {
-        background: none;
-        border: none;
-        cursor: pointer;
-        font-size: 0.9rem;
-    }
+td.indent-1 {
+    padding-left: 5px;
+}
+
+td.indent-2 {
+    padding-left: 10px;
+}
+
+td.indent-3 {
+    padding-left: 15px;
+}
+
+td.indent-4 {
+    padding-left: 20px;
+}
+
+td.indent-5 {
+    padding-left: 25px;
+}
+
+td.indent-6 {
+    padding-left: 30px;
+}
+
+td.indent-7 {
+    padding-left: 35px;
+}
+
+td.indent-8 {
+    padding-left: 40px;
+}
+
+td.indent-9 {
+    padding-left: 45px;
+}
+
+td.indent-10 {
+    padding-left: 50px;
+}
+
+.material-item {
+    display: none;
+}
+
+.toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
 
 
 /* css untuk line data materials */
@@ -37,13 +75,90 @@
     display: block;
 }
 
-.level-1 { margin-left: 1em; }
-.level-2 { margin-left: 2em; }
-.level-3 { margin-left: 3em; }
-.level-4 { margin-left: 4em; }
-.level-5 { margin-left: 5em; }
-.level-6 { margin-left: 6em; }
-.level-7 { margin-left: 7em; }
-.level-8 { margin-left: 8em; }
-.level-9 { margin-left: 9em; }
-.level-10 { margin-left: 10em; }
+.level-1 {
+    margin-left: 1em;
+}
+
+.level-2 {
+    margin-left: 2em;
+}
+
+.level-3 {
+    margin-left: 3em;
+}
+
+.level-4 {
+    margin-left: 4em;
+}
+
+.level-5 {
+    margin-left: 5em;
+}
+
+.level-6 {
+    margin-left: 6em;
+}
+
+.level-7 {
+    margin-left: 7em;
+}
+
+.level-8 {
+    margin-left: 8em;
+}
+
+.level-9 {
+    margin-left: 9em;
+}
+
+.level-10 {
+    margin-left: 10em;
+}
+
+
+
+
+/* Traceability Views */
+.material-item {
+    display: none;
+}
+
+.level-1 {
+    margin-left: 1em;
+}
+
+.level-2 {
+    margin-left: 2em;
+}
+
+.level-3 {
+    margin-left: 3em;
+}
+
+.level-4 {
+    margin-left: 4em;
+}
+
+.level-5 {
+    margin-left: 5em;
+}
+
+.level-6 {
+    margin-left: 6em;
+}
+
+.level-7 {
+    margin-left: 7em;
+}
+
+.level-8 {
+    margin-left: 8em;
+}
+
+.level-9 {
+    margin-left: 9em;
+}
+
+.level-10 {
+    margin-left: 10em;
+}
