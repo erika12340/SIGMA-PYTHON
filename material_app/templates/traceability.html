@@ -215,9 +215,9 @@
                                 <select name="source_code" id="source" class="form-select"
                                     onchange="this.form.submit()">
                                     <option value="">-- Pilih Source --</option>
-                                    {% for source in trc_code %}
-                                    <option value="{{ source.SO_CODE }}"
-                                        {% if source.TRC_SO_CODE == selected_trc %}selected{% endif %}>
+                                    {% for source in cu_code %}
+                                    <option value="{{ source.TRC_SO_CODE }}|{{ source.SO_DESC }}"
+                                        {% if source.TRC_SO_CODE == source.TRC_SO_CODE|stringformat:"s"|add:"|"|add:source.TRC_SO_CODE|add:"|"|add:source.SO_DESC %}selected{% endif %}>
                                         {{ source.TRC_SO_CODE }} - {{ source.SO_DESC }}
                                     </option>
                                     {% endfor %}
@@ -287,6 +287,7 @@
                                 </select>
                             </div>
                         </form>
+
                         <div class="col-md-12 text-end">
                             <a href="{% url 'traceability' %}" class="btn btn-secondary"> Reset </a>
                         </div>
@@ -435,6 +436,7 @@
                         <div class="col-md-12 text-end">
                             <a href="{% url 'traceability' %}" class="btn btn-secondary"> Reset </a>
                         </div>
+
                     </div>
                 </div>
 
@@ -462,6 +464,7 @@
                     </div>
                 </div>
                 {% endif %}
+
             </div>
         </div>
     </div>
@@ -507,6 +510,9 @@
     $('#trc_fl_phase').select2();
     $('#start_date').select2();
     $('#end_date').select2();
+    $('#end_date_bycu').select2();
+    $('#start_date_bycu').select2();
+    $('#trc_fl_phasebycu').select2();
 </script>
 
 {% endblock %}
