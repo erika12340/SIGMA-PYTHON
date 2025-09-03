@@ -89,7 +89,7 @@ class MD_PRODUCTION_PHASES(models.Model):
 # -------------- 6. Model MD_WORKERS --------------
 class MD_WORKERS(models.Model):
     WM_CODE = models.CharField(max_length=9, primary_key=True)
-    WM_NAME = models.CharField(max_length=3)
+    WM_NAME = models.CharField(max_length=30)
 
     class Meta:
         managed = False
@@ -102,7 +102,7 @@ class WMS_TRACEABILITY(models.Model):
     TRC_SO_CODE = models.CharField (max_length=4)
     TRC_CU_EXT_PROGR = models.CharField (max_length=6)
     TRC_START_TIME = models.DateTimeField(max_length=8)
-    TRC_END_TIME = models.CharField (max_length=8)
+    TRC_END_TIME = models.DateTimeField (max_length=8)
     TRC_MAT_SAP_CODE = models.CharField (max_length=9)
     TRC_WM_CODE = models.CharField (max_length=8)
     TRC_FL_PHASE = models.CharField (max_length=1)
