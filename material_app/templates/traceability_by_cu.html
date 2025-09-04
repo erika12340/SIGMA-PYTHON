@@ -1,10 +1,9 @@
 {% extends "templates2/index.html" %}
 {% block content %}
 
-
 <style>
-    /* Semua material-item disembunyikan dulu */
-    .material-item {
+    /* Menyembunyikan */
+    .containment-item {
         display: none;
     }
 
@@ -76,7 +75,7 @@
                     <!-- Filter Containment Unit -->
                     <div class="col-md-4">
                         <label for="mat" class="form-label fw-bold">Containment Unit:</label>
-                        <select name="mat_info" id="mat" class="form-select" onchange="this.form.submit()">
+                        <select name="mat_info" id="trc" class="form-select" onchange="this.form.submit()">
                             <option value="">-- Pilih Containment --</option>
                             {% for cu in cu_list %}
                             <option value="{{ cu.TRC_SO_CODE }}|{{ cu.TRC_CU_EXT_PROGR }}"
@@ -93,6 +92,7 @@
                         <select name="trc_fl_phase" id="trc_fl_phase" class="form-select" onchange="this.form.submit()">
                             <option value="">-- Pilih Traceability Phase --</option>
                             {% for p in phase %}
+
                             <option value="{{ p.TRC_FL_PHASE }}"
                                 {% if p.TRC_FL_PHASE == selected_phase %}selected{% endif %}>
                                 {% if p.TRC_FL_PHASE == "C" %}
@@ -161,13 +161,13 @@
         </div>
 
         <!-- Data Traceability By Containment Unit -->
-        {% if traceability_tree %}
+        {% if traceability_tree_cu %}
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title mb-3">Traceability Views By Containment Unit</h5>
-                <div id="material-tree">
+                <div id="containment-tree">
                     {% for row in traceability_tree %}
-                    <div class="material-item level-{{ row.level|add:1 }} mb-1">
+                    <div class="containment-item level-{{ row.level|add:1 }} mb-1">
                         <button class="toggle-btn" data-id="{{ forloop.counter }}">▶</button>
                         <strong>({{ row.TRC_PP_CODE }} {{ row.TRC_MCH_CODE }})</strong> -
                         ({{ row.TRC_START_TIME|date:"Y-m-d H:i" }} -
@@ -196,7 +196,7 @@
         const toggleButtons = document.querySelectorAll('.toggle-btn');
         toggleButtons.forEach(btn => {
             btn.addEventListener('click', function () {
-                const current = this.closest('.material-item');
+                const current = this.closest('.containment-item');
                 let next = current.nextElementSibling;
                 while (next && parseInt(next.className.match(/level-(\d+)/)[1]) > parseInt(
                         current.className.match(/level-(\d+)/)[1])) {
@@ -213,8 +213,8 @@
 
 <!-- JS UNTUK FORM -->
 <script>
+    $('#source').select2();
     $('#trc').select2();
-    $('#mch_info').select2();
     $('#trc_fl_phase').select2();
     $('#start_date').select2();
     $('#end_date').select2();
