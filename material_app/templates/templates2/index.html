@@ -74,12 +74,25 @@
               <div data-i18n="Icons">Production</div>
             </a>
           </li>
-          <li class="menu-item" id="traceability">
-            <a href="traceability" class="menu-link">
+
+          <li class="menu-item dropdown" id="traceability">
+            <a href="#" class="menu-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
               <i class="bi bi-clipboard-data"></i>
-              <div data-i18n="Icons">Treceability Views</div>
+              <div data-i18n="Icons">Traceability Views</div>
             </a>
+            <ul class="dropdown-menu">
+              <li id="by_machine">
+                <a class="dropdown-item" href="traceability_by_machine">By Materials</a>
+              </li>
+              <li id="by_cu">
+                <a class="dropdown-item " href="traceability_by_cu">By CU</a>
+              </li>
+              <li id="by_materials">
+                <a class="dropdown-item" href="url 'traceability_by_materials">By Materials</a>
+              </li>
+            </ul>
           </li>
+
         </ul>
       </aside>
 
@@ -130,6 +143,12 @@
       document.getElementById('data_produksi').classList.add('active');
     } else if (currentUrl == '/traceability') {
       document.getElementById('traceability').classList.add('active');
+    } else if (currentUrl == '/traceability_by_machine') {
+      document.getElementById('traceability_by_machine').classList.add('active');
+    } else if (currentUrl == '/traceability_by_cu') {
+      document.getElementById('traceability_by_cu').classList.add('active');
+    } else if (currentUrl == '/traceability_by_materials') {
+      document.getElementById('traceability_by_materials').classList.add('active');
     }
   </script>
 

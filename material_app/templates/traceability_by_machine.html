@@ -1,0 +1,210 @@
+{% extends "templates2/index.html" %}
+{% block content %}
+
+
+<style>
+    /* Semua material-item disembunyikan dulu */
+    .material-item {
+        display: none;
+    }
+
+    /* Indentasi berdasarkan level */
+    .level-1 {
+        margin-left: 1em;
+    }
+
+    .level-2 {
+        margin-left: 2em;
+    }
+
+    .level-3 {
+        margin-left: 3em;
+    }
+
+    .level-4 {
+        margin-left: 4em;
+    }
+
+    .level-5 {
+        margin-left: 5em;
+    }
+
+    .level-6 {
+        margin-left: 6em;
+    }
+
+    .level-7 {
+        margin-left: 7em;
+    }
+
+    .level-8 {
+        margin-left: 8em;
+    }
+
+    .level-9 {
+        margin-left: 9em;
+    }
+
+    .level-10 {
+        margin-left: 10em;
+    }
+</style>
+
+
+
+<!-- Container Box -->
+<div class="container">
+    <h3 style="margin-left: 30px ;">Traceability Views</h3>
+    <div class="container mt-4">
+        <div class="card mb-4 shadow-sm">
+            <div class="card-body">
+                <!-- Form Produksi  -->
+                <form method="get" action="{% url 'traceability_by_machine' %}" class="row g-3" id="filterForm">
+                    <div class="col-md-4">
+                        <label for="trc" class="form-label fw-bold">Production Phase :</label>
+                        <select name="trc_code" id="trc" class="form-select" onchange="this.form.submit()">
+                            <option value="">-- Pilih Fase --</option>
+                            {% for trc in trc_list %}
+                            <option value="{{ trc.TRC_PP_CODE }}"
+                                {% if trc.TRC_PP_CODE == selected_trc %}selected{% endif %}>
+                                {{ trc.TRC_PP_CODE }} - {{ trc.PP_DESC }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Form Mesin -->
+                    <div class="col-md-4">
+                        <label for="mch_info" class="form-label fw-bold">Machine :</label>
+                        <select name="mch_info" id="mch_info" class="form-select" onchange="this.form.submit()">
+                            <option value="">-- Pilih Mesin --</option>
+                            {% for m in machines %}
+                            {% with value=m.TRC_PP_CODE|add:"|"|add:m.TRC_MCH_CODE %}
+                            <option value="{{ value }}" {% if selected_mch_info == value %}selected{% endif %}>
+                                {{ m.TRC_PP_CODE }} - {{ m.TRC_MCH_CODE }}
+                            </option>
+                            {% endwith %}
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Form Traceability Phase -->
+                    <div class="col-md-4">
+                        <label for="mch_info" class="form-label fw-bold">FL Phase :</label>
+                        <select name="trc_fl_phase" id="trc_fl_phase" class="form-select" onchange="this.form.submit()">
+                            <option value="">-- Pilih Phase --</option>
+                            {% for p in phase %}
+                            <option value="{{ p.TRC_FL_PHASE }}"
+                                {% if p.TRC_FL_PHASE == selected_phase %}selected{% endif %}>
+                                {% if p.TRC_FL_PHASE == "C" %}
+                                Consumed CU
+                                {% elif p.TRC_FL_PHASE == "P" %}
+                                Produced CU
+                                {% else %}
+                                {{ p.TRC_FL_PHASE }}
+                                {% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Form Tanggal -->
+                    <div class="col-md-4">
+                        <label for="start_date" class="form-label fw-bold">From :</label>
+                        <select name="start_date" id="start_date" class="form-select" onchange="this.form.submit()">
+                            <option value="">-- Pilih Tanggal & Shift --</option>
+                            {% for opt in date_shift_choices %}
+                            <option value="{{ opt.value }}"
+                                {% if selected_start_date == opt.value %}selected{% endif %}>
+                                {{ opt.label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="end_date" class="form-label fw-bold">To :</label>
+                        <select name="end_date" id="end_date" class="form-select" onchange="this.form.submit()">
+                            <option value="">-- Pilih Tanggal & Shift --</option>
+                            {% for opt in date_shift_choices %}
+                            <option value="{{ opt.value }}" {% if selected_end_date == opt.value %}selected{% endif %}>
+                                {{ opt.label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+
+                <!-- Tombol Reset -->
+                <div class="col-md-12 text-end">
+                    <a href="{% url 'traceability_by_machine' %}" class="btn btn-secondary"> Reset </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Line Daftar Traceability Berdasarkan Mesin-->
+        {% if traceability_tree %}
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Traceability Views By Machine</h5>
+                <div id="material-tree">
+                    {% for row in traceability_tree %}
+                    <div class="material-item level-{{ row.level|add:1 }} mb-1">
+                        <button class="toggle-btn" data-id="{{ forloop.counter }}">▶</button>
+                        <!-- memiliki status consumed -->
+                        <strong>({{ row.TRC_SO_CODE }} {{ row.TRC_CU_EXT_PROGR }})</strong> -
+                        {{ row.MAT_CODE }} -
+                        {{ row.TRC_MAT_SAP_CODE }} -
+                        ({{ row.TRC_START_TIME|date:"Y-m-d H:i" }} - {{ row.TRC_END_TIME|date:"Y-m-d H:i" }}) -
+                        ({{ row.TRC_WM_CODE }} - {{ row.WM_NAME }})
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+
+
+<!-- JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous">
+</script>
+
+
+<!-- JS UNTUK LINE DATA MATERIAL -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const toggleButtons = document.querySelectorAll('.toggle-btn');
+        toggleButtons.forEach(btn => {
+            btn.addEventListener('click', function () {
+                const current = this.closest('.material-item');
+                let next = current.nextElementSibling;
+                while (next && parseInt(next.className.match(/level-(\d+)/)[1]) > parseInt(
+                        current.className.match(/level-(\d+)/)[1])) {
+                    next.style.display = next.style.display === 'none' ? 'block' : 'none';
+                    next = next.nextElementSibling;
+                }
+                this.textContent = this.textContent === '▶' ? '▼' : '▶';
+            });
+        });
+
+        // Tampilkan level 1 saat load
+        const firstLevels = document.querySelectorAll('.level-1');
+        firstLevels.forEach(el => el.style.display = 'block');
+    });
+</script>
+
+
+<!-- JS UNTUK FORM -->
+<script>
+    $('#trc').select2();
+    $('#mch_info').select2();
+    $('#trc_fl_phase').select2();
+    $('#start_date').select2();
+    $('#end_date').select2();
+</script>
+
+{% endblock %}

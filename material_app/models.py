@@ -140,10 +140,12 @@ class MD_CONTAINERS(models.Model):
 
 # -------------- 10. Model MD_SOURCES --------------
 class MD_SOURCES(models.Model):
-    SO_CODE = models.CharField (max_length=3, primary_key=True)
-    SO_DESC = models.CharField (max_length=8)
+    SO_CODE = models.CharField (max_length=4, primary_key=True)
+    SO_DESC = models.CharField (max_length=30)
 
     class Meta:
         managed = False
         db_table = 'MD_SOURCES'
+
+
 
