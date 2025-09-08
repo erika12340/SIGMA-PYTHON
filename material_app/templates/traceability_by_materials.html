@@ -140,16 +140,16 @@
             </div>
         </div>
 
-        <!-- Line Daftar Traceability Berdasarkan Materials -->
-        {% if traceability_row_mat %}
+        <!-- Line Daftar Traceability By Materials -->
+        {% if traceability_raw %}
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title mb-3">Traceability Views</h5>
                 <div id="material-tree">
-                    {% for row in traceability_tree %}
+                    {% for row in traceability_raw %}
                     <div class="material-item level-{{ row.level|add:1 }} mb-1">
                         <button class="toggle-btn" data-id="{{ forloop.counter }}">▶</button>
-                        <strong>({{ row.TRC_SO_CODE }} {{ row.TRC_CU_EXT_PROGR }})</strong> -
+                        ({{ row.TRC_SO_CODE }} {{ row.TRC_CU_EXT_PROGR }}) -
                         {{ row.MAT_CODE }} -
                         {{ row.TRC_MAT_SAP_CODE }} -
                         ({{ row.TRC_START_TIME|date:"Y-m-d H:i" }} - {{ row.TRC_END_TIME|date:"Y-m-d H:i" }}) -
@@ -186,8 +186,6 @@
                 this.textContent = this.textContent === '▶' ? '▼' : '▶';
             });
         });
-
-        // Tampilkan level 1 saat load
         const firstLevels = document.querySelectorAll('.level-1');
         firstLevels.forEach(el => el.style.display = 'block');
     });

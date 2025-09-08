@@ -353,18 +353,18 @@ def traceability_by_machine(request):
         ).annotate(
             MAT_CODE=Subquery(mat_code_subquery),
             WM_CODE=Subquery(wm_code_subquery),
-            WM_NAME=Subquery(wm_name_subquery),
+            WM_NAME=Subquery(wm_name_subquery),  
         )
 
         #  Filter by Production Phase
         if trc_code:
             traceability_qs = traceability_qs.filter(TRC_PP_CODE=trc_code)
 
-        #  Filter by Traceability Phase
+        #  Filter by FL Traceability Phase
         if trc_fl_phase:
             traceability_qs = traceability_qs.filter(TRC_FL_PHASE=trc_fl_phase)
 
-        #  Filter by Machine (combined value)
+        #  Filter by Machine
         if mch_info:
             try:
                 trc_pp, trc_mch = mch_info.split('|')
@@ -388,12 +388,10 @@ def traceability_by_machine(request):
                 'MAT_CODE',
                 'WM_CODE',
                 'WM_NAME', 
-            )
-        )
+        ))
 
-    # ========== Build Tree ==========
+    # ========== Traceability Views by machine  (line) ==========
     traceability_tree = []
-
     if traceability_raw:
         roots = set((item['TRC_SO_CODE'], item['TRC_CU_EXT_PROGR']) for item in traceability_raw)
 
@@ -429,6 +427,7 @@ def traceability_by_machine(request):
                         'level': 1,
                         **item
                     })
+                    
     context = {
         'trc_list': trc_list,
         'machines': machines,
@@ -446,16 +445,104 @@ def traceability_by_machine(request):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # ===================== Traceability By CU ======================
 def traceability_by_cu(request):
-    # Ambil input dari form
+    # filter data so_Code
+    allowed_so_codes = ['00CE', '00CP', '00CX', '00FB', '00RC', '00TB', '00TT', 'SM11', 'SM21', 'TLV1']
+
+    # ambil filter
     so_code = request.GET.get('source_code')
     mat_info = request.GET.get('mat_info')
     start_date_raw = request.GET.get('start_date')
     end_date_raw = request.GET.get('end_date')
     trc_fl_phase = request.GET.get('trc_fl_phase')
 
-    #  Ambil cu_ext
+    # Ambil cu_ext dari mat_info jika ada (format: SO_CODE|CU_EXT_PROGR)
     cu_ext = None
     if mat_info:
         try:
@@ -463,7 +550,7 @@ def traceability_by_cu(request):
         except ValueError:
             pass
 
-    # Helper: parsing date|shift
+    # Helper function untuk parsing "YYYY-MM-DD|SHIFT"
     def parse_date_shift(raw_value):
         try:
             date_part, shift_part = raw_value.split('|')
@@ -471,22 +558,20 @@ def traceability_by_cu(request):
         except Exception:
             return None, None
 
-    # tanggal dan shift
-    start_date, _ = parse_date_shift(start_date_raw)
-    end_date, _ = parse_date_shift(end_date_raw)
+    start_date_str, _ = parse_date_shift(start_date_raw) if start_date_raw else (None, None)
+    end_date_str, _ = parse_date_shift(end_date_raw) if end_date_raw else (None, None)
 
     try:
-        if start_date and end_date:
-            start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
-            end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
-        else:
-            start_date = end_date = None
+        start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date() if start_date_str else None
+        end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date() if end_date_str else None
     except ValueError:
-        start_date = end_date = None
+        start_date = None
+        end_date = None
 
-    # === Dropdown Sources ===
+    # --- Dropdown Sources ---
     sources = (
         WMS_TRACEABILITY.objects
+        .filter(TRC_SO_CODE__in=allowed_so_codes)
         .values('TRC_SO_CODE')
         .distinct()
         .annotate(
@@ -497,18 +582,20 @@ def traceability_by_cu(request):
         .order_by('TRC_SO_CODE')
     )
 
-    # === Dropdown Containment Unit ===
+    # --- Dropdown Containment Unit ---
     cu_list = []
     if so_code:
-        cu_list = (
-            WMS_TRACEABILITY.objects
-            .filter(TRC_SO_CODE=so_code)
-            .values('TRC_SO_CODE', 'TRC_CU_EXT_PROGR')
-            .distinct()
-            .order_by('TRC_CU_EXT_PROGR')
-        )
+        # Pastikan so_code termasuk allowed_so_codes
+        if so_code in allowed_so_codes:
+            cu_list = (
+                WMS_TRACEABILITY.objects
+                .filter(TRC_SO_CODE=so_code)
+                .values('TRC_SO_CODE', 'TRC_CU_EXT_PROGR')
+                .distinct()
+                .order_by('TRC_CU_EXT_PROGR')
+            )
 
-    # === Dropdown Phase ===
+    # --- Dropdown Phase ---
     phase = (
         WMS_TRACEABILITY.objects
         .values('TRC_FL_PHASE')
@@ -516,7 +603,7 @@ def traceability_by_cu(request):
         .order_by('TRC_FL_PHASE')
     )
 
-    # === Dropdown Date + Shift ===
+    # --- Dropdown Date + Shift ---
     date_shift_raw = (
         WMS_TRACEABILITY.objects
         .annotate(date=TruncDate('TRC_START_TIME'))
@@ -539,22 +626,22 @@ def traceability_by_cu(request):
         for item in date_shift_raw if item['shift']
     ]
 
-    # === Data Traceability ===
-    traceability_raw = []
+    # --- Data Traceability ---
     traceability_raw_cu = []
     if start_date and end_date:
-        mat_code_subquery = MD_MATERIALS.objects.filter(
-            MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')
-        ).values('MAT_CODE')[:1]
+        so_code_query = WMS_TRACEABILITY_CU.objects.filter(
+            SO_CODE=OuterRef('TRC_SO_CODE')
+        ).values('SO_CODE')[:1]
 
         wm_name_subquery = MD_WORKERS.objects.filter(
             WM_CODE=OuterRef('TRC_WM_CODE')
         ).values('WM_NAME')[:1]
 
         traceability_qs = WMS_TRACEABILITY.objects.filter(
-            TRC_START_TIME__date__range=(start_date, end_date)
+            TRC_START_TIME__date__range=(start_date, end_date),
+            TRC_SO_CODE__in=allowed_so_codes
         ).annotate(
-            MAT_CODE=Subquery(mat_code_subquery),
+            MAT_CODE=Subquery(so_code_query),
             WM_NAME=Subquery(wm_name_subquery),
         )
 
@@ -581,44 +668,8 @@ def traceability_by_cu(request):
                 'WM_NAME',
             )
         )
-
-    traceability_tree = []
-
-    if traceability_raw_cu:
-        roots = set((item['TRC_SO_CODE'], item['TRC_CU_EXT_PROGR']) for item in traceability_raw_cu)
-
-        containment_data = WMS_TRACEABILITY_CU.objects.filter(
-            SO_CODE__in=[so for so, cu in roots]
-        ).values('SO_CODE', 'CU_EXT_PROGR', 'CHILD_CU_CODE')
-
-        cu_map = {}
-        for cu in containment_data:
-            key = (cu['SO_CODE'], cu['CU_EXT_PROGR'])
-            cu_map.setdefault(key, []).append(cu['CHILD_CU_CODE'])
-
-        for root in roots:
-            so_code, cu_ext_progr = root
-            key_display = f"{so_code} - {cu_ext_progr}"
-
-            root_data = next((item for item in traceability_raw if item['TRC_SO_CODE'] == so_code and item['TRC_CU_EXT_PROGR'] == cu_ext_progr), None)
-
-            traceability_tree.append({
-                'type': 'root',
-                'key': key_display,
-                'level': 0,
-                **(root_data if root_data else {})
-            })
-            children_cu_codes = cu_map.get(root, [])
-            for item in traceability_raw:
-                if item['TRC_SO_CODE'] == so_code and item['TRC_CU_EXT_PROGR'] in children_cu_codes:
-                    traceability_tree.append({
-                        'type': 'child',
-                        'parent_key': key_display,
-                        'level': 1,
-                        **item
-                    })
-
-    # === Mengambil Data CU dan Materials ===
+    
+    # --- Data CU dan Materials ---
     data_cu = None
     materials = None
 
@@ -626,8 +677,7 @@ def traceability_by_cu(request):
         data_cu = WMS_TRACEABILITY.objects.filter(
             TRC_SO_CODE=so_code,
             TRC_CU_EXT_PROGR=cu_ext
-
-    ).order_by('-TRC_START_TIME').first()
+        ).order_by('-TRC_START_TIME').first()
 
     if data_cu:
         materials = MD_MATERIALS.objects.filter(
@@ -638,6 +688,42 @@ def traceability_by_cu(request):
     if cu_ext:
         get_materials = MD_MATERIALS.objects.filter(MAT_CODE=cu_ext).first()
 
+    # --- Traceability Tree (line by materials + child )---
+    traceability_tree = []
+
+    if traceability_raw_cu:
+        roots = set((item['TRC_SO_CODE'], item['TRC_CU_EXT_PROGR']) for item in traceability_raw_cu)
+
+        cu_data = WMS_TRACEABILITY_CU.objects.filter(
+            SO_CODE__in=[so for so, cu in roots]
+        ).values('SO_CODE', 'CU_EXT_PROGR', 'CHILD_CU_CODE')
+
+        cu_map = {}
+        for cu in cu_data:
+            key = (cu['SO_CODE'], cu['CU_EXT_PROGR'])
+            cu_map.setdefault(key, []).append(cu['CHILD_CU_CODE'])
+
+        for root in roots:
+            so_code, cu_ext_progr = root
+            key_display = f"{so_code} - {cu_ext_progr}"
+            root_data = next((item for item in traceability_raw_cu if item['TRC_SO_CODE'] == so_code and item['TRC_CU_EXT_PROGR'] == cu_ext_progr), None)
+            traceability_tree.append({
+                'type': 'root',
+                'key': key_display,
+                'level': 0,
+                **(root_data if root_data else {})
+            })
+            children_cu_codes = cu_map.get(root, [])
+            for item in traceability_raw_cu:
+                if item['TRC_SO_CODE'] == so_code and item['TRC_CU_EXT_PROGR'] in children_cu_codes:
+                    traceability_tree.append({
+                        'type': 'child',
+                        'parent_key': key_display,
+                        'level': 1,
+                        **item
+                    })
+
+    # --- Context untuk Template ---
     context = {
         'sources': sources,
         'cu_list': cu_list,
@@ -651,7 +737,7 @@ def traceability_by_cu(request):
         'mat_info': mat_info,
         'get_materials': get_materials,
         'data_cu': data_cu,
-        'materials' : materials,
+        'materials': materials,
     }
     return render(request, 'traceability_by_cu.html', context)
 
@@ -660,43 +746,53 @@ def traceability_by_cu(request):
 
 
 
-# =========================== Traceability By Materials =======================
+
+
+
+
+
+
+
+
+# =========================== TRACEABILITY BY MATERIALS =======================
 def traceability_by_materials(request):
+    # Filter SFC yang diperbolehkan
+    allowed_sfc_code = ['C0', 'CC', 'CE', 'CP', 'CX', 'FB', 'RC', 'TB', 'TT']
+
+    # Ambil parameter dari query string
     sfc_code = request.GET.get('sfc_code')
     mat_code = request.GET.get('mat_code')
-    start_date_raw = request.GET.get('start_date')  # format: 2025-09-01|2
-    end_date_raw = request.GET.get('end_date')      # format: 2025-09-01|2
+    start_date_raw = request.GET.get('start_date')
+    end_date_raw = request.GET.get('end_date')
     trc_fl_phase = request.GET.get('trc_fl_phase')
 
-# Date|Shift
+    # --- Helper parsing date|shift ---
     def parse_date_shift(raw_value):
         try:
             date_part, shift_part = raw_value.split('|')
             return date_part, shift_part
         except Exception:
             return None, None
-        
-    start_date, _ = parse_date_shift(start_date_raw)
-    end_date, _ = parse_date_shift(end_date_raw)
+
+    start_date_str, _ = parse_date_shift(start_date_raw) if start_date_raw else (None, None)
+    end_date_str, _ = parse_date_shift(end_date_raw) if end_date_raw else (None, None)
 
     try:
-        if start_date and end_date:
-            start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
-            end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
-        else:
-            start_date = end_date = None
+        start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date() if start_date_str else None
+        end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date() if end_date_str else None
     except ValueError:
         start_date = end_date = None
 
-    # Dropdown: SFC (Semi Finished Code)
+    # --- Dropdown: SFC (Semi Finished Code) ---
     sfc_list = (
         MD_SEMI_FINISHED_CLASSES.objects
+        .filter(SFC_CODE__in=allowed_sfc_code)
         .values('SFC_CODE', 'SFC_DESC')
         .distinct()
         .order_by('SFC_CODE')
     )
 
-    # Dropdown: Materials
+    # --- Dropdown: Materials ---
     material_list = (
         MD_MATERIALS.objects
         .values('MAT_CODE', 'MAT_SAP_CODE', 'MAT_VARIANT', 'CNT_CODE', 'MAT_DESC')
@@ -704,7 +800,7 @@ def traceability_by_materials(request):
         .order_by('MAT_CODE')
     )
 
-    # Dropdown: Traceability Phase
+    # --- Dropdown: Traceability Phase ---
     phase = (
         WMS_TRACEABILITY.objects
         .values('TRC_FL_PHASE')
@@ -712,7 +808,7 @@ def traceability_by_materials(request):
         .order_by('TRC_FL_PHASE')
     )
 
-    # Dropdown: Date + Shift
+    # --- Dropdown: Date + Shift ---
     date_shift_raw = (
         WMS_TRACEABILITY.objects
         .annotate(date=TruncDate('TRC_START_TIME'))
@@ -735,8 +831,8 @@ def traceability_by_materials(request):
         for item in date_shift_raw if item['shift']
     ]
 
-    # Ambil data traceability
-    traceability_raw_mat = []
+    # --- Ambil Data Traceability ---
+    traceability_raw = []
 
     if start_date and end_date:
         mat_code_subquery = MD_MATERIALS.objects.filter(
@@ -748,7 +844,8 @@ def traceability_by_materials(request):
         ).values('WM_NAME')[:1]
 
         traceability_qs = WMS_TRACEABILITY.objects.filter(
-            TRC_START_TIME__date__range=(start_date, end_date)
+            TRC_START_TIME__date__range=(start_date, end_date),
+            TRC_SFC_CODE__in=allowed_sfc_code  # sfc filter
         ).annotate(
             MAT_CODE=Subquery(mat_code_subquery),
             WM_NAME=Subquery(wm_name_subquery),
@@ -763,28 +860,28 @@ def traceability_by_materials(request):
         if trc_fl_phase:
             traceability_qs = traceability_qs.filter(TRC_FL_PHASE=trc_fl_phase)
 
-        traceability_raw_mat = list(
+        traceability_raw = list(
             traceability_qs.values(
                 'TRC_PP_CODE',
                 'TRC_MCH_CODE',
                 'TRC_SO_CODE',
+                'TRC_SFC_CODE',
                 'TRC_MAT_SAP_CODE',
                 'TRC_WM_CODE',
                 'TRC_START_TIME',
                 'TRC_END_TIME',
                 'TRC_CU_EXT_PROGR',
-                'TRC_SFC_CODE',
                 'MAT_CODE',
                 'WM_NAME',
-            
             )
         )
 
+    # --- Context untuk Template ---
     context = {
         'sfc_list': sfc_list,
         'material_list': material_list,
         'phase': phase,
-        'traceability_raw_mat' : traceability_raw_mat,
+        'traceability_raw': traceability_raw,
         'date_shift_choices': date_shift_choices,
         'selected_sfc': sfc_code,
         'selected_mat': mat_code,
