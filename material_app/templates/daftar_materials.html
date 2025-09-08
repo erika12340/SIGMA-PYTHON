@@ -57,7 +57,7 @@
             <div class="col-md-6">
                 <label for="sfc" class="form-label fw-bold">Semi Finishing :</label>
                 <select name="sfc_code" id="sfc" class="form-select" onchange="this.form.submit()">
-                    <option value="">-- Pilih SFC --</option>
+                    <option value="">-- Select SFC --</option>
                     {% for sfc in sfc_list %}
                     <option value="{{ sfc.SFC_CODE }}" {% if sfc.SFC_CODE == selected_sfc %}selected{% endif %}>
                         {{ sfc.SFC_CODE }} - {{ sfc.SFC_DESC }}
@@ -68,7 +68,7 @@
             <div class="col-md-6">
                 <label for="mat" class="form-label fw-bold">IP Materials :</label>
                 <select name="mat_info" id="mat" class="form-select" onchange="this.form.submit()">
-                    <option value="">-- Pilih Material --</option>
+                    <option value="">-- Select Material --</option>
                     {% for m in materials %}
                     <option value="{{ m.MAT_CODE }}|{{ m.MAT_SAP_CODE }}|{{ m.MAT_VARIANT }}|{{ m.CNT_CODE }}"
                         {% if selected_mat_info == m.MAT_CODE|stringformat:"s"|add:"|"|add:m.MAT_SAP_CODE|add:"|"|add:m.MAT_VARIANT|add:"|"|add:m.CNT_CODE %}selected{% endif %}>

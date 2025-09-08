@@ -52,15 +52,15 @@
 
 <!-- Container Box -->
 <div class="container">
-    <h3 style="margin-left: 30px ;">By Containment Unit</h3>
-    <!--============================== TAB: By CU ===================================-->
+    <h3 style="margin-left: 30px ;">By Containment Unit (CU)</h3>
     <div class="container mt-4">
         <div class="card mb-4 shadow-sm">
             <div class="card-body">
+
                 <!-- Filter Source -->
-                <form method="get" action="{% url 'traceability_by_cu' %}" class="row g-3" id="filterForm">
+                <form method="get" action="traceability_by_cu" class="row g-3" id="filterForm">
                     <div class="col-md-4">
-                        <label for="source" class="form-label fw-bold">Source:</label>
+                        <label for="source" class="form-label fw-bold">Source :</label>
                         <select name="source_code" id="source" class="form-select" onchange="this.form.submit()">
                             <option value="">-- Pilih Source --</option>
                             {% for source in sources %}
@@ -74,13 +74,13 @@
 
                     <!-- Filter Containment Unit -->
                     <div class="col-md-4">
-                        <label for="mat" class="form-label fw-bold">Containment Unit:</label>
+                        <label for="mat" class="form-label fw-bold">Containment Unit :</label>
                         <select name="mat_info" id="trc" class="form-select" onchange="this.form.submit()">
                             <option value="">-- Pilih Containment --</option>
                             {% for cu in cu_list %}
                             <option value="{{ cu.TRC_SO_CODE }}|{{ cu.TRC_CU_EXT_PROGR }}"
                                 {% if mat_info == cu.TRC_SO_CODE|stringformat:"s"|add:"|"|add:cu.TRC_CU_EXT_PROGR|stringformat:"s" %}selected{% endif %}>
-                                {{ cu.TRC_SO_CODE }} - {{ cu.TRC_CU_EXT_PROGR }}
+                                {{ cu.TRC_SO_CODE }}{{ cu.TRC_CU_EXT_PROGR }}
                             </option>
                             {% endfor %}
                         </select>
@@ -92,7 +92,6 @@
                         <select name="trc_fl_phase" id="trc_fl_phase" class="form-select" onchange="this.form.submit()">
                             <option value="">-- Pilih Traceability Phase --</option>
                             {% for p in phase %}
-
                             <option value="{{ p.TRC_FL_PHASE }}"
                                 {% if p.TRC_FL_PHASE == selected_phase %}selected{% endif %}>
                                 {% if p.TRC_FL_PHASE == "C" %}
@@ -120,6 +119,7 @@
                             {% endfor %}
                         </select>
                     </div>
+
                     <div class="col-md-4">
                         <label for="end_date" class="form-label fw-bold">To :</label>
                         <select name="end_date" id="end_date" class="form-select" onchange="this.form.submit()">
@@ -133,7 +133,7 @@
                     </div>
                 </form>
                 <div class="col-md-12 text-end">
-                    <a href="{% url 'traceability_by_cu' %}" class="btn btn-secondary"> Reset </a>
+                    <a href="traceability_by_cu" class="btn btn-secondary"> Reset </a>
                 </div>
             </div>
         </div>
@@ -146,13 +146,13 @@
                         <div class="col-md-6">
                             <label class="form-label">Containment Unit (CU)</label>
                             <input type="text" class="form-control"
-                                value="{% if cu_ext %}{{ cu_ext.TRC_SO_CODE }}-{{ cu_ext.TRC_CU_EXT_PROGR }}{% endif %}"
+                                value="{% if data_cu %}{{ data_cu.TRC_SO_CODE }}{{ data_cu.TRC_CU_EXT_PROGR }}{% endif %}"
                                 readonly>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Materials</label>
                             <input type="text" class="form-control"
-                                value="{% if materials %}{{ materials.IP_CODE }} - {{ materials.MAT_SAP_CODE }} - {{ materials.MAT_VARIANT }} - {{ materials.CNT_CODE }}{% endif %}"
+                                value="{% if materials %}{{ materials.MAT_CODE }} - {{ materials.MAT_SAP_CODE }} - {{ materials.MAT_VARIANT }} - {{ materials.CNT_CODE }} - {{ materials.MAT_DESC }}{% endif %}"
                                 readonly>
                         </div>
                     </div>
@@ -161,15 +161,15 @@
         </div>
 
         <!-- Data Traceability By Containment Unit -->
-        {% if traceability_tree_cu %}
+        {% if traceability_raw_cu %}
         <div class="card">
             <div class="card-body">
-                <h5 class="card-title mb-3">Traceability Views By Containment Unit</h5>
+                <h5 class="card-title mb-3">Traceability Views</h5>
                 <div id="containment-tree">
                     {% for row in traceability_tree %}
                     <div class="containment-item level-{{ row.level|add:1 }} mb-1">
                         <button class="toggle-btn" data-id="{{ forloop.counter }}">▶</button>
-                        <strong>({{ row.TRC_PP_CODE }} {{ row.TRC_MCH_CODE }})</strong> -
+                        ({{ row.TRC_PP_CODE }} {{ row.TRC_MCH_CODE }})-
                         ({{ row.TRC_START_TIME|date:"Y-m-d H:i" }} -
                         {{ row.TRC_END_TIME|date:"Y-m-d H:i" }}) -
                         ({{ row.TRC_WM_CODE }} - {{ row.WM_NAME }})

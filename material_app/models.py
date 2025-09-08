@@ -1,6 +1,6 @@
 from django.db import models
 
-# -------------- 1. Model SF ------------
+# -------------- 1. MD_SEMI+FINISHED_CLASSES ------------
 class MD_SEMI_FINISHED_CLASSES(models.Model):
     SFC_CODE = models.CharField(max_length=9, primary_key=True)
     SFC_DESC = models.CharField(max_length=3)
@@ -12,8 +12,7 @@ class MD_SEMI_FINISHED_CLASSES(models.Model):
     def __str__(self):
         return f"{self.SFC_CODE} - {self.SFC_DESC}"
 
-
-# -------------- 2. Model Material -------------
+# -------------- 2. MD_MATERIALS -------------
 class MD_MATERIALS(models.Model):
     MAT_SAP_CODE = models.CharField(max_length=9, primary_key=True)
     MAT_VARIANT = models.CharField(max_length=10)
@@ -24,7 +23,6 @@ class MD_MATERIALS(models.Model):
     MAT_MEASURE_UNIT = models.CharField(max_length=10)
     SFC_CODE = models.ForeignKey('MD_SEMI_FINISHED_CLASSES', db_column='SFC_CODE', on_delete=models.SET_NULL, null=True)
 
-
     class Meta:
         managed = False
         db_table = 'MD_MATERIALS'
@@ -33,7 +31,7 @@ class MD_MATERIALS(models.Model):
         )
 
 
-# -------------- 3. Model BOM --------------
+# -------------- 3. MD_BOM --------------
 class MD_BOM(models.Model):
     MAT_SAP_CODE = models.CharField(max_length=9, primary_key=True)
     MAT_VARIANT = models.CharField(max_length=10)
@@ -54,7 +52,7 @@ class MD_BOM(models.Model):
         )
 
 
-# -------------- 4. Model Produksi --------------
+# -------------- 4. DC_PRODUCTION_DATA --------------
 class DC_PRODUCTION_DATA(models.Model):
     MAT_SAP_CODE = models.CharField(max_length=9, primary_key=True)
     PP_CODE = models.CharField(max_length=3)
@@ -75,6 +73,7 @@ class DC_PRODUCTION_DATA(models.Model):
         unique_together = (
             ('MAT_SAP_CODE', 'MAT_VARIANT', 'CNT_CODE'),
         )
+
 # -------------- Model 5. MD_PRODUCTION_PHASES --------------
 class MD_PRODUCTION_PHASES(models.Model):
     PP_CODE = models.CharField(max_length=3, primary_key=True)
@@ -83,7 +82,6 @@ class MD_PRODUCTION_PHASES(models.Model):
     class Meta:
         managed = False
         db_table = 'MD_PRODUCTION_PHASES'
-
 
 # -------------- 6. Model MD_WORKERS --------------
 class MD_WORKERS(models.Model):
@@ -121,7 +119,7 @@ class WMS_TRACEABILITY_CU(models.Model):
     CHILD_CU_CODE = models.CharField (max_length=20)
     CHILD_SO_CODE = models.CharField (max_length=4)
     CHILD_CU_EXT_PROGR = models.CharField (max_length=6)
-    
+
     class Meta:
         managed = False
         db_table = 'WMS_TRACEABILITY_CU'
@@ -146,6 +144,4 @@ class MD_SOURCES(models.Model):
     class Meta:
         managed = False
         db_table = 'MD_SOURCES'
-
-
-
+        

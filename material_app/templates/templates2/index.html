@@ -1,43 +1,44 @@
 {% load static %}
-
 <!doctype html>
 <html lang="en" class="layout-menu-fixed layout-compact" data-assets-path="../assets/"
   data-template="vertical-menu-template-free">
 
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport"
-    content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <meta name="robots" content="noindex, nofollow" />
-  <!-- Sistem Informasi Akomodasi Produksi Material -->
   <title>SIGMA</title>
 
   <!-- Custom CSS -->
   <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+  <!-- Bootstrap 5.3.2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-..." crossorigin="anonymous" />
 
-  <!-- fonts -->
-  <meta name="description" content="" />
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&ampdisplay=swap"
-    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
-  <!-- boostrap di folder static -->
+  <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+
+  <!-- Vendor CSS -->
   <link rel="stylesheet" href="{% static 'assets/vendor/fonts/iconify-icons.css' %}" />
   <link rel="stylesheet" href="{% static 'assets/vendor/libs/node-waves/node-waves.css' %}" />
   <link rel="stylesheet" href="{% static 'assets/vendor/css/core.css' %}" />
-  <link rel="stylesheet" href="{% static '/assets/css/demo.css' %}" />
+  <link rel="stylesheet" href="{% static 'assets/css/demo.css' %}" />
   <link rel="stylesheet" href="{% static 'assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css' %}" />
   <link rel="stylesheet" href="{% static 'assets/vendor/libs/apex-charts/apex-charts.css' %}" />
+
+  <!-- Select2 -->
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
   <link rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+
+  <!-- jQuery -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-
-
 </head>
 
 <body>
@@ -47,56 +48,58 @@
       <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme"
         style="background-color: rgb(255, 255, 255);">
         <div class="app-brand demo">
-          <a href="index.html" class="app-brand-link">
+          <a href="/" class="app-brand-link">
             <span class="app-brand-text demo menu-text fw-semibold mt-8" style="text-align: center;">SIGMA
-              <hr style="width: 195px;"></span>
+              <hr style="width: 195px;">
+            </span>
           </a>
         </div>
         <div class="menu-inner-shadow"></div>
         <ul class="menu-inner py-1">
-
           <li class="menu-item" id="menu-dashboard">
-            <a href="/" class="menu-link md-2">
+            <a href="/" class="menu-link">
               <i class="bi bi-speedometer"></i>
-              <div data-i18n="Icons">Dashboard</div>
+              <div>Dashboard</div>
             </a>
           </li>
 
           <li class="menu-item" id="daftar_materials">
             <a href="daftar_materials" class="menu-link">
               <i class="bi bi-bar-chart-line-fill"></i>
-              <div data-i18n="Icons">Materials</div>
+              <div>Materials</div>
             </a>
           </li>
+
           <li class="menu-item" id="data_produksi">
             <a href="data_produksi" class="menu-link">
               <i class="bi bi-folder2-open"></i>
-              <div data-i18n="Icons">Production</div>
+              <div>Production</div>
             </a>
           </li>
 
+          <!-- Dropdown Menu -->
           <li class="menu-item dropdown" id="traceability">
-            <a href="#" class="menu-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+            <a class="menu-link dropdown-toggle" href="#" id="dropdownMenuLink" role="button" data-bs-toggle="dropdown"
+              aria-expanded="false">
               <i class="bi bi-clipboard-data"></i>
-              <div data-i18n="Icons">Traceability Views</div>
+              <div>Traceability Views</div>
             </a>
-            <ul class="dropdown-menu">
-              <li id="by_machine">
-                <a class="dropdown-item" href="traceability_by_machine">By Materials</a>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+              <li id="traceability_by_machine">
+                <a class="dropdown-item" href="traceability_by_machine">By Machine</a>
               </li>
-              <li id="by_cu">
-                <a class="dropdown-item " href="traceability_by_cu">By CU</a>
+              <li id="traceability_by_cu">
+                <a class="dropdown-item" href="traceability_by_cu">By CU</a>
               </li>
-              <li id="by_materials">
-                <a class="dropdown-item" href="url 'traceability_by_materials">By Materials</a>
+              <li id="traceability_by_materials">
+                <a class="dropdown-item" href="traceability_by_materials">By Materials</a>
               </li>
             </ul>
           </li>
-
         </ul>
       </aside>
 
-      <!-- NAVBAR-->
+      <!-- Page Content -->
       <div class="layout-page">
         <nav
           class="layout-navbar container-xxl navbar-detached navbar navbar-expand-xl align-items-center bg-navbar-theme"
@@ -107,21 +110,24 @@
             </a>
           </div>
           <div class="navbar-nav-right d-flex align-items-center justify-content-end" id="navbar-collapse">
+            <!-- navbar content -->
           </div>
         </nav>
-        <!-- /NAVBAR-->
-
-        {% block content %} {% endblock %}
-
+        {% block content %}{% endblock %}
       </div>
     </div>
   </div>
   <div class="layout-overlay layout-menu-toggle"></div>
-  </div>
 
-  <!-- Boostrap JS -->
+  <!-- JS & Plugins -->
   <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
   <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap4.min.js"></script>
+
+  <!-- Bootstrap 5.3.2 JS Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-..."
+    crossorigin="anonymous"></script>
+
+  <!-- JS in folder -->
   <script src="{% static 'assets/vendor/libs/jquery/jquery.js' %}"></script>
   <script src="{% static 'assets/vendor/libs/popper/popper.js' %}"></script>
   <script src="{% static 'assets/vendor/js/bootstrap.js' %}"></script>
@@ -132,26 +138,26 @@
   <script src="{% static 'assets/js/main.js' %}"></script>
   <script src="{% static 'assets/js/dashboards-analytics.js' %}"></script>
 
-  <!-- Aktif Menu -->
+  <!-- Aktifkan Menu Sesuai Halaman -->
   <script>
     const currentUrl = window.location.pathname;
-    if (currentUrl == '/') {
+    if (currentUrl === '/') {
       document.getElementById('menu-dashboard').classList.add('active');
-    } else if (currentUrl == '/daftar_materials') {
+    } else if (currentUrl.includes('/daftar_materials')) {
       document.getElementById('daftar_materials').classList.add('active');
-    } else if (currentUrl == '/data_produksi') {
+    } else if (currentUrl.includes('/data_produksi')) {
       document.getElementById('data_produksi').classList.add('active');
-    } else if (currentUrl == '/traceability') {
+    } else if (currentUrl.includes('/traceability_by_machine')) {
       document.getElementById('traceability').classList.add('active');
-    } else if (currentUrl == '/traceability_by_machine') {
       document.getElementById('traceability_by_machine').classList.add('active');
-    } else if (currentUrl == '/traceability_by_cu') {
+    } else if (currentUrl.includes('/traceability_by_cu')) {
+      document.getElementById('traceability').classList.add('active');
       document.getElementById('traceability_by_cu').classList.add('active');
-    } else if (currentUrl == '/traceability_by_materials') {
+    } else if (currentUrl.includes('/traceability_by_materials')) {
+      document.getElementById('traceability').classList.add('active');
       document.getElementById('traceability_by_materials').classList.add('active');
     }
   </script>
-
 </body>
 
 </html>
