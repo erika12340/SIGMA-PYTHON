@@ -532,17 +532,19 @@ def traceability_by_machine(request):
 
 # ===================== Traceability By CU ======================
 def traceability_by_cu(request):
-    # filter data so_Code
+    # -------------- FILTER DATA SO_CODE ---------------
     allowed_so_codes = ['00CE', '00CP', '00CX', '00FB', '00RC', '00TB', '00TT', 'SM11', 'SM21', 'TLV1']
 
-    # ambil filter
+
+    # ------------- MENGAMBIL DATA TERFILTER ------------
     so_code = request.GET.get('source_code')
     mat_info = request.GET.get('mat_info')
     start_date_raw = request.GET.get('start_date')
     end_date_raw = request.GET.get('end_date')
     trc_fl_phase = request.GET.get('trc_fl_phase')
 
-    # Ambil cu_ext dari mat_info jika ada (format: SO_CODE|CU_EXT_PROGR)
+
+    # ------------ MENGAMBIL DATA CU_EXT (DATA DARI DROPDOWN) --------------
     cu_ext = None
     if mat_info:
         try:
@@ -550,7 +552,8 @@ def traceability_by_cu(request):
         except ValueError:
             pass
 
-    # Helper function untuk parsing "YYYY-MM-DD|SHIFT"
+
+    # ------------ TAMPILAN DROPDOWN TANGGAL DAN SHIFT ----------------
     def parse_date_shift(raw_value):
         try:
             date_part, shift_part = raw_value.split('|')
@@ -568,7 +571,8 @@ def traceability_by_cu(request):
         start_date = None
         end_date = None
 
-    # --- Dropdown Sources ---
+
+    # --------------- DROPDOWN SOURCES ------------------
     sources = (
         WMS_TRACEABILITY.objects
         .filter(TRC_SO_CODE__in=allowed_so_codes)
@@ -582,7 +586,8 @@ def traceability_by_cu(request):
         .order_by('TRC_SO_CODE')
     )
 
-    # --- Dropdown Containment Unit ---
+
+    # ------------ DROPDOWN CONTAINMENT UNIT (CU) ------------
     cu_list = []
     if so_code:
         # Pastikan so_code termasuk allowed_so_codes
@@ -595,7 +600,8 @@ def traceability_by_cu(request):
                 .order_by('TRC_CU_EXT_PROGR')
             )
 
-    # --- Dropdown Phase ---
+
+    # ------- DROPDOWN PHASE--------
     phase = (
         WMS_TRACEABILITY.objects
         .values('TRC_FL_PHASE')
@@ -603,7 +609,8 @@ def traceability_by_cu(request):
         .order_by('TRC_FL_PHASE')
     )
 
-    # --- Dropdown Date + Shift ---
+
+    # --- ----------- DROPDOWN DATE AND SHIFT ----------- ---
     date_shift_raw = (
         WMS_TRACEABILITY.objects
         .annotate(date=TruncDate('TRC_START_TIME'))
@@ -617,7 +624,6 @@ def traceability_by_cu(request):
         .distinct()
         .order_by('-date')
     )
-
     date_shift_choices = [
         {
             'value': f"{item['date']}|{item['shift']}",
@@ -626,7 +632,8 @@ def traceability_by_cu(request):
         for item in date_shift_raw if item['shift']
     ]
 
-    # --- Data Traceability ---
+
+    # ----------- DATA BY CU ------------
     traceability_raw_cu = []
     if start_date and end_date:
         so_code_query = WMS_TRACEABILITY_CU.objects.filter(
@@ -654,6 +661,7 @@ def traceability_by_cu(request):
         if trc_fl_phase:
             traceability_qs = traceability_qs.filter(TRC_FL_PHASE=trc_fl_phase)
 
+        # --------- DATA LINE -----------
         traceability_raw_cu = list(
             traceability_qs.values(
                 'TRC_PP_CODE',
@@ -668,8 +676,9 @@ def traceability_by_cu(request):
                 'WM_NAME',
             )
         )
-    
-    # --- Data CU dan Materials ---
+
+
+    # --------- MENGAMBIL DATA CU DAN MATERIALS ----------
     data_cu = None
     materials = None
 
@@ -688,7 +697,8 @@ def traceability_by_cu(request):
     if cu_ext:
         get_materials = MD_MATERIALS.objects.filter(MAT_CODE=cu_ext).first()
 
-    # --- Traceability Tree (line by materials + child )---
+
+    # ------------- TRACEABILITY VIEWS BY CU ------------------
     traceability_tree = []
 
     if traceability_raw_cu:
@@ -723,7 +733,8 @@ def traceability_by_cu(request):
                         **item
                     })
 
-    # --- Context untuk Template ---
+
+    # --- CONTEXT KE HTML ---
     context = {
         'sources': sources,
         'cu_list': cu_list,
@@ -756,17 +767,19 @@ def traceability_by_cu(request):
 
 # =========================== TRACEABILITY BY MATERIALS =======================
 def traceability_by_materials(request):
-    # Filter SFC yang diperbolehkan
+    # ----------------- FILTER SFC_CODE YANG TAMPIL ----------------------
     allowed_sfc_code = ['C0', 'CC', 'CE', 'CP', 'CX', 'FB', 'RC', 'TB', 'TT']
 
-    # Ambil parameter dari query string
+
+    # --------------- MENGAMBIL PARAMETER QUERY --------------------
     sfc_code = request.GET.get('sfc_code')
     mat_code = request.GET.get('mat_code')
     start_date_raw = request.GET.get('start_date')
     end_date_raw = request.GET.get('end_date')
     trc_fl_phase = request.GET.get('trc_fl_phase')
 
-    # --- Helper parsing date|shift ---
+
+    # --------------- DATE|SHIFT -----------------
     def parse_date_shift(raw_value):
         try:
             date_part, shift_part = raw_value.split('|')
@@ -783,7 +796,8 @@ def traceability_by_materials(request):
     except ValueError:
         start_date = end_date = None
 
-    # --- Dropdown: SFC (Semi Finished Code) ---
+
+    # ---------------------- DROPDOWN SFC CODE -----------------------
     sfc_list = (
         MD_SEMI_FINISHED_CLASSES.objects
         .filter(SFC_CODE__in=allowed_sfc_code)
@@ -792,7 +806,8 @@ def traceability_by_materials(request):
         .order_by('SFC_CODE')
     )
 
-    # --- Dropdown: Materials ---
+
+    # ------------- DROPDOWN MATERIALS --------------
     material_list = (
         MD_MATERIALS.objects
         .values('MAT_CODE', 'MAT_SAP_CODE', 'MAT_VARIANT', 'CNT_CODE', 'MAT_DESC')
@@ -800,7 +815,8 @@ def traceability_by_materials(request):
         .order_by('MAT_CODE')
     )
 
-    # --- Dropdown: Traceability Phase ---
+
+    # ------------- DROPDOWN TRACEABILITY PHASE ----------
     phase = (
         WMS_TRACEABILITY.objects
         .values('TRC_FL_PHASE')
@@ -808,7 +824,8 @@ def traceability_by_materials(request):
         .order_by('TRC_FL_PHASE')
     )
 
-    # --- Dropdown: Date + Shift ---
+
+    # ---------------DROPDOWN DATE AND SHIFT --------------
     date_shift_raw = (
         WMS_TRACEABILITY.objects
         .annotate(date=TruncDate('TRC_START_TIME'))
@@ -822,7 +839,6 @@ def traceability_by_materials(request):
         .distinct()
         .order_by('-date')
     )
-
     date_shift_choices = [
         {
             'value': f"{item['date']}|{item['shift']}",
@@ -831,7 +847,8 @@ def traceability_by_materials(request):
         for item in date_shift_raw if item['shift']
     ]
 
-    # --- Ambil Data Traceability ---
+
+    # -------------- LINE TRACEABILITY BY MATERIALS + CHILDS -----------------
     traceability_raw = []
 
     if start_date and end_date:
@@ -845,8 +862,9 @@ def traceability_by_materials(request):
 
         traceability_qs = WMS_TRACEABILITY.objects.filter(
             TRC_START_TIME__date__range=(start_date, end_date),
-            TRC_SFC_CODE__in=allowed_sfc_code  # sfc filter
+            TRC_SFC_CODE__in=allowed_sfc_code
         ).annotate(
+
             MAT_CODE=Subquery(mat_code_subquery),
             WM_NAME=Subquery(wm_name_subquery),
         )
@@ -876,7 +894,7 @@ def traceability_by_materials(request):
             )
         )
 
-    # --- Context untuk Template ---
+    # ------------- CONTEXT KE HTML ---------------
     context = {
         'sfc_list': sfc_list,
         'material_list': material_list,
