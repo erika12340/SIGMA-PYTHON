@@ -1,14 +1,11 @@
 {% extends "templates2/index.html" %}
 {% block content %}
 
-
 <style>
-    /* Semua material-item disembunyikan dulu */
     .material-item {
         display: none;
     }
 
-    /* Indentasi berdasarkan level */
     .level-1 {
         margin-left: 1em;
     }
@@ -50,16 +47,16 @@
     }
 </style>
 
-
-
-<!-- Container Box -->
 <div class="container">
-    <h3 style="margin-left: 30px ;">By Machine</h3>
+    <h3 style="margin-left: 30px;">By Machine</h3>
+
+    <!-- FILTER -->
     <div class="container mt-4">
         <div class="card mb-4 shadow-sm">
             <div class="card-body">
-                <!-- Form Produksi  -->
                 <form method="get" action="traceability_by_machine" class="row g-3" id="filterForm">
+
+                    <!-- Production Phase -->
                     <div class="col-md-4">
                         <label for="trc" class="form-label fw-bold">Production Phase :</label>
                         <select name="trc_code" id="trc" class="form-select" onchange="this.form.submit()">
@@ -73,7 +70,7 @@
                         </select>
                     </div>
 
-                    <!-- Form Mesin -->
+                    <!-- Machine -->
                     <div class="col-md-4">
                         <label for="mch_info" class="form-label fw-bold">Machine :</label>
                         <select name="mch_info" id="mch_info" class="form-select" onchange="this.form.submit()">
@@ -88,7 +85,7 @@
                         </select>
                     </div>
 
-                    <!-- Form Traceability Phase -->
+                    <!-- FL Phase -->
                     <div class="col-md-4">
                         <label for="mch_info" class="form-label fw-bold">FL Phase :</label>
                         <select name="trc_fl_phase" id="trc_fl_phase" class="form-select" onchange="this.form.submit()">
@@ -96,19 +93,16 @@
                             {% for p in phase %}
                             <option value="{{ p.TRC_FL_PHASE }}"
                                 {% if p.TRC_FL_PHASE == selected_phase %}selected{% endif %}>
-                                {% if p.TRC_FL_PHASE == "C" %}
-                                Consumed CU
-                                {% elif p.TRC_FL_PHASE == "P" %}
-                                Produced CU
-                                {% else %}
-                                {{ p.TRC_FL_PHASE }}
+                                {% if p.TRC_FL_PHASE == "C" %} Consumed CU
+                                {% elif p.TRC_FL_PHASE == "P" %} Produced CU
+                                {% else %} {{ p.TRC_FL_PHASE }}
                                 {% endif %}
                             </option>
                             {% endfor %}
                         </select>
                     </div>
 
-                    <!-- Form Tanggal -->
+                    <!-- Start Date -->
                     <div class="col-md-4">
                         <label for="start_date" class="form-label fw-bold">From :</label>
                         <select name="start_date" id="start_date" class="form-select" onchange="this.form.submit()">
@@ -122,6 +116,7 @@
                         </select>
                     </div>
 
+                    <!-- End Date -->
                     <div class="col-md-4">
                         <label for="end_date" class="form-label fw-bold">To :</label>
                         <select name="end_date" id="end_date" class="form-select" onchange="this.form.submit()">
@@ -135,28 +130,44 @@
                     </div>
                 </form>
 
-                <!-- Tombol Reset -->
-                <div class="col-md-12 text-end">
-                    <a href="traceability_by_machine" class="btn btn-secondary"> Reset </a>
+                <div class="col-md-12 text-end mt-2">
+                    <a href="traceability_by_machine" class="btn btn-secondary">Reset</a>
                 </div>
             </div>
         </div>
 
-        <!-- Line Daftar Traceability Berdasarkan Mesin-->
+        <!-- TRACEABILITY TREE -->
         {% if traceability_tree %}
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title mb-3">Traceability Views</h5>
                 <div id="material-tree">
                     {% for row in traceability_tree %}
-                    <div class="material-item level-{{ row.level|add:1 }} mb-1">
-                        <button class="toggle-btn" data-id="{{ forloop.counter }}">▶</button>
-                        <!-- memiliki status consumed -->
-                        ({{ row.TRC_SO_CODE }} {{ row.TRC_CU_EXT_PROGR }}) -
+                    <div class="material-item level-{{ row.level|add:1 }} mb-1" data-index="{{ forloop.counter }}"
+                        data-level="{{ row.level|add:1 }}">
+
+                        {% if row.level == 0 %}
+                        <button class="toggle-btn" data-index="{{ forloop.counter }}">▶</button>
+                        {% else %}
+                        <span style="display: inline-block; width: 20px;"></span>
+                        {% endif %}
+
+                        <!-- Baris 1 -->
+                        {{ row.TRC_SO_CODE }} {{ row.TRC_CU_EXT_PROGR }} -
                         {{ row.MAT_CODE }} -
                         {{ row.TRC_MAT_SAP_CODE }} -
-                        ({{ row.TRC_START_TIME|date:"Y-m-d H:i" }} - {{ row.TRC_END_TIME|date:"Y-m-d H:i" }}) -
+                        ({{ row.TRC_START_TIME }} - {{ row.TRC_END_TIME }}) -
                         ({{ row.TRC_WM_CODE }} - {{ row.WM_NAME }})
+
+                        <br>
+
+                        <!-- Baris 2 -->
+                        <div style="margin-left: 8px; background-color: rgb(245, 193, 255);">
+                            {{ row.TRC_PP_CODE }}
+                            {{ row.TRC_MCH_CODE }} -
+                            ({{ row.TRC_START_TIME }} - {{ row.TRC_END_TIME }}) -
+                            ({{ row.OPERATOR_PROD.WM_CODE }} - {{ row.OPERATOR_PROD.WM_NAME }})
+                        </div>
                     </div>
                     {% endfor %}
                 </div>
@@ -166,39 +177,43 @@
     </div>
 </div>
 
-
-
-<!-- JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous">
-</script>
-
-
-<!-- JS UNTUK LINE DATA MATERIAL -->
+<!-- SCRIPT TOGGLE CHILDREN -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        const toggleButtons = document.querySelectorAll('.toggle-btn');
-        toggleButtons.forEach(btn => {
-            btn.addEventListener('click', function () {
-                const current = this.closest('.material-item');
-                let next = current.nextElementSibling;
-                while (next && parseInt(next.className.match(/level-(\d+)/)[1]) > parseInt(
-                        current.className.match(/level-(\d+)/)[1])) {
-                    next.style.display = next.style.display === 'none' ? 'block' : 'none';
+        // Show only root level (level-1)
+        document.querySelectorAll(".material-item[data-level='1']").forEach(item => item.style.display =
+            "block");
+
+        document.querySelectorAll(".toggle-btn").forEach(btn => {
+            btn.addEventListener("click", function () {
+                const currentIndex = parseInt(this.dataset.index);
+                const currentItem = document.querySelector(`[data-index='${currentIndex}']`);
+                const currentLevel = parseInt(currentItem.dataset.level);
+                const isExpanding = this.textContent === "▶";
+
+                this.textContent = isExpanding ? "▼" : "▶";
+
+                let next = currentItem.nextElementSibling;
+                while (next && next.classList.contains("material-item")) {
+                    const nextLevel = parseInt(next.dataset.level);
+                    if (nextLevel <= currentLevel) break;
+
+                    if (isExpanding && nextLevel === currentLevel + 1) {
+                        next.style.display = "block";
+                    } else if (!isExpanding) {
+                        next.style.display = "none";
+                        const toggle = next.querySelector(".toggle-btn");
+                        if (toggle) toggle.textContent = "▶";
+                    }
+
                     next = next.nextElementSibling;
                 }
-                this.textContent = this.textContent === '▶' ? '▼' : '▶';
             });
         });
-
-        // Tampilkan level 1 saat load
-        const firstLevels = document.querySelectorAll('.level-1');
-        firstLevels.forEach(el => el.style.display = 'block');
     });
 </script>
 
-
-<!-- JS UNTUK FORM -->
+<!-- SELECT2 (jika kamu pakai) -->
 <script>
     $('#trc').select2();
     $('#mch_info').select2();

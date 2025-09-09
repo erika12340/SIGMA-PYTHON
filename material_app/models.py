@@ -119,6 +119,9 @@ class WMS_TRACEABILITY_CU(models.Model):
     CHILD_CU_CODE = models.CharField (max_length=20)
     CHILD_SO_CODE = models.CharField (max_length=4)
     CHILD_CU_EXT_PROGR = models.CharField (max_length=6)
+    PRODUCTION_DATE = models.CharField (max_length=8)
+    PP_CODE = models.CharField (max_length=3)
+    MCH_CODE = models.CharField (max_length=8)
 
     class Meta:
         managed = False

@@ -118,9 +118,13 @@
                 {% for row in material_data %}
                 <div class="material-item level-{{ row.level|add:1 }} mb-1">
                     <button class="toggle-btn" data-id="{{ forloop.counter }}">▶</button>
-                    <strong>{{ row.MT_CODE }}</strong> - {{ row.SFC_CODE }} ({{ row.SFC_DESC }}) - {{ row.MAT_CODE }} -
-                    {{ row.CHILD_MAT_SAP_CODE }} - {{ row.CHILD_CNT_CODE }} - {{ row.MAT_VARIANT }} - {{ row.MAT_DESC }}
-                    -
+                    <strong>{{ row.MT_CODE }}</strong> -
+                    {{ row.SFC_CODE }} ({{ row.SFC_DESC }}) -
+                    {{ row.MAT_CODE }} -
+                    {{ row.CHILD_MAT_SAP_CODE }} -
+                    {{ row.CHILD_CNT_CODE }} -
+                    {{ row.MAT_VARIANT }} -
+                    {{ row.MAT_DESC }} -
                     {{ row.BOM_QUANTITY }} {{ row.MAT_MEASURE_UNIT }} -
                     <small class="text-muted">({{ row.BV_STATUS }})</small>
                 </div>
