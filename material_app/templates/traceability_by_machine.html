@@ -103,6 +103,7 @@
                     </div>
 
                     <!-- Start Date -->
+                    <!-- Start Date -->
                     <div class="col-md-4">
                         <label for="start_date" class="form-label fw-bold">From :</label>
                         <select name="start_date" id="start_date" class="form-select" onchange="this.form.submit()">
@@ -128,6 +129,7 @@
                             {% endfor %}
                         </select>
                     </div>
+
                 </form>
 
                 <div class="col-md-12 text-end mt-2">
@@ -160,12 +162,10 @@
                         ({{ row.TRC_WM_CODE }} - {{ row.WM_NAME }})
 
                         <br>
-
                         <!-- Baris 2 -->
-                        <div style="margin-left: 8px; background-color: rgb(245, 193, 255);">
-                            {{ row.TRC_PP_CODE }}
-                            {{ row.TRC_MCH_CODE }} -
-                            ({{ row.TRC_START_TIME }} - {{ row.TRC_END_TIME }}) -
+                        <div style="margin-left: 8px; background-color: rgb(243, 199, 252);">
+                            {{ row.PP_CODE }} {{ row.MCH_CODE }} -
+                            ({{ row.PRODUCTION_DATE }}) -
                             ({{ row.OPERATOR_PROD.WM_CODE }} - {{ row.OPERATOR_PROD.WM_NAME }})
                         </div>
                     </div>
