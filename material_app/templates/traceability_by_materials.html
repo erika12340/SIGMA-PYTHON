@@ -149,12 +149,20 @@
                     {% for row in traceability_raw %}
                     <div class="material-item level-{{ row.level|add:1 }} mb-1">
                         <button class="toggle-btn" data-id="{{ forloop.counter }}">▶</button>
-                        ({{ row.TRC_SO_CODE }} {{ row.TRC_CU_EXT_PROGR }}) -
+                        <!-- Baris 1 -->
+                        {{ row.TRC_SO_CODE }} {{ row.TRC_CU_EXT_PROGR }} -
                         {{ row.MAT_CODE }} -
                         {{ row.TRC_MAT_SAP_CODE }} -
-                        ({{ row.TRC_START_TIME|date:"Y-m-d H:i" }} - {{ row.TRC_END_TIME|date:"Y-m-d H:i" }}) -
-                        ({{ row.TRC_WM_CODE }} - {{ row.WM_NAME }}) -
-                        {{ row.MAT_DESC }}
+                        ({{ row.TRC_START_TIME }} - {{ row.TRC_END_TIME }}) -
+                        ({{ row.TRC_WM_CODE }} - {{ row.WM_NAME }})
+
+                        <br>
+                        <!-- Baris 2 -->
+                        <div style="margin-left: 8px; background-color: rgb(249, 222, 255);">
+                            {{ row.PP_CODE }} {{ row.MCH_CODE }} -
+                            ({{ row.TRC_START_TIME }} - {{ row.TRC_END_TIME }}) -
+                            ({{ row.TRC_WM_CODE }} - {{ row.WM_NAME }})
+                        </div>
                     </div>
                     {% endfor %}
                 </div>

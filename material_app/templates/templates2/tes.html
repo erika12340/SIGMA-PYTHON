@@ -197,14 +197,57 @@
     return render(request, 'traceability_by_machine.html', context) -->
 
 
-
 <!-- 
+CATATAN ALUR BY MACHINE
 1. ada form production phase isinya TRC_PP_CODE(MODEL WMS_TRACEABILITY) dan PP_DESC (MD_PRODUCTION_PHASES) 
 2. ada form machine tampil berdasarkan form production phase yang terpilih isinya TRC_PP_CODE (MODEL WMS_TRACEABILITY)  dan  TRC_MCH_CODE (MODEL WMS_TRACEABILITY) 
 3. ada form fl phase isinya TRC_FL_PHASE 
-4. ada form tanggal dari TRC_START_TIME dan TRC_END_TIME  (dari model WMS_TRACEABILITY) kalo di ketentuan tampilannya kalo shift 1 (00-08) shift 2 (08-16), shift 3 (16-00)
-5. lalu muncul traceability views. berdasarkan ke empat form tersebut, berdasarkan TRC_PP_CODE,TRC_MSH_CODE, TRC_FL_PHASE, DAN TANGGAL TANGGALNYA
-6. format traceabily views nya tiap level ada 2 baris yaitu baris pertama  {{ row.TRC_SO_CODE }} {{ row.TRC_CU_EXT_PROGR }}-{{ row.MAT_CODE }} - {{ row.TRC_MAT_SAP_CODE }} -({{ row.TRC_START_TIME }} - {{ row.TRC_END_TIME }}) - ({{ row.TRC_WM_CODE }} - {{ row.WM_NAME }}) ==> data berada di model WMS_TRACEABILITY, dan kalo yang WM_NAME ada di model (MD_WORKERS)
-7. format baris 2 itu ngambil dari model WMS_TRACEABILITY_CU berdasarkan TRC_CU_EXT_PROGR yang ada di baris 1, di join dengan CU_EXT_PROGR di model WMS_TRACEABILITY_CU
-8. sedangkan untuk childnya. diambil dari TRC_CU_EXT_PROGR join dengan WMS_TRACEABILITY_CU (yang apabila di wms_traceability_cu TRC_CU_EXT_PROGR ADALAH CU_EXT_PROGR ) LALU ada CHILD_CU_EXT_PROGR dan itu lah yang menjadi anak. lalu cari anaknya di induknya apabila masih memiliki anak tampil lagi sampai habis
+4. dan ada form tanggal TRC_START_TIME dan TRC_END_TIME di model WMS_TRACEABILITY dan tambahan shift dimana time pada kolom TRC_START_TIME dan TRC_END_TIME di kompress jadi shift 1,2,3 dengan ketentuan jam 00:00:00 - 08:00:00 (shift 1), 08:00:00 - 16:00:00 (shift 2), dan 16:00:00 - 24:00:00 atau 00.00.00 aku kurang tau penulisannya itu jadi (shift 3)
+5. Ada logika tambahan pada fl_phase yaitu ketika di form fl_phase yang dipilih berstatus C maka di baris 1 tampil data yang TRC_FL_PHASE nya berstatus C dan baris 2 tampil yang TRC_FL_PHASE nya berstatus P. 
+    Jika TRC_FL_PHASE yang dipilih berstatus P maka baris 1 tampil data TRC_FL_PHASE berstatus p dan baris 2 tampil TRC_FL_PHASE yang berstatus C. 
+
+UNTUK FORMATNYA traceability views YAITU SEBAGAI BERIKUT:
+6. ISI BARIS 1 {{ row.TRC_SO_CODE }} {{ row.TRC_CU_EXT_PROGR }}-{{ row.MAT_CODE }} - {{ row.TRC_MAT_SAP_CODE }} -({{ row.TRC_START_TIME }} - {{ row.TRC_END_TIME }}) - ({{ row.TRC_WM_CODE }} ==> data berada di model WMS_TRACEABILITY, dan - {{ row.WM_NAME }}) ==> kalo yang WM_NAME ada di model (MD_WORKERS)
+7. ISI baris 2 {{ row.PP_CODE }} {{ row.MCH_CODE }} - ({{ row.TRC_START_TIME }} - {{ row.TRC_END_TIME }}) - ({{ row.TRC_WM_CODE }}  ==> data berada di model WMS_TRACEABILITY, DAN ADA DATA {{ row.WM_NAME }})  kalo yang WM_NAME ada di model (MD_WORKERS) 
+8. untuk pengaturan child. yaitu berdasarkan TRC_SO_CODE dan TRC_CU_EXT_PROGR ( yang ada di model [WMS_TRACEABILITY]) dimana apabila di model [WMS_TRACEABILITY_CU] namanya [SO_CODE] dan [CU_EXT_PROGR] di cari childnya di model [WMS_TRACEABILITY_CU] dimana ada [CHILD_CU_CODE] dan [CHILD_CU_EXT_PROGR].  
+Nah setelah ketemu childnya, baru cari lagi di WMS_TRACEABILITY sebagai TRC_SO_CODE dan TRC_CU_EXT_PROGR. dan tampilkan dengan tampilan dan ketentuan seperti di poin sebelumnya. 
+9. begitu seterusnya sampai tidak ada child
+-->
+
+
+
+<!-- 
+CATATAN ALUR MY CONTAINMENT UNIT (CU)
+1. Ada form TRC_SO_CODE (ADA DI MODEL WMS_TRACEABILITY) DAN SO_DESC ADA DI (MODEL MD_SOURCES)
+2. Ada form TRC_SO_CODE dan TRC_CU_EXT_PROGR di model  WMS_TRACEABILITY
+3. ada form fl phase isinya TRC_FL_PHASE 
+4. dan ada form tanggal TRC_START_TIME dan TRC_END_TIME di model WMS_TRACEABILITY dan tambahan shift dimana time pada kolom TRC_START_TIME dan TRC_END_TIME di kompress jadi shift 1,2,3 dengan ketentuan jam 00:00:00 - 08:00:00 (shift 1), 08:00:00 - 16:00:00 (shift 2), dan 16:00:00 - 24:00:00 atau 00.00.00 aku kurang tau penulisannya itu jadi (shift 3)
+5. apabila form fl_phase yang dipilih C maka yang tampil di baris 1 TRC_FL_PHASE berstatus P dan baris 2 TRC_FL_PHASE nya berstatus C. begitu sebaliknya apabila yang dipilih adalah P maka yang tampil baris 1 adalah TRC_FL_PHASE berstatus C dan baris 2 TRC_FL_PHASE berstatus P
+UNTUK FORMAT TRACEABILITY BY CU SEBAGAI BERIKUT:
+6. ISI BARIS 1 {{ row.PP_CODE }} - {{ row.MCH_CODE }} - ({{ row.TRC_START_TIME }} - {{ row.TRC_END_TIME }}) - ({{ row.TRC_WM_CODE }} - {{ row.WM_NAME }})
+7. ISI BARIS 2 {{ row.TRC_SO_CODE }} {{ row.TRC_CU_EXT_PROGR }} - {{ row.MAT_CODE }} - {{ row.TRC_MAT_SAP_CODE }} - ({{ row.TRC_START_TIME }} - {{ row.TRC_END_TIME }}) - ({{ row.TRC_WM_CODE }} - {{ row.WM_NAME }})
+8. untuk pengaturan child. yaitu berdasarkan TRC_SO_CODE dan TRC_CU_EXT_PROGR ( yang ada di model [WMS_TRACEABILITY]) dimana apabila di model [WMS_TRACEABILITY_CU] namanya [SO_CODE] dan [CU_EXT_PROGR] di cari childnya di model [WMS_TRACEABILITY_CU] dimana ada [CHILD_CU_CODE] dan [CHILD_CU_EXT_PROGR].  
+Nah setelah ketemu childnya, baru cari lagi di WMS_TRACEABILITY sebagai TRC_SO_CODE dan TRC_CU_EXT_PROGR. dan tampilkan dengan tampilan dan ketentuan seperti di poin sebelumnya. 
+9. begitu seterusnya sampai tidak ada child
+
+WHERE CONCAT (TRC_SO_CODE,TRC_CU_EXT_PROGR) = 'SM1100DL0R'
+WHERE CONCAT( CHILD_SO_CODE,CHILD_CU_EXT_PROGR) = 'SM1100DL0R'
+-->
+
+
+<!-- 
+CATATAN ALUR MY MATERIALS (CU)
+1. Ada form {{ sfc.SFC_CODE }} - {{ sfc.SFC_DESC }} DARI MODEL MD_SEMI_FINISHED_CLASSES
+2. Ada form {{ m.MAT_CODE }} - {{ m.MAT_SAP_CODE }} - {{ m.MAT_VARIANT }} - {{ m.CNT_CODE }} - {{ m.MAT_DESC }} DI MD_MATERIALS
+3. ada form fl phase isinya TRC_FL_PHASE 
+4. dan ada form tanggal TRC_START_TIME dan TRC_END_TIME di model WMS_TRACEABILITY dan tambahan shift dimana time pada kolom TRC_START_TIME dan TRC_END_TIME di kompress jadi shift 1,2,3 dengan ketentuan jam 00:00:00 - 08:00:00 (shift 1), 08:00:00 - 16:00:00 (shift 2), dan 16:00:00 - 24:00:00 atau 00.00.00 aku kurang tau penulisannya itu jadi (shift 3)
+5. DATA TAMPIL BERDASARKAN WHERE [TRC_MAT_SAP_CODE] = 'STB6965A0' AND [TRC_CNT_CODE] = 'TF2' AND [TRC_MAT_VARIANT] = '#' AND TRC_FL_PHASE = 'C' 
+AND CAST(TRC_START_TIME AS DATE) = '2025-09-05'
+6. Dan untuk tambahan ketentuan tampil di htmlnya apabila form fl_phase yang dipilih C maka yang tampil di baris 1 TRC_FL_PHASE berstatus P dan baris 2 TRC_FL_PHASE nya berstatus C. begitu sebaliknya apabila yang dipilih adalah P maka yang tampil baris 1 adalah TRC_FL_PHASE berstatus C dan baris 2 TRC_FL_PHASE berstatus P
+UNTUK FORMATNYA traceability views BY MATERIALS YAITU SEBAGAI BERIKUT:
+7. ISI BARIS 1 {{ row.TRC_SO_CODE }} {{ row.TRC_CU_EXT_PROGR }}-{{ row.MAT_CODE }} - {{ row.TRC_MAT_SAP_CODE }} -({{ row.TRC_START_TIME }} - {{ row.TRC_END_TIME }}) - ({{ row.TRC_WM_CODE }} ==> data berada di model WMS_TRACEABILITY, dan - {{ row.WM_NAME }}) ==> kalo yang WM_NAME ada di model (MD_WORKERS)
+8. ISI baris 2 {{ row.PP_CODE }} {{ row.MCH_CODE }} - ({{ row.TRC_START_TIME }} - {{ row.TRC_END_TIME }}) - ({{ row.TRC_WM_CODE }}  ==> data berada di model WMS_TRACEABILITY, DAN ADA DATA {{ row.WM_NAME }})  kalo yang WM_NAME ada di model (MD_WORKERS) 
+9. untuk pengaturan child. yaitu berdasarkan TRC_SO_CODE dan TRC_CU_EXT_PROGR ( yang ada di model WMS_TRACEABILITY) dimana apabila di model [WMS_TRACEABILITY_CU] namanya [SO_CODE] dan [CU_EXT_PROGR] di cari childnya di model [WMS_TRACEABILITY_CU] dimana ada [CHILD_CU_CODE] dan [CHILD_CU_EXT_PROGR].  
+Nah setelah ketemu childnya, baru cari lagi di WMS_TRACEABILITY sebagai TRC_SO_CODE dan TRC_CU_EXT_PROGR. dan tampilkan dengan tampilan dengan ketentuan seperti di poin sebelumnya. 
+10. begitu seterusnya sampai tidak ada child
 -->

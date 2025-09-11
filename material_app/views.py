@@ -253,216 +253,236 @@ def data_produksi(request):
 
 
 
-from django.shortcuts import render
-from django.db.models import Q
-from datetime import datetime, timedelta, time
-from collections import defaultdict
-
-# Models (asumsikan sudah ada)
-from .models import WMS_TRACEABILITY, MD_PRODUCTION_PHASES, MD_WORKERS, WMS_TRACEABILITY_CU
-
 def traceability_by_machine(request):
-    # 1. Ambil pilihan filter (production phase, machine, fl_phase, tanggal shift)
+    trc_code = request.GET.get('trc_code')
+    mch_info = request.GET.get('mch_info')
+    start_date_raw = request.GET.get('start_date')
+    end_date_raw = request.GET.get('end_date')
+    trc_fl_phase = request.GET.get('trc_fl_phase')
+
+    def parse_date_shift(raw_value):
+        try:
+            date_part, shift_part = raw_value.split('|')
+            return date_part, shift_part
+        except:
+            return None, None
+
+    # Parse tanggal
+    start_date, _ = parse_date_shift(start_date_raw)
+    end_date, _ = parse_date_shift(end_date_raw)
+    try:
+        if start_date and end_date:
+            start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+            end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
+        else:
+            start_date = end_date = None
+    except ValueError:
+        start_date = end_date = None
+
+    # Ambil descriptor phase
+    pp_desc_subquery = MD_PRODUCTION_PHASES.objects.filter(
+        PP_CODE=OuterRef('TRC_PP_CODE')
+    ).values('PP_DESC')[:1]
+
     trc_list = (
-        WMS_TRACEABILITY.objects.values('TRC_PP_CODE')
+        WMS_TRACEABILITY.objects
+        .annotate(PP_DESC=Subquery(pp_desc_subquery))
+        .values('TRC_PP_CODE', 'PP_DESC')
         .distinct()
         .order_by('TRC_PP_CODE')
     )
-    # Dapatkan deskripsi phase dari MD_PRODUCTION_PHASES (assume PP_CODE sebagai pk)
-    # Buat dict supaya gampang akses PP_DESC
-    phase_desc_map = {
-        p.PP_CODE: p.PP_DESC for p in MD_PRODUCTION_PHASES.objects.all()
-    }
 
-    # Buat list trc_list dengan PP_DESC
-    trc_list = [
-        {
-            'TRC_PP_CODE': trc['TRC_PP_CODE'],
-            'PP_DESC': phase_desc_map.get(trc['TRC_PP_CODE'], '')
-        } for trc in trc_list
+    machines = []
+    if trc_code:
+        machines = (
+            WMS_TRACEABILITY.objects
+            .filter(TRC_PP_CODE=trc_code)
+            .values('TRC_PP_CODE', 'TRC_MCH_CODE')
+            .distinct()
+            .order_by('TRC_MCH_CODE')
+        )
+
+    phase = (
+        WMS_TRACEABILITY.objects
+        .values('TRC_FL_PHASE')
+        .distinct()
+        .order_by('TRC_FL_PHASE')
+    )
+
+    date_shift_raw = (
+        WMS_TRACEABILITY.objects
+        .annotate(date=TruncDate('TRC_START_TIME'))
+        .values('TRC_START_TIME', 'date')
+        .annotate(shift=Subquery(
+            DC_PRODUCTION_DATA.objects.filter(
+                PS_START_PROD=OuterRef('TRC_START_TIME')
+            ).values('SHF_CODE')[:1]
+        ))
+        .values('date', 'shift')
+        .distinct()
+        .order_by('-date')
+    )
+    date_shift_choices = [
+        {'value': f"{d['date']}|{d['shift']}", 'label': f"{d['date'].strftime('%d/%m/%Y')} - {d['shift']}"}
+        for d in date_shift_raw if d['shift']
     ]
 
-    # Ambil pilihan production phase
-    selected_trc = request.GET.get('trc_code')
+    # Filter traceability utama
+    traceability_raw = []
+    if trc_code and mch_info and start_date and end_date and trc_fl_phase:
+        traceability_qs = WMS_TRACEABILITY.objects.filter(
+            TRC_START_TIME__date__range=(start_date, end_date)
+        ).annotate(
+            MAT_CODE=Subquery(
+                MD_MATERIALS.objects.filter(
+                    MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')
+                ).values('MAT_CODE')[:1]
+            ),
+            WM_CODE=Subquery(
+                MD_WORKERS.objects.filter(
+                    WM_CODE=OuterRef('TRC_WM_CODE')
+                ).values('WM_CODE')[:1]
+            ),
+            WM_NAME=Subquery(
+                MD_WORKERS.objects.filter(
+                    WM_CODE=OuterRef('TRC_WM_CODE')
+                ).values('WM_NAME')[:1]
+            )
+        )
+        if trc_code:
+            traceability_qs = traceability_qs.filter(TRC_PP_CODE=trc_code)
+        if trc_fl_phase:
+            traceability_qs = traceability_qs.filter(TRC_FL_PHASE=trc_fl_phase)
+        if mch_info:
+            try:
+                trc_pp, trc_mch = mch_info.split('|')
+                traceability_qs = traceability_qs.filter(
+                    TRC_PP_CODE=trc_pp, TRC_MCH_CODE=trc_mch
+                )
+            except ValueError:
+                pass
 
-    # 2. Ambil machine yang ada di phase terpilih
-    machines_qs = WMS_TRACEABILITY.objects.all()
-    if selected_trc:
-        machines_qs = machines_qs.filter(TRC_PP_CODE=selected_trc)
-    machines_qs = machines_qs.values('TRC_PP_CODE', 'TRC_MCH_CODE').distinct().order_by('TRC_MCH_CODE')
-    machines = list(machines_qs)
+        traceability_raw = list(traceability_qs.values(
+            'TRC_PP_CODE', 'TRC_MCH_CODE', 'TRC_SO_CODE', 'TRC_MAT_SAP_CODE',
+            'TRC_WM_CODE', 'TRC_START_TIME', 'TRC_END_TIME', 'TRC_CU_EXT_PROGR',
+            'MAT_CODE', 'WM_CODE', 'WM_NAME'
+        ))
 
-    selected_mch_info = request.GET.get('mch_info')  # format "TRC_PP_CODE|TRC_MCH_CODE"
+    # Fungsi bantu
+    def get_pp_mch_wm_from_cu(cu_ext_progr):
+        info = WMS_TRACEABILITY_CU.objects.filter(
+            CU_EXT_PROGR=cu_ext_progr
+        ).values('PP_CODE', 'MCH_CODE', 'PRODUCTION_DATE', 'WM_CODE').first()
+        return info or {'PP_CODE': '', 'MCH_CODE': '', 'PRODUCTION_DATE': '', 'WM_CODE': ''}
 
-    # 3. FL Phase
-    phase = WMS_TRACEABILITY.objects.values('TRC_FL_PHASE').distinct().order_by('TRC_FL_PHASE')
+    def get_worker_name(wm_code):
+        if not wm_code:
+            return ''
+        worker = MD_WORKERS.objects.filter(WM_CODE=wm_code).values('WM_NAME').first()
+        return worker['WM_NAME'] if worker else ''
 
-    selected_phase = request.GET.get('trc_fl_phase')
 
-    # 4. Tanggal & Shift
-    # Buat pilihan tanggal + shift dari data WMS_TRACEABILITY, misal dari TRC_START_TIME
-    dates_qs = WMS_TRACEABILITY.objects.values_list('TRC_START_TIME', flat=True).distinct().order_by('TRC_START_TIME')
-    date_shift_choices = []
 
-    def get_shift_label(dt, shift_num):
-        return f"{dt.date()} Shift {shift_num} ({'00.00-08.00' if shift_num == 1 else '08.00-16.00' if shift_num == 2 else '16.00-00.00'})"
 
-    # Ambil distinct tanggal dengan shift
-    date_shift_set = set()
-    for dt in dates_qs:
-        if not dt:
-            continue
-        # Tentukan shift
-        hour = dt.hour
-        shift = 3 if hour >= 16 else 2 if hour >= 8 else 1
-        # Simpan sebagai string unik: "YYYY-MM-DD|shift"
-        key = f"{dt.date()}|{shift}"
-        if key not in date_shift_set:
-            date_shift_set.add(key)
-            label = get_shift_label(dt, shift)
-            date_shift_choices.append({'value': key, 'label': label})
 
-    selected_start_date = request.GET.get('start_date')  # format "YYYY-MM-DD|shift"
-    selected_end_date = request.GET.get('end_date')
 
-    # Helper untuk parse shift ke waktu mulai dan berakhir
-    def shift_to_time(date_str, shift_num):
-        d = datetime.strptime(date_str, '%Y-%m-%d').date()
-        if shift_num == 1:
-            start = datetime.combine(d, time(0, 0))
-            end = datetime.combine(d, time(8, 0))
-        elif shift_num == 2:
-            start = datetime.combine(d, time(8, 0))
-            end = datetime.combine(d, time(16, 0))
-        else:
-            # Shift 3: 16:00 to next day 00:00
-            start = datetime.combine(d, time(16, 0))
-            end = datetime.combine(d + timedelta(days=1), time(0, 0))
-        return start, end
 
-    # 5. Filter data WMS_TRACEABILITY berdasarkan filter yang dipilih
-    trace_qs = WMS_TRACEABILITY.objects.all()
 
-    if selected_trc:
-        trace_qs = trace_qs.filter(TRC_PP_CODE=selected_trc)
 
-    if selected_mch_info:
-        try:
-            pp_code, mch_code = selected_mch_info.split('|')
-            trace_qs = trace_qs.filter(TRC_PP_CODE=pp_code, TRC_MCH_CODE=mch_code)
-        except:
-            pass
 
-    if selected_phase:
-        trace_qs = trace_qs.filter(TRC_FL_PHASE=selected_phase)
 
-    # Filter tanggal berdasarkan start_date dan end_date
-    if selected_start_date:
-        start_date_str, start_shift_str = selected_start_date.split('|')
-        start_shift_num = int(start_shift_str)
-        start_dt, _ = shift_to_time(start_date_str, start_shift_num)
-        trace_qs = trace_qs.filter(TRC_START_TIME__gte=start_dt)
 
-    if selected_end_date:
-        end_date_str, end_shift_str = selected_end_date.split('|')
-        end_shift_num = int(end_shift_str)
-        _, end_dt = shift_to_time(end_date_str, end_shift_num)
-        trace_qs = trace_qs.filter(TRC_END_TIME__lte=end_dt)
 
-    # Ambil semua data filtered ke list
-    trace_data = list(trace_qs.order_by('TRC_START_TIME'))
+    def get_child_cu_tree(parent_cu, level=1):
+        child_data = []
+        # Cari semua anak yang ada di CHILD_CU_EXT_PROGR di record induk CU_EXT_PROGR = parent_cu
+        parent_records = WMS_TRACEABILITY_CU.objects.filter(CU_EXT_PROGR=parent_cu)
 
-    # Ambil semua data WMS_TRACEABILITY_CU
-    cu_data = list(WMS_TRACEABILITY_CU.objects.all())
+        for parent_rec in parent_records:
+            child_cu = parent_rec.CHILD_CU_EXT_PROGR
+            if not child_cu:
+                continue
 
-    # Buat dict mapping CU_EXT_PROGR ke list anaknya
-    children_map = defaultdict(list)
-    for cu in cu_data:
-        if cu.CHILD_CU_EXT_PROGR:
-            children_map[cu.CU_EXT_PROGR].append(cu.CHILD_CU_EXT_PROGR)
+            info = get_pp_mch_wm_from_cu(child_cu)
+            operator = {'WM_CODE': info['WM_CODE'], 'WM_NAME': get_worker_name(info['WM_CODE'])}
 
-    # Buat dict mapping TRC_CU_EXT_PROGR ke data dari WMS_TRACEABILITY_CU
-    cu_map = {cu.CU_EXT_PROGR: cu for cu in cu_data}
+            detail = WMS_TRACEABILITY.objects.filter(
+                TRC_CU_EXT_PROGR=child_cu
+            ).annotate(
+                MAT_CODE=Subquery(
+                    MD_MATERIALS.objects.filter(
+                        MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')
+                    ).values('MAT_CODE')[:1]
+                )
+            ).values(
+                'TRC_PP_CODE','TRC_MCH_CODE','TRC_SO_CODE',
+                'TRC_MAT_SAP_CODE','TRC_WM_CODE','TRC_START_TIME',
+                'TRC_END_TIME','TRC_CU_EXT_PROGR','MAT_CODE'
+            ).first()
 
-    # Buat dict mapping TRC_CU_EXT_PROGR ke WMS_TRACEABILITY
-    trace_map = defaultdict(list)
-    for row in trace_data:
-        trace_map[row.TRC_CU_EXT_PROGR].append(row)
+            if detail:
+                detail.update({
+                    'level': level,
+                    'type': 'child',
+                    'OPERATOR_PROD': operator,
+                    'PP_CODE': info['PP_CODE'],
+                    'MCH_CODE': info['MCH_CODE'],
+                    'PRODUCTION_DATE': info['PRODUCTION_DATE'],
+                })
+                child_data.append(detail)
 
-    # 6. Build tree dengan rekursif fungsi
+                # Rekursif cari anak dari anak ini
+                child_data += get_child_cu_tree(child_cu, level + 1)
+
+        return child_data
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     traceability_tree = []
+    for item in traceability_raw:
+        info = get_pp_mch_wm_from_cu(item['TRC_CU_EXT_PROGR'])
+        operator = {'WM_CODE': info['WM_CODE'], 'WM_NAME': get_worker_name(info['WM_CODE'])}
 
-    # Helper: ambil WM_NAME dari MD_WORKERS via TRC_WM_CODE
-    wm_codes = {w.WM_CODE: w.WM_NAME for w in MD_WORKERS.objects.all()}
-
-    def build_tree(cu_ext_progr, level=0):
-        rows = trace_map.get(cu_ext_progr, [])
-        for row in rows:
-            # Baris 1 data
-            wm_name = wm_codes.get(row.TRC_WM_CODE, '')
-
-            # Baris 2: ambil dari WMS_TRACEABILITY_CU berdasarkan TRC_CU_EXT_PROGR
-            cu_row = cu_map.get(row.TRC_CU_EXT_PROGR)
-
-            # ambil info operator dari MD_WORKERS jika ada
-            operator_wm_code = getattr(cu_row, 'OPERATOR_WM_CODE', None)
-            operator_wm_name = wm_codes.get(operator_wm_code, '') if operator_wm_code else ''
-
-            traceability_tree.append({
-                'level': level,
-                'TRC_SO_CODE': row.TRC_SO_CODE,
-                'TRC_CU_EXT_PROGR': row.TRC_CU_EXT_PROGR,
-                'MAT_CODE': row.MAT_CODE,
-                'TRC_MAT_SAP_CODE': row.TRC_MAT_SAP_CODE,
-                'TRC_START_TIME': row.TRC_START_TIME.strftime('%Y-%m-%d %H:%M'),
-                'TRC_END_TIME': row.TRC_END_TIME.strftime('%Y-%m-%d %H:%M'),
-                'TRC_WM_CODE': row.TRC_WM_CODE,
-                'WM_NAME': wm_name,
-
-                # baris 2
-                'PP_CODE': row.TRC_PP_CODE,
-                'MCH_CODE': row.TRC_MCH_CODE,
-                'PRODUCTION_DATE': row.TRC_START_TIME.strftime('%Y-%m-%d'),
-                'OPERATOR_PROD': {
-                    'WM_CODE': operator_wm_code or '',
-                    'WM_NAME': operator_wm_name
-                },
-            })
-
-            # 7. Build children recursively
-            children = children_map.get(row.TRC_CU_EXT_PROGR, [])
-            for child_cu in children:
-                build_tree(child_cu, level + 1)
-
-    # Tentukan roots untuk tree, yaitu TRC_CU_EXT_PROGR yang tidak ada sebagai CHILD_CU_EXT_PROGR di data lain
-    all_cu_ext_progr = set(cu_map.keys())
-    all_child_cu_ext_progr = {cu.CHILD_CU_EXT_PROGR for cu in cu_data if cu.CHILD_CU_EXT_PROGR}
-    root_cu_ext_progrs = all_cu_ext_progr - all_child_cu_ext_progr
-
-    # Jika ingin tampilkan tree dari root yang ada di trace_data (filter sesuai), bisa pakai:
-    root_cu_candidates = set(row.TRC_CU_EXT_PROGR for row in trace_data)
-    roots = root_cu_ext_progrs.intersection(root_cu_candidates)
-
-    # Build tree mulai dari roots
-    for root in roots:
-        build_tree(root)
+        root_node = {
+            'type': 'root',
+            'level': 0,
+            **item,
+            'OPERATOR_PROD': operator,
+            'PP_CODE': info['PP_CODE'],
+            'MCH_CODE': info['MCH_CODE'],
+            'PRODUCTION_DATE': info['PRODUCTION_DATE'],
+        }
+        traceability_tree.append(root_node)
+        traceability_tree += get_child_cu_tree(item['TRC_CU_EXT_PROGR'], 1)
 
     context = {
         'trc_list': trc_list,
         'machines': machines,
         'phase': phase,
         'date_shift_choices': date_shift_choices,
-        'selected_trc': selected_trc,
-        'selected_mch_info': selected_mch_info,
-        'selected_phase': selected_phase,
-        'selected_start_date': selected_start_date,
-        'selected_end_date': selected_end_date,
         'traceability_tree': traceability_tree,
+        'selected_trc': trc_code,
+        'selected_mch_info': mch_info,
+        'selected_start_date': start_date_raw,
+        'selected_end_date': end_date_raw,
+        'selected_phase': trc_fl_phase,
     }
     return render(request, 'traceability_by_machine.html', context)
-
-
-
 
 
 

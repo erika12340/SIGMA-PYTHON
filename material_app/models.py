@@ -133,7 +133,7 @@ class WMS_TRACEABILITY_CU(models.Model):
             ('SO_CODE', 'CHILD_CU_CODE', 'CU_EXT_PROGR')
         )
 
-# -------------- 9. Model MD_CONTAINERS --------------done
+# -------------- 9. Model MD_CONTAINERS --------------
 class MD_CONTAINERS(models.Model):
     CNT_CODE = models.CharField (max_length=3, primary_key=True)
     CNT_DESC = models.CharField (max_length=8)
@@ -142,7 +142,7 @@ class MD_CONTAINERS(models.Model):
         managed = False
         db_table = 'MD_CONTAINERS'
 
-# -------------- 10. Model MD_SOURCES --------------done
+# -------------- 10. Model MD_SOURCES --------------
 class MD_SOURCES(models.Model):
     SO_CODE = models.CharField (max_length=4, primary_key=True)
     SO_DESC = models.CharField (max_length=30)

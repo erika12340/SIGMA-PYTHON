@@ -33,18 +33,6 @@
     .level-7 {
         margin-left: 7em;
     }
-
-    .level-8 {
-        margin-left: 8em;
-    }
-
-    .level-9 {
-        margin-left: 9em;
-    }
-
-    .level-10 {
-        margin-left: 10em;
-    }
 </style>
 
 <div class="container">
@@ -145,28 +133,26 @@
                 <h5 class="card-title mb-3">Traceability Views</h5>
                 <div id="material-tree">
                     {% for row in traceability_tree %}
-                    <div class="material-item level-{{ row.level|add:1 }} mb-1" data-index="{{ forloop.counter }}"
-                        data-level="{{ row.level|add:1 }}">
+                    <div class="material-item level-{{ row.level|add:1 }} mb-1">
+                        <div data-bs-spy="scroll" data-bs-target="#list-example" data-bs-offset="0"
+                            class="scrollspy-example" tabindex="0">
 
-                        {% if row.level == 0 %}
-                        <button class="toggle-btn" data-index="{{ forloop.counter }}">▶</button>
-                        {% else %}
-                        <span style="display: inline-block; width: 20px;"></span>
-                        {% endif %}
+                            <button class="toggle-btn" data-id="{{ forloop.counter }}">▶</button>
 
-                        <!-- Baris 1 -->
-                        {{ row.TRC_SO_CODE }} {{ row.TRC_CU_EXT_PROGR }} -
-                        {{ row.MAT_CODE }} -
-                        {{ row.TRC_MAT_SAP_CODE }} -
-                        ({{ row.TRC_START_TIME }} - {{ row.TRC_END_TIME }}) -
-                        ({{ row.TRC_WM_CODE }} - {{ row.WM_NAME }})
+                            <!-- Baris 1 -->
+                            {{ row.TRC_SO_CODE }} {{ row.TRC_CU_EXT_PROGR }} -
+                            {{ row.MAT_CODE }} -
+                            {{ row.TRC_MAT_SAP_CODE }} -
+                            ({{ row.TRC_START_TIME }} - {{ row.TRC_END_TIME }}) -
+                            ({{ row.TRC_WM_CODE }} - {{ row.WM_NAME }})
 
-                        <br>
-                        <!-- Baris 2 -->
-                        <div style="margin-left: 8px; background-color: rgb(243, 199, 252);">
-                            {{ row.PP_CODE }} {{ row.MCH_CODE }} -
-                            ({{ row.PRODUCTION_DATE }}) -
-                            ({{ row.OPERATOR_PROD.WM_CODE }} - {{ row.OPERATOR_PROD.WM_NAME }})
+                            <br>
+                            <!-- Baris 2 -->
+                            <div style="margin-left: 8px; background-color: rgb(249, 222, 255);">
+                                {{ row.PP_CODE }} {{ row.MCH_CODE }} -
+                                ({{ row.TRC_START_TIME }} - {{ row.TRC_END_TIME }}) -
+                                ({{ row.TRC_WM_CODE }} - {{ row.WM_NAME }})
+                            </div>
                         </div>
                     </div>
                     {% endfor %}
@@ -180,32 +166,27 @@
 <!-- SCRIPT TOGGLE CHILDREN -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        // Show only root level (level-1)
-        document.querySelectorAll(".material-item[data-level='1']").forEach(item => item.style.display =
-            "block");
+        // Tampilkan semua level-1 (root)
+        document.querySelectorAll(".material-item.level-1").forEach(item => item.style.display = "block");
 
         document.querySelectorAll(".toggle-btn").forEach(btn => {
             btn.addEventListener("click", function () {
-                const currentIndex = parseInt(this.dataset.index);
-                const currentItem = document.querySelector(`[data-index='${currentIndex}']`);
-                const currentLevel = parseInt(currentItem.dataset.level);
-                const isExpanding = this.textContent === "▶";
+                let currentItem = this.parentElement;
+                let currentLevel = parseInt(currentItem.className.match(/level-(\d+)/)[1]);
+                let next = currentItem.nextElementSibling;
+                let isExpanding = this.textContent === "▶";
 
                 this.textContent = isExpanding ? "▼" : "▶";
 
-                let next = currentItem.nextElementSibling;
                 while (next && next.classList.contains("material-item")) {
-                    const nextLevel = parseInt(next.dataset.level);
-                    if (nextLevel <= currentLevel) break;
-
-                    if (isExpanding && nextLevel === currentLevel + 1) {
-                        next.style.display = "block";
-                    } else if (!isExpanding) {
-                        next.style.display = "none";
-                        const toggle = next.querySelector(".toggle-btn");
-                        if (toggle) toggle.textContent = "▶";
+                    let level = parseInt(next.className.match(/level-(\d+)/)[1]);
+                    if (level <= currentLevel) break;
+                    if (level === currentLevel + 1) {
+                        next.style.display = isExpanding ? "block" : "none";
                     }
-
+                    if (!isExpanding && level > currentLevel) {
+                        next.querySelector(".toggle-btn").textContent = "▶";
+                    }
                     next = next.nextElementSibling;
                 }
             });
@@ -213,7 +194,7 @@
     });
 </script>
 
-<!-- SELECT2 (jika kamu pakai) -->
+<!-- SELECT2-->
 <script>
     $('#trc').select2();
     $('#mch_info').select2();
