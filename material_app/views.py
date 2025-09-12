@@ -253,6 +253,15 @@ def data_produksi(request):
 
 
 
+
+
+
+
+
+
+
+
+# ============== Traceability By Machine ===============
 def traceability_by_machine(request):
     trc_code = request.GET.get('trc_code')
     mch_info = request.GET.get('mch_info')
@@ -267,7 +276,7 @@ def traceability_by_machine(request):
         except:
             return None, None
 
-    # Parse tanggal
+    # Tanggal dan Shift
     start_date, _ = parse_date_shift(start_date_raw)
     end_date, _ = parse_date_shift(end_date_raw)
     try:
@@ -279,7 +288,7 @@ def traceability_by_machine(request):
     except ValueError:
         start_date = end_date = None
 
-    # Ambil descriptor phase
+    # Ambil production phase
     pp_desc_subquery = MD_PRODUCTION_PHASES.objects.filter(
         PP_CODE=OuterRef('TRC_PP_CODE')
     ).values('PP_DESC')[:1]
@@ -300,7 +309,7 @@ def traceability_by_machine(request):
             .values('TRC_PP_CODE', 'TRC_MCH_CODE')
             .distinct()
             .order_by('TRC_MCH_CODE')
-        )
+    )
 
     phase = (
         WMS_TRACEABILITY.objects
@@ -327,7 +336,7 @@ def traceability_by_machine(request):
         for d in date_shift_raw if d['shift']
     ]
 
-    # Filter traceability utama
+    # ========Filter traceability (pengambilan data yang terfilter)=========
     traceability_raw = []
     if trc_code and mch_info and start_date and end_date and trc_fl_phase:
         traceability_qs = WMS_TRACEABILITY.objects.filter(
@@ -372,26 +381,14 @@ def traceability_by_machine(request):
     def get_pp_mch_wm_from_cu(cu_ext_progr):
         info = WMS_TRACEABILITY_CU.objects.filter(
             CU_EXT_PROGR=cu_ext_progr
-        ).values('PP_CODE', 'MCH_CODE', 'PRODUCTION_DATE', 'WM_CODE').first()
-        return info or {'PP_CODE': '', 'MCH_CODE': '', 'PRODUCTION_DATE': '', 'WM_CODE': ''}
+        ).values('PP_CODE', 'MCH_CODE', 'WM_CODE').first()
+        return info or {'PP_CODE': '', 'MCH_CODE':  '', 'WM_CODE': ''}
 
     def get_worker_name(wm_code):
         if not wm_code:
             return ''
         worker = MD_WORKERS.objects.filter(WM_CODE=wm_code).values('WM_NAME').first()
         return worker['WM_NAME'] if worker else ''
-
-
-
-
-
-
-
-
-
-
-
-
 
     def get_child_cu_tree(parent_cu, level=1):
         child_data = []
@@ -425,33 +422,12 @@ def traceability_by_machine(request):
                     'level': level,
                     'type': 'child',
                     'OPERATOR_PROD': operator,
-                    'PP_CODE': info['PP_CODE'],
-                    'MCH_CODE': info['MCH_CODE'],
-                    'PRODUCTION_DATE': info['PRODUCTION_DATE'],
                 })
                 child_data.append(detail)
 
-                # Rekursif cari anak dari anak ini
+                # Search child from child
                 child_data += get_child_cu_tree(child_cu, level + 1)
-
         return child_data
-    
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     traceability_tree = []
     for item in traceability_raw:
@@ -463,9 +439,6 @@ def traceability_by_machine(request):
             'level': 0,
             **item,
             'OPERATOR_PROD': operator,
-            'PP_CODE': info['PP_CODE'],
-            'MCH_CODE': info['MCH_CODE'],
-            'PRODUCTION_DATE': info['PRODUCTION_DATE'],
         }
         traceability_tree.append(root_node)
         traceability_tree += get_child_cu_tree(item['TRC_CU_EXT_PROGR'], 1)
@@ -482,31 +455,8 @@ def traceability_by_machine(request):
         'selected_end_date': end_date_raw,
         'selected_phase': trc_fl_phase,
     }
+
     return render(request, 'traceability_by_machine.html', context)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -675,12 +625,12 @@ def traceability_by_cu(request):
 
         cu_data = WMS_TRACEABILITY_CU.objects.filter(
             SO_CODE__in=[so for so, cu in roots]
-        ).values('SO_CODE', 'CU_EXT_PROGR', 'CHILD_CU_CODE')
+        ).values('SO_CODE', 'CU_EXT_PROGR')
 
         cu_map = {}
         for cu in cu_data:
             key = (cu['SO_CODE'], cu['CU_EXT_PROGR'])
-            cu_map.setdefault(key, []).append(cu['CHILD_CU_CODE'])
+            cu_map.setdefault(key, []).append(cu['CHILD_SO_CODE', 'CHILD_CU_EXT_PROGR'])
 
         for root in roots:
             so_code, cu_ext_progr = root

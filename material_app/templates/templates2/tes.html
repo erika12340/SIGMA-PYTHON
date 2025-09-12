@@ -226,8 +226,8 @@ CATATAN ALUR MY CONTAINMENT UNIT (CU)
 UNTUK FORMAT TRACEABILITY BY CU SEBAGAI BERIKUT:
 6. ISI BARIS 1 {{ row.PP_CODE }} - {{ row.MCH_CODE }} - ({{ row.TRC_START_TIME }} - {{ row.TRC_END_TIME }}) - ({{ row.TRC_WM_CODE }} - {{ row.WM_NAME }})
 7. ISI BARIS 2 {{ row.TRC_SO_CODE }} {{ row.TRC_CU_EXT_PROGR }} - {{ row.MAT_CODE }} - {{ row.TRC_MAT_SAP_CODE }} - ({{ row.TRC_START_TIME }} - {{ row.TRC_END_TIME }}) - ({{ row.TRC_WM_CODE }} - {{ row.WM_NAME }})
-8. untuk pengaturan child. yaitu berdasarkan TRC_SO_CODE dan TRC_CU_EXT_PROGR ( yang ada di model [WMS_TRACEABILITY]) dimana apabila di model [WMS_TRACEABILITY_CU] namanya [SO_CODE] dan [CU_EXT_PROGR] di cari childnya di model [WMS_TRACEABILITY_CU] dimana ada [CHILD_CU_CODE] dan [CHILD_CU_EXT_PROGR].  
-Nah setelah ketemu childnya, baru cari lagi di WMS_TRACEABILITY sebagai TRC_SO_CODE dan TRC_CU_EXT_PROGR. dan tampilkan dengan tampilan dan ketentuan seperti di poin sebelumnya. 
+8. untuk pengaturan child. yaitu berdasarkan TRC_SO_CODE dan TRC_CU_EXT_PROGR ( yang ada di model WMS_TRACEABILITY) dimana apabila di model [WMS_TRACEABILITY_CU] namanya [SO_CODE] dan [CU_EXT_PROGR] di cari childnya di model [WMS_TRACEABILITY_CU] dimana ada [CHILD_CU_CODE] dan [CHILD_CU_EXT_PROGR].  
+Nah setelah ketemu childnya, baru cari lagi di WMS_TRACEABILITY sebagai TRC_SO_CODE dan TRC_CU_EXT_PROGR. dan tampilkan dengan tampilan dengan ketentuan seperti di poin sebelumnya. 
 9. begitu seterusnya sampai tidak ada child
 
 WHERE CONCAT (TRC_SO_CODE,TRC_CU_EXT_PROGR) = 'SM1100DL0R'
@@ -250,4 +250,27 @@ UNTUK FORMATNYA traceability views BY MATERIALS YAITU SEBAGAI BERIKUT:
 9. untuk pengaturan child. yaitu berdasarkan TRC_SO_CODE dan TRC_CU_EXT_PROGR ( yang ada di model WMS_TRACEABILITY) dimana apabila di model [WMS_TRACEABILITY_CU] namanya [SO_CODE] dan [CU_EXT_PROGR] di cari childnya di model [WMS_TRACEABILITY_CU] dimana ada [CHILD_CU_CODE] dan [CHILD_CU_EXT_PROGR].  
 Nah setelah ketemu childnya, baru cari lagi di WMS_TRACEABILITY sebagai TRC_SO_CODE dan TRC_CU_EXT_PROGR. dan tampilkan dengan tampilan dengan ketentuan seperti di poin sebelumnya. 
 10. begitu seterusnya sampai tidak ada child
+-->
+
+<!-- 
+1.Tab Scroll div line traceability
+
+2. QUERY NYARI BERDASARKAN MATERIALS
+[TRC_MAT_SAP_CODE] = 'STB6965A0' AND [TRC_CNT_CODE] = 'TF2' AND [TRC_MAT_VARIANT] = '#' AND TRC_FL_PHASE = 'p' AND CAST(TRC_START_TIME AS DATE) = '2025-09-05'
+
+3. QUERY MENGGABUNGKAN DATA 
+CONCAT (TRC_SO_CODE,TRC_CU_EXT_PROGR) = '01BCSI'
+-->
+
+
+<!--
+
+BUAT LOGIKA DI BY MATERIALS SETELAH PILIH FORM MENAMPILKAN DATA BERDASARKAN KETENTUAN DI BAWAH INI
+
+--[TRC_MAT_SAP_CODE] = 'STB6965A0' AND [TRC_CNT_CODE] = 'TF2' AND [TRC_MAT_VARIANT] = '#' AND TRC_FL_PHASE = 'p' AND CAST(TRC_START_TIME AS DATE) = '2025-09-05'
+
+GABUNG DATA DARI DUA KOLOM
+
+WHERE CONCAT( SO_CODE, CU_EXT_PROGR) = '00CP000FLI'
+CONCAT (TRC_SO_CODE,TRC_CU_EXT_PROGR) = '00BR000UZN'
 -->

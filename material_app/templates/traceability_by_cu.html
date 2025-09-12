@@ -50,7 +50,7 @@
 </style>
 
 <div class="container">
-    <h3 style="margin-left: 30px;">By Containment Unit (CU)</h3>
+    <h4 style="margin-left: 30px;">By Containment Unit (CU)</h4>
     <div class="container mt-4">
         <!-- Filter Form -->
         <div class="card mb-4 shadow-sm">
@@ -136,7 +136,7 @@
             </div>
         </div>
 
-        <!-- Display Selected Containment Unit dan Materials -->
+        <!-- Menampilkan data containment unit (CU) dan Materils -->
         <div class="card mb-4">
             <div class="card-body">
                 <form>
@@ -144,12 +144,17 @@
                         <div class="col-md-6">
                             <label class="form-label">Containment Unit (CU)</label>
                             <input type="text" class="form-control" readonly
-                                value="{% if data_cu %}{{ data_cu.TRC_SO_CODE }}{{ data_cu.TRC_CU_EXT_PROGR }}{% endif %}">
+                                value="{% if data_cu %} {{ data_cu.TRC_SO_CODE }} {{ data_cu.TRC_CU_EXT_PROGR }}{% endif %}">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Materials</label>
-                            <input type="text" class="form-control" readonly
-                                value="{% if materials %}{{ materials.MAT_CODE }} - {{ materials.MAT_SAP_CODE }} - {{ materials.MAT_VARIANT }} - {{ materials.CNT_CODE }} - {{ materials.MAT_DESC }}{% endif %}">
+                            <input type="text" class="form-control" readonly value="{% if materials %}
+                                {{ materials.MAT_CODE }} - 
+                                {{ materials.TRC_MAT_SAP_CODE }} - 
+                                {{ materials.TRC_MAT_VARIANT }} - 
+                                {{ materials.TRC_CNT_CODE }} - 
+                                {{ materials.MAT_DESC }}
+                                {% endif %}">
                         </div>
                     </div>
                 </form>
@@ -157,19 +162,19 @@
         </div>
 
         <!-- Traceability Tree Display -->
-        {% if traceability_tree %}
+        {% if traceability_by_cu %}
         <div class="card">
             <div class="card-body">
-                <h5 class="card-title mb-3">Traceability Views</h5>
+                <h5 class="card-title mb-3">Traceability Views By Containment Unit (CU)</h5>
                 <div id="containment_raw_cu">
-                    {% for row in traceability_tree %}
+                    {% for row in traceability_by_cu %}
                     <div class="material-item level-{{ row.level|add:1 }} mb-1">
                         <div data-bs-spy="scroll" data-bs-target="#list-example" data-bs-offset="0"
                             class="scrollspy-example" tabindex="0">
 
                             <button class="toggle-btn" data-id="{{ forloop.counter }}">▶</button>
                             <!-- Baris 1 -->
-                            {{ row.PP_CODE }} {{ row.MCH_CODE }} -
+                            {{ row.TRC_PP_CODE }} {{ row.TRC_MCH_CODE }} -
                             ({{ row.TRC_START_TIME }} - {{ row.TRC_END_TIME }}) -
                             ({{ row.TRC_WM_CODE }} - {{ row.WM_NAME }})
 
@@ -180,6 +185,7 @@
                             {{ row.TRC_MAT_SAP_CODE }} -
                             ({{ row.TRC_START_TIME }} - {{ row.TRC_END_TIME }}) -
                             ({{ row.TRC_WM_CODE }} - {{ row.WM_NAME }})
+
                         </div>
                     </div>
                     {% endfor %}
@@ -190,13 +196,12 @@
     </div>
 </div>
 
-<!-- JS -->
+<!-- JS BOOTSTRAP 5-->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous">
 </script>
 
-
-<!-- JS UNTUK LINE DATA MATERIAL -->
+<!-- JS UNTUK LINE MATERIAL -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const toggleButtons = document.querySelectorAll('.toggle-btn');
@@ -212,13 +217,11 @@
                 this.textContent = this.textContent === '▶' ? '▼' : '▶';
             });
         });
-
-        // Tampilkan level 1 saat load
+        // Menambahkan 1 level 
         const firstLevels = document.querySelectorAll('.level-1');
         firstLevels.forEach(el => el.style.display = 'block');
     });
 </script>
-
 
 <!-- JS UNTUK FORM -->
 <script>
@@ -228,6 +231,5 @@
     $('#start_date').select2();
     $('#end_date').select2();
 </script>
-
 
 {% endblock %}

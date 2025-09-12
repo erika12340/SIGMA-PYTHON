@@ -113,7 +113,8 @@
             <!-- navbar content -->
           </div>
         </nav>
-        {% block content %}{% endblock %}
+        {% block content %}
+        {% endblock %}
       </div>
     </div>
   </div>
@@ -147,15 +148,6 @@
       document.getElementById('daftar_materials').classList.add('active');
     } else if (currentUrl.includes('/data_produksi')) {
       document.getElementById('data_produksi').classList.add('active');
-    } else if (currentUrl.includes('/traceability_by_machine')) {
-      document.getElementById('traceability').classList.add('active');
-      document.getElementById('traceability_by_machine').classList.add('active');
-    } else if (currentUrl.includes('/traceability_by_cu')) {
-      document.getElementById('traceability').classList.add('active');
-      document.getElementById('traceability_by_cu').classList.add('active');
-    } else if (currentUrl.includes('/traceability_by_materials')) {
-      document.getElementById('traceability').classList.add('active');
-      document.getElementById('traceability_by_materials').classList.add('active');
     }
   </script>
 </body>

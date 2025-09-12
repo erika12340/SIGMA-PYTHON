@@ -1,7 +1,6 @@
 {% extends "templates2/index.html" %}
 {% block content %}
 
-
 <style>
     /* Semua material-item disembunyikan dulu */
     .material-item {
@@ -51,7 +50,6 @@
 </style>
 
 
-
 <!-- Container Box -->
 <div class="container">
     <h3 style="margin-left: 30px ;">By Materials</h3>
@@ -78,9 +76,14 @@
                         <select name="mat_info" id="mat" class="form-select" onchange="this.form.submit()">
                             <option value="">-- Select Materials --</option>
                             {% for m in material_list %}
-                            <option value="{{ m.MAT_CODE }}|{{ m.MAT_SAP_CODE }}|{{ m.CNT_CODE }}|{{ m.MAT_VARIANT }}"
-                                {% if selected_mat_info == m.MAT_CODE|stringformat:"s"|add:"|"|add:m.MAT_SAP_CODE|add:"|"|add:m.CNT_CODE|add:"|"|add:m.MAT_VARIANT %}selected{% endif %}>
-                                {{ m.MAT_CODE }} - {{ m.MAT_SAP_CODE }} - {{ m.CNT_CODE }} - {{ m.MAT_VARIANT }}
+                            <option
+                                value="{{ m.MAT_CODE }}|{{ m.TRC_MAT_SAP_CODE }}|{{ m.TRC_CNT_CODE }}|{{ m.TRC_MAT_VARIANT }}"
+                                {% if selected_mat_info == m.MAT_CODE|stringformat:"s"|add:"|"|add:m.TRC_MAT_SAP_CODE|add:"|"|add:m.TRC_CNT_CODE|add:"|"|add:m.TRC_MAT_VARIANT|add:m.MAT_DESC %}selected{% endif %}>
+                                {{ m.MAT_CODE }} -
+                                {{ m.TRC_MAT_SAP_CODE }} -
+                                {{ m.TRC_CNT_CODE }} -
+                                {{ m.TRC_MAT_VARIANT }} -
+                                {{ m.MAT_DESC }}
                             </option>
                             {% endfor %}
                         </select>
@@ -90,7 +93,7 @@
                     <div class="col-md-4">
                         <label for="mch_info" class="form-label fw-bold">FL Phase :</label>
                         <select name="trc_fl_phase" id="trc_fl_phase" class="form-select" onchange="this.form.submit()">
-                            <option value="">-- Select Phase --</option>
+                            <option value="">-- Select FL Phase --</option>
                             {% for p in phase %}
                             <option value="{{ p.TRC_FL_PHASE }}"
                                 {% if p.TRC_FL_PHASE == selected_phase %}selected{% endif %}>
@@ -137,18 +140,20 @@
                 <div class="col-md-12 text-end">
                     <a href="traceability_by_materials" class="btn btn-secondary"> Reset </a>
                 </div>
+
             </div>
         </div>
 
-        <!-- Line Daftar Traceability By Materials -->
-        {% if traceability_raw %}
+        <!-- Traceability By Materials -->
+        {% if traceability_by_materials %}
         <div class="card">
             <div class="card-body">
-                <h5 class="card-title mb-3">Traceability Views</h5>
+                <h5 class="card-title mb-3">Traceability Views By Materials</h5>
                 <div id="material-tree">
-                    {% for row in traceability_raw %}
+                    {% for row in traceability_by_materials %}
                     <div class="material-item level-{{ row.level|add:1 }} mb-1">
                         <button class="toggle-btn" data-id="{{ forloop.counter }}">▶</button>
+
                         <!-- Baris 1 -->
                         {{ row.TRC_SO_CODE }} {{ row.TRC_CU_EXT_PROGR }} -
                         {{ row.MAT_CODE }} -
@@ -157,12 +162,14 @@
                         ({{ row.TRC_WM_CODE }} - {{ row.WM_NAME }})
 
                         <br>
+
                         <!-- Baris 2 -->
-                        <div style="margin-left: 8px; background-color: rgb(249, 222, 255);">
-                            {{ row.PP_CODE }} {{ row.MCH_CODE }} -
+                        <div style="margin-left: 8px; background-color: rgb(229, 222, 255);">
+                            {{ row.TRC_PP_CODE }} {{ row.TRC_MCH_CODE }} -
                             ({{ row.TRC_START_TIME }} - {{ row.TRC_END_TIME }}) -
                             ({{ row.TRC_WM_CODE }} - {{ row.WM_NAME }})
                         </div>
+
                     </div>
                     {% endfor %}
                 </div>
@@ -171,7 +178,7 @@
         {% endif %}
     </div>
 </div>
-</div>
+
 
 <!-- JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"

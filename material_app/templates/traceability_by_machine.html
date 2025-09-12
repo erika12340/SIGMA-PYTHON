@@ -90,7 +90,7 @@
                         </select>
                     </div>
 
-                    <!-- Start Date -->
+
                     <!-- Start Date -->
                     <div class="col-md-4">
                         <label for="start_date" class="form-label fw-bold">From :</label>
@@ -147,12 +147,14 @@
                             ({{ row.TRC_WM_CODE }} - {{ row.WM_NAME }})
 
                             <br>
+
                             <!-- Baris 2 -->
-                            <div style="margin-left: 8px; background-color: rgb(249, 222, 255);">
+                            <div style="margin-left: 8px; background-color: rgb(199, 190, 250);">
                                 {{ row.PP_CODE }} {{ row.MCH_CODE }} -
-                                ({{ row.TRC_START_TIME }} - {{ row.TRC_END_TIME }}) -
+                                ({{ row.TRC_START_TIME}} - {{ row.TRC_END_TIME }})
                                 ({{ row.TRC_WM_CODE }} - {{ row.WM_NAME }})
                             </div>
+
                         </div>
                     </div>
                     {% endfor %}
@@ -163,21 +165,19 @@
     </div>
 </div>
 
-<!-- SCRIPT TOGGLE CHILDREN -->
+
+<!-- JAVA SCRIPT TOGGLE CHILD -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         // Tampilkan semua level-1 (root)
         document.querySelectorAll(".material-item.level-1").forEach(item => item.style.display = "block");
-
         document.querySelectorAll(".toggle-btn").forEach(btn => {
             btn.addEventListener("click", function () {
                 let currentItem = this.parentElement;
                 let currentLevel = parseInt(currentItem.className.match(/level-(\d+)/)[1]);
                 let next = currentItem.nextElementSibling;
                 let isExpanding = this.textContent === "▶";
-
                 this.textContent = isExpanding ? "▼" : "▶";
-
                 while (next && next.classList.contains("material-item")) {
                     let level = parseInt(next.className.match(/level-(\d+)/)[1]);
                     if (level <= currentLevel) break;
@@ -194,7 +194,7 @@
     });
 </script>
 
-<!-- SELECT2-->
+<!-- JS SELECT2-->
 <script>
     $('#trc').select2();
     $('#mch_info').select2();
