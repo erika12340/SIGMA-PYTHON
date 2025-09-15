@@ -2,7 +2,10 @@ node_modules
 .env
 # Byte-compiled / optimized / DLL files
 __pycache__/
+material_app/__pycache__/
+material_app/migrations/__pycache__/
 *.py[cod]
+*.pyc
 *$py.class
 
 # C extensions
