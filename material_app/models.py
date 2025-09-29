@@ -106,6 +106,7 @@ class WMS_TRACEABILITY(models.Model):
     TRC_WM_CODE = models.CharField (max_length=8)
     TRC_FL_PHASE = models.CharField (max_length=1)
     TRC_CNT_CODE = models.CharField (max_length=3)
+    TRC_MAT_VARIANT = models.CharField (max_length=10)
 
     class Meta:
         managed = False

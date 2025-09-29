@@ -5,38 +5,25 @@
     .material-item {
         display: none;
     }
+    .level-1 { margin-left: 1em; }
+    .level-2 { margin-left: 2em; }
+    .level-3 { margin-left: 3em; }
+    .level-4 { margin-left: 4em; }
+    .level-5 { margin-left: 5em; }
+    .level-6 { margin-left: 6em; }
+    .level-7 { margin-left: 7em; }
 
-    .level-1 {
-        margin-left: 1em;
-    }
-
-    .level-2 {
-        margin-left: 2em;
-    }
-
-    .level-3 {
-        margin-left: 3em;
-    }
-
-    .level-4 {
-        margin-left: 4em;
-    }
-
-    .level-5 {
-        margin-left: 5em;
-    }
-
-    .level-6 {
-        margin-left: 6em;
-    }
-
-    .level-7 {
-        margin-left: 7em;
+    .baris2 {
+        border-radius: 7px;
+        margin-left: 8px; 
+        display: inline-block; 
+        background-color: rgb(219, 213, 251); 
+        padding: 2px 4px;
     }
 </style>
 
-<div class="container">
-    <h3 style="margin-left: 30px;">By Machine</h3>
+<div class="container mt-4">
+    <h3 class="judul mb-4">By Machine</h3>
 
     <!-- FILTER -->
     <div class="container mt-4">
@@ -90,7 +77,6 @@
                         </select>
                     </div>
 
-
                     <!-- Start Date -->
                     <div class="col-md-4">
                         <label for="start_date" class="form-label fw-bold">From :</label>
@@ -121,12 +107,12 @@
                 </form>
 
                 <div class="col-md-12 text-end mt-2">
-                    <a href="traceability_by_machine" class="btn btn-secondary">Reset</a>
+                    <a href="traceability_by_machine" class="btn btn-primary">Reset</a>
                 </div>
             </div>
         </div>
 
-        <!-- TRACEABILITY TREE -->
+        <!-- traceability views by machine -->
         {% if traceability_tree %}
         <div class="card">
             <div class="card-body">
@@ -136,25 +122,30 @@
                     <div class="material-item level-{{ row.level|add:1 }} mb-1">
                         <div data-bs-spy="scroll" data-bs-target="#list-example" data-bs-offset="0"
                             class="scrollspy-example" tabindex="0">
-
                             <button class="toggle-btn" data-id="{{ forloop.counter }}">▶</button>
-
-                            <!-- Baris 1 -->
-                            {{ row.TRC_SO_CODE }} {{ row.TRC_CU_EXT_PROGR }} -
-                            {{ row.MAT_CODE }} -
-                            {{ row.TRC_MAT_SAP_CODE }} -
-                            ({{ row.TRC_START_TIME }} - {{ row.TRC_END_TIME }}) -
-                            ({{ row.TRC_WM_CODE }} - {{ row.WM_NAME }})
-
-                            <br>
-
-                            <!-- Baris 2 -->
-                            <div style="margin-left: 8px; background-color: rgb(199, 190, 250);">
-                                {{ row.PP_CODE }} {{ row.MCH_CODE }} -
-                                ({{ row.TRC_START_TIME}} - {{ row.TRC_END_TIME }})
-                                ({{ row.TRC_WM_CODE }} - {{ row.WM_NAME }})
-                            </div>
-
+                            <!-- traceability views by machine -->
+                            {% if row.type == "root" %}
+                                <!-- Root node -->
+                                {{ row.baris1.TRC_SO_CODE }} 
+                                {{ row.baris1.TRC_CU_EXT_PROGR }} -
+                                {{ row.baris1.MAT_CODE }} -
+                                {{ row.baris1.TRC_MAT_SAP_CODE }} -
+                                ({{ row.baris1.TRC_START_TIME }} - 
+                                {{ row.baris1.TRC_END_TIME }}) -
+                                ({{ row.baris1.TRC_WM_CODE }} - 
+                                {{ row.baris1.WM_NAME }})
+                                <br>
+                                {% if row.baris2 %}
+                                <div class="baris2">
+                                    {{ row.baris2.TRC_PP_CODE }} 
+                                    {{ row.baris2.TRC_MCH_CODE }} -
+                                    ({{ row.baris2.TRC_START_TIME }} - 
+                                    {{ row.baris2.TRC_END_TIME }})
+                                    ({{ row.baris2.TRC_WM_CODE }} - 
+                                    {{ row.baris2.WM_NAME }})
+                                </div>
+                                {% endif %}
+                            {% endif %}
                         </div>
                     </div>
                     {% endfor %}
@@ -166,6 +157,18 @@
 </div>
 
 
+<!-- JS  -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/2.3.2/js/dataTables.js"></script>
+<script src="https://cdn.datatables.net/buttons/3.2.4/js/dataTables.buttons.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/3.2.4/js/buttons.html5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+
+
 <!-- JAVA SCRIPT TOGGLE CHILD -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -173,7 +176,7 @@
         document.querySelectorAll(".material-item.level-1").forEach(item => item.style.display = "block");
         document.querySelectorAll(".toggle-btn").forEach(btn => {
             btn.addEventListener("click", function () {
-                let currentItem = this.parentElement;
+                let currentItem = this.parentElement.parentElement;
                 let currentLevel = parseInt(currentItem.className.match(/level-(\d+)/)[1]);
                 let next = currentItem.nextElementSibling;
                 let isExpanding = this.textContent === "▶";
@@ -185,13 +188,15 @@
                         next.style.display = isExpanding ? "block" : "none";
                     }
                     if (!isExpanding && level > currentLevel) {
-                        next.querySelector(".toggle-btn").textContent = "▶";
+                        let toggle = next.querySelector(".toggle-btn");
+                        if (toggle) toggle.textContent = "▶";
+                        next.style.display = "none";
                     }
                     next = next.nextElementSibling;
                 }
             });
         });
-    });
+    }); 
 </script>
 
 <!-- JS SELECT2-->

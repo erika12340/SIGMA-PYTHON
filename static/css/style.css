@@ -1,116 +1,76 @@
-.nav-tabs {
-    background-color: #f1f1f1;
-    /* Warna background menu */
-    border-radius: 12px;
-    /* Membuat sisi kiri dan kanan melengkung */
-    padding: 5px;
-    /* Supaya ada jarak di dalam */
+/* -------------- BODY -------------- */
+body{
+    background: url('../img/3.png') no-repeat center center fixed;
+    background-size: cover;
 }
 
-/* Menu Traceability and Materials */
-.nav {
-    background-color: rgb(228, 198, 255);
-    width: 95%;
-    margin: 20px auto;
+/* -------------- NAVBAR ------------- */
+.navbar {
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.7); 
+    backdrop-filter: blur(5px);          
+    padding: 1rem 2rem;                  
+    position: relative;                   
+    z-index: 1000;                     
 }
 
-td[class^="indent-"] {
-    padding-left: 0;
+/* Warna teks navbar dan brand */
+.navbar .nav-link,
+.navbar .navbar-brand {
+    color: #ffffff !important;  /* teks putih */
+    font-weight: 500;
+    transition: color 0.3s ease;
 }
 
-td.indent-1 {
-    padding-left: 5px;
+/* Hover efek */
+.navbar .nav-link:hover,
+.navbar .navbar-brand:hover {
+    color: #f8c146 !important; /* warna hover emas */
 }
 
-td.indent-2 {
-    padding-left: 10px;
+/* Aktif menu */
+.navbar .nav-link.active {
+    color: #f8c146 !important;  
+    border-bottom: 2px solid #f8c146;
 }
 
-td.indent-3 {
-    padding-left: 15px;
+/* Supaya menu navbar berada di tengah */
+.navbar-nav {
+    margin: 0 auto;  
 }
 
-td.indent-4 {
-    padding-left: 20px;
+/* Teks link di tengah */
+.navbar .nav-link {
+    text-align: center;
 }
 
-td.indent-5 {
-    padding-left: 25px;
+/* Dropdown menu */
+.dropdown-menu {
+    background-color: rgba(26, 26, 26, 0.9);
+    position: absolute;
+    z-index: 2000;        
 }
 
-td.indent-6 {
-    padding-left: 30px;
+/* Item dropdown */
+.dropdown-item {
+    color: #ffffff; /* teks putih */
 }
 
-td.indent-7 {
-    padding-left: 35px;
+.dropdown-item:hover {
+    background-color: #333;
+    color: #f8c146;
 }
 
-td.indent-8 {
-    padding-left: 40px;
+/* css label form */
+.form-label{
+    color: #000;
 }
 
-td.indent-9 {
-    padding-left: 45px;
+.judul{
+    color:#ffffff;
 }
 
-td.indent-10 {
-    padding-left: 50px;
-}
-
-.material-item {
-    display: none;
-}
-
-.toggle-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 0.9rem;
-}
-
-
-/* css untuk line data materials */
-.material-item {
-    display: block;
-}
-
-.level-1 {
-    margin-left: 1em;
-}
-
-.level-2 {
-    margin-left: 2em;
-}
-
-.level-3 {
-    margin-left: 3em;
-}
-
-.level-4 {
-    margin-left: 4em;
-}
-
-.level-5 {
-    margin-left: 5em;
-}
-
-.level-6 {
-    margin-left: 6em;
-}
-
-.level-7 {
-    margin-left: 7em;
-}
-
-.level-8 {
-    margin-left: 8em;
-}
-
-.level-9 {
-    margin-left: 9em;
-}
-
-.level-10 {
-    margin-left: 10em;
+/* CSS TOOGLE RESVONSIVE */
+.navbar-toggler{
+    background: #ffffff;
 }

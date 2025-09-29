@@ -2,71 +2,65 @@
 {% block content %}
 
 <style>
-    /* Semua material-item disembunyikan dulu */
     .material-item {
         display: none;
     }
 
-    /* Indentasi berdasarkan level */
-    .level-1 {
-        margin-left: 1em;
-    }
-
-    .level-2 {
-        margin-left: 2em;
-    }
-
-    .level-3 {
-        margin-left: 3em;
-    }
-
-    .level-4 {
-        margin-left: 4em;
-    }
-
-    .level-5 {
-        margin-left: 5em;
-    }
-
-    .level-6 {
-        margin-left: 6em;
-    }
-
-    .level-7 {
-        margin-left: 7em;
-    }
+    .level-1 { margin-left: 1em; }
+    .level-2 { margin-left: 2em; }
+    .level-3 { margin-left: 3em; }
+    .level-4 { margin-left: 4em; }
+    .level-5 { margin-left: 5em; }
+    .level-6 { margin-left: 6em; }
+    .level-7 { margin-left: 7em; }
+    .level-8 { margin-left: 8em; }
 </style>
 
+<!-- konten -->
 <div class="container mt-4">
-    <h3 class="mb-4">Data Materials</h3>
-    <!-- Form Dropdown -->
-    <form method="get" action="daftar_materials" class="mb-4">
-        <div class="row g-3">
-            <div class="col-md-6">
-                <label for="sfc" class="form-label fw-bold">Semi Finishing :</label>
-                <select name="sfc_code" id="sfc" class="form-select" onchange="this.form.submit()">
-                    <option value="">-- Select SFC --</option>
-                    {% for sfc in sfc_list %}
-                    <option value="{{ sfc.SFC_CODE }}" {% if sfc.SFC_CODE == selected_sfc %}selected{% endif %}>
-                        {{ sfc.SFC_CODE }} - {{ sfc.SFC_DESC }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-6">
-                <label for="mat" class="form-label fw-bold">IP Materials :</label>
-                <select name="mat_info" id="mat" class="form-select" onchange="this.form.submit()">
-                    <option value="">-- Select Material --</option>
-                    {% for m in materials %}
-                    <option value="{{ m.MAT_CODE }}|{{ m.MAT_SAP_CODE }}|{{ m.MAT_VARIANT }}|{{ m.CNT_CODE }}"
-                        {% if selected_mat_info == m.MAT_CODE|stringformat:"s"|add:"|"|add:m.MAT_SAP_CODE|add:"|"|add:m.MAT_VARIANT|add:"|"|add:m.CNT_CODE %}selected{% endif %}>
-                        {{ m.MAT_CODE }} - {{ m.MAT_SAP_CODE }} - {{ m.CNT_CODE }} - {{ m.MAT_VARIANT }}
-                    </option>
-                    {% endfor %}
-                </select>
+    <h3 class="judul mb-4"  >Data Materials</h3>
+  <!-- Form Dropdown dalam Card -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Filter Data Materials</h5>
+            <form method="get" action="daftar_materials">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="sfc" class="form-label fw-bold">Semi Finishing :</label>
+                        <select name="sfc_code" id="sfc" class="form-select" onchange="this.form.submit()">
+                            <option value="">-- Select SFC --</option>
+                            {% for sfc in sfc_list %}
+                            <option value="{{ sfc.SFC_CODE }}" {% if sfc.SFC_CODE == selected_sfc %}selected{% endif %}>
+                                {{ sfc.SFC_CODE }} - {{ sfc.SFC_DESC }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="mat" class="form-label fw-bold">IP Materials :</label>
+                        <select name="mat_info" id="mat" class="form-select" onchange="this.form.submit()">
+                            <option value="">-- Select Material --</option>
+                            {% for m in materials %}
+                            <option value="{{ m.MAT_CODE }}|{{ m.MAT_SAP_CODE }}|{{ m.MAT_VARIANT }}|{{ m.CNT_CODE }}"
+                                {% if selected_mat_info == m.MAT_CODE|stringformat:"s"|add:"|"|add:m.MAT_SAP_CODE|add:"|"|add:m.MAT_VARIANT|add:"|"|add:m.CNT_CODE %}selected{% endif %}>
+                                {{ m.MAT_CODE }} - {{ m.MAT_SAP_CODE }} - {{ m.CNT_CODE }} - {{ m.MAT_VARIANT }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </form>
+
+             <!-- Tombol Reset -->
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <a href="daftar_materials" class="btn btn-primary">Reset</a>
+                </div>
             </div>
         </div>
-    </form>
+    </div>
+
 
     <!-- Detail Material -->
     <div class="card mb-4">
@@ -122,6 +116,17 @@
     </div>
     {% endif %}
 </div>
+<!-- end konten -->
+
+<!-- JS  -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/2.3.2/js/dataTables.js"></script>
+<script src="https://cdn.datatables.net/buttons/3.2.4/js/dataTables.buttons.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/3.2.4/js/buttons.html5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <!-- JS UNTUK LINE DATA MATERIAL -->
 <script>

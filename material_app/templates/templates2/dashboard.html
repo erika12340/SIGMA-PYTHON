@@ -1,12 +1,11 @@
 {% extends "templates2/index.html" %}
-
 {% block content %}
-<div class="content-wrapper">
+
+<div class="content-wrapper" style="color:aliceblue">
   <!-- Content -->
   <div class="container-xxl flex-grow-1 container-p-y">
     <div class="row gy-6">
-      <!-- Title -->
-      <h3>Sistem Informasi Akomodasi Produksi Material</h3>
+      <h4 class="h4-text">Sistem Informasi Akomodasi Produksi Material</h4>
 
       <!-- Transactions -->
       <div class="col-lg-8">
@@ -18,7 +17,7 @@
           </div>
           <div class="card-body pt-lg-10">
             <div class="row g-6">
-              
+
               <!-- Sales -->
               <div class="col-md-3 col-6">
                 <div class="d-flex align-items-center border-end pe-3">
@@ -28,12 +27,12 @@
                     </div>
                   </div>
                   <div class="ms-3">
-                    <p class="mb-0">Sales</p>
-                    <h5 class="mb-0">245k</h5>
+                    <p class="mb-0">Materials</p>
+                    <h5 class="mb-0">--</h5>
                   </div>
                 </div>
               </div>
-              
+
               <!-- Customers -->
               <div class="col-md-3 col-6">
                 <div class="d-flex align-items-center border-end pe-3">
@@ -43,8 +42,8 @@
                     </div>
                   </div>
                   <div class="ms-3">
-                    <p class="mb-0">Customers</p>
-                    <h5 class="mb-0">12.5k</h5>
+                    <p class="mb-0">Produksi</p>
+                    <h5 class="mb-0">--</h5>
                   </div>
                 </div>
               </div>
@@ -58,27 +57,11 @@
                     </div>
                   </div>
                   <div class="ms-3">
-                    <p class="mb-0">Product</p>
-                    <h5 class="mb-0">1.54k</h5>
+                    <p class="mb-0">Mesin</p>
+                    <h5 class="mb-0">--</h5>
                   </div>
                 </div>
               </div>
-              
-              <!-- Revenue -->
-              <div class="col-md-3 col-6">
-                <div class="d-flex align-items-center border-end pe-3">
-                  <div class="avatar">
-                    <div class="avatar-initial bg-info rounded shadow-xs">
-                      <i class="icon-base ri ri-money-dollar-circle-line icon-24px"></i>
-                    </div>
-                  </div>
-                  <div class="ms-3">
-                    <p class="mb-0">Revenue</p>
-                    <h5 class="mb-0">$88k</h5>
-                  </div>
-                </div>
-              </div>
-
             </div>
           </div>
         </div>
@@ -88,24 +71,6 @@
     </div>
   </div>
   <!-- / Content -->
-
-  <!-- Footer -->
-  <footer class="content-footer footer bg-footer-theme">
-    <div class="container-xxl">
-      <div class="footer-container d-flex align-items-center justify-content-between py-4 flex-md-row flex-column">
-        <div class="mb-2 mb-md-0">
-          &#169;
-          <script>
-            document.write(new Date().getFullYear());
-          </script>
-          , made with by
-          <a href="https://themeselection.com" target="_blank" class="footer-link fw-medium">Erika Rachmawati</a>
-        </div>
-      </div>
-    </div>
-  </footer>
-  <!-- / Footer -->
-
   <div class="content-backdrop fade"></div>
 </div>
 {% endblock %}
