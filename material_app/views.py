@@ -276,7 +276,9 @@ def daftar_produksi(request):
 
 
 
-
+from datetime import datetime, time
+from django.db.models import Q, OuterRef, Subquery
+from django.db.models.functions import TruncDate, ExtractHour
 
 # ========================= TRACEABILITY BY MACHINE ==========================
 def traceability_by_machine(request):
@@ -299,8 +301,19 @@ def traceability_by_machine(request):
         except Exception:
             return None, None
 
-    start_date, start_shift = parse_date_shift(start_date_raw)
-    end_date, end_shift = parse_date_shift(end_date_raw)
+    def get_shift_datetime_range(date_obj, shift_num):
+        if shift_num == 1:
+            start_dt = datetime.combine(date_obj, time(0, 0, 0))
+            end_dt = datetime.combine(date_obj, time(8, 0, 0))
+        elif shift_num == 2:
+            start_dt = datetime.combine(date_obj, time(8, 0, 0))
+            end_dt = datetime.combine(date_obj, time(16, 0, 0))
+        elif shift_num == 3:
+            start_dt = datetime.combine(date_obj, time(16, 0, 0))
+            end_dt = datetime.combine(date_obj, time(23, 59, 59))
+        else:
+            return None, None
+        return start_dt, end_dt
 
     def hour_to_shift(hour):
         if 0 <= hour < 8:
@@ -308,7 +321,10 @@ def traceability_by_machine(request):
         if 8 <= hour < 16:
             return 2
         return 3
-    
+
+    start_date, start_shift = parse_date_shift(start_date_raw)
+    end_date, end_shift = parse_date_shift(end_date_raw)
+
     # 1) Daftar form production phase (TRC_PP_CODE)
     pp_desc_subquery = MD_PRODUCTION_PHASES.objects.filter(
         PP_CODE=OuterRef('TRC_PP_CODE')
@@ -383,29 +399,14 @@ def traceability_by_machine(request):
         except ValueError:
             pass
 
-        # filter tanggal range
-        traceability_qs = traceability_qs.filter(TRC_START_TIME__date__range=(start_date, end_date))
-
-        # filter shift di start_date
-        if start_shift:
-            if start_shift == 1:
-                traceability_qs = traceability_qs.filter(
-                    TRC_START_TIME__date=start_date,
-                    TRC_START_TIME__hour__gte=0,
-                    TRC_START_TIME__hour__lt=8
-                )
-            elif start_shift == 2:
-                traceability_qs = traceability_qs.filter(
-                    TRC_START_TIME__date=start_date,
-                    TRC_START_TIME__hour__gte=8,
-                    TRC_START_TIME__hour__lt=16
-                )
-            elif start_shift == 3:
-                traceability_qs = traceability_qs.filter(
-                    TRC_START_TIME__date=start_date,
-                    TRC_START_TIME__hour__gte=16,
-                    TRC_START_TIME__hour__lte=23
-                )
+        # filter tanggal dan shift
+        if start_shift and end_shift:
+            start_dt, _ = get_shift_datetime_range(start_date, start_shift)
+            _, end_dt = get_shift_datetime_range(end_date, end_shift)
+            traceability_qs = traceability_qs.filter(
+                Q(TRC_START_TIME__range=(start_dt, end_dt)) |
+                Q(TRC_END_TIME__range=(start_dt, end_dt))
+            )
 
         # filter phase
         traceability_qs = traceability_qs.filter(TRC_FL_PHASE=trc_fl_phase)
@@ -440,11 +441,11 @@ def traceability_by_machine(request):
                 if not child_cu:
                     continue
 
-                # ambil detail baris1 (phase utama anak)
+                # ambil detail baris1
                 detail1 = WMS_TRACEABILITY.objects.filter(
                     TRC_SO_CODE=child_so,
                     TRC_CU_EXT_PROGR=child_cu,
-                    TRC_FL_PHASE='C'   # atau bisa disesuaikan kayak root (baris1_phase / baris2_phase)
+                    TRC_FL_PHASE='C'
                 ).annotate(
                     MAT_CODE=Subquery(MD_MATERIALS.objects.filter(MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')).values('MAT_CODE')[:1]),
                     WM_NAME=Subquery(MD_WORKERS.objects.filter(WM_CODE=OuterRef('TRC_WM_CODE')).values('WM_NAME')[:1])
@@ -454,7 +455,7 @@ def traceability_by_machine(request):
                     'TRC_END_TIME','TRC_CU_EXT_PROGR','TRC_FL_PHASE','MAT_CODE','WM_NAME'
                 ).first()
 
-                # ambil detail baris2 (phase kebalikannya)
+                # ambil detail baris2
                 detail2 = None
                 if detail1:
                     other_phase = 'P' if detail1['TRC_FL_PHASE'] == 'C' else 'C'
@@ -473,7 +474,7 @@ def traceability_by_machine(request):
 
                 if detail1:
                     node = {
-                        'type': 'root',   # biar template bisa pakai format yang sama
+                        'type': 'root',   # agar template bisa pakai format yang sama
                         'level': level,
                         'baris1': detail1,
                         'baris2': detail2
@@ -482,7 +483,6 @@ def traceability_by_machine(request):
                     child_nodes += get_child_cu_tree(child_so, child_cu, level+1)
 
             return child_nodes
-
 
         # --- Build traceability_tree ---
         for item in traceability_raw:
@@ -501,12 +501,21 @@ def traceability_by_machine(request):
                     TRC_CU_EXT_PROGR=item['TRC_CU_EXT_PROGR'],
                     TRC_FL_PHASE=baris2_phase
                 ).annotate(
-                    MAT_CODE=Subquery(MD_MATERIALS.objects.filter(MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')).values('MAT_CODE')[:1]),
-                    WM_NAME=Subquery(MD_WORKERS.objects.filter(WM_CODE=OuterRef('TRC_WM_CODE')).values('WM_NAME')[:1])
+                    MAT_CODE=Subquery(
+                        MD_MATERIALS.objects.filter(
+                            MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')
+                        ).values('MAT_CODE')[:1]
+                    ),
+                    WM_NAME=Subquery(
+                        MD_WORKERS.objects.filter(
+                            WM_CODE=OuterRef('TRC_WM_CODE')
+                        ).values('WM_NAME')[:1]
+                    )
                 ).values(
-                    'TRC_PP_CODE','TRC_MCH_CODE','TRC_SO_CODE',
-                    'TRC_MAT_SAP_CODE','TRC_WM_CODE','TRC_START_TIME',
-                    'TRC_END_TIME','TRC_CU_EXT_PROGR','TRC_FL_PHASE','MAT_CODE','WM_NAME'
+                    'TRC_PP_CODE', 'TRC_MCH_CODE', 'TRC_SO_CODE',
+                    'TRC_MAT_SAP_CODE', 'TRC_WM_CODE', 'TRC_START_TIME',
+                    'TRC_END_TIME', 'TRC_CU_EXT_PROGR', 'TRC_FL_PHASE',
+                    'MAT_CODE', 'WM_NAME'
                 ).first()
 
                 node = {
@@ -516,9 +525,9 @@ def traceability_by_machine(request):
                     'baris2': baris2
                 }
                 traceability_tree.append(node)
-
                 traceability_tree += get_child_cu_tree(item['TRC_SO_CODE'], item['TRC_CU_EXT_PROGR'], level=1)
 
+    # --- Context untuk render ke template ---
     context = {
         'trc_list': trc_list,
         'machines': machines,
@@ -533,8 +542,6 @@ def traceability_by_machine(request):
     }
 
     return render(request, 'traceability_by_machine.html', context)
-
-
 
 
 
