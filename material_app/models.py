@@ -30,7 +30,6 @@ class MD_MATERIALS(models.Model):
             ('MAT_SAP_CODE', 'MAT_VARIANT', 'CNT_CODE'),
         )
 
-
 # -------------- 3. MD_BOM --------------
 class MD_BOM(models.Model):
     MAT_SAP_CODE = models.CharField(max_length=9, primary_key=True)
@@ -58,7 +57,6 @@ class DC_PRODUCTION_DATA(models.Model):
     PP_CODE = models.CharField(max_length=3)
     MCH_CODE = models.CharField(max_length=8)
     SHF_CODE = models.CharField(max_length=10)
-    WM_CODE = models.CharField(max_length=8)
     PS_QUANTITY = models.CharField(max_length=8)
     PS_DECLARE_SEC = models.CharField(max_length=8)
     PS_START_PROD = models.DateTimeField(max_length=8)
@@ -76,7 +74,7 @@ class DC_PRODUCTION_DATA(models.Model):
 
 
 
-# -------------- Model 5. MD_PRODUCTION_PHASES -------------- DONE
+# -------------- Model 5. MD_PRODUCTION_PHASES -------------- 
 class MD_PRODUCTION_PHASES(models.Model):
     PP_CODE = models.CharField(max_length=3, primary_key=True)
     PP_DESC = models.CharField(max_length=8)
@@ -85,7 +83,7 @@ class MD_PRODUCTION_PHASES(models.Model):
         managed = False
         db_table = 'MD_PRODUCTION_PHASES'
 
-# -------------- 6. Model MD_WORKERS --------------DONE
+# -------------- 6. Model MD_WORKERS --------------
 class MD_WORKERS(models.Model):
     WM_CODE = models.CharField(max_length=9, primary_key=True)
     WM_NAME = models.CharField(max_length=30)
@@ -122,9 +120,6 @@ class WMS_TRACEABILITY_CU(models.Model):
     CHILD_CU_CODE = models.CharField (max_length=20)
     CHILD_SO_CODE = models.CharField (max_length=4)
     CHILD_CU_EXT_PROGR = models.CharField (max_length=6)
-    PP_CODE = models.CharField (max_length=3)
-    MCH_CODE = models.CharField (max_length=8)
-    WM_CODE = models.CharField (max_length=8)
 
     class Meta:
         managed = False
@@ -133,16 +128,9 @@ class WMS_TRACEABILITY_CU(models.Model):
             ('SO_CODE', 'CHILD_CU_CODE', 'CU_EXT_PROGR')
         )
 
-# -------------- 9. Model MD_CONTAINERS --------------
-class MD_CONTAINERS(models.Model):
-    CNT_CODE = models.CharField (max_length=3, primary_key=True)
-    CNT_DESC = models.CharField (max_length=8)
 
-    class Meta:
-        managed = False
-        db_table = 'MD_CONTAINERS'
 
-# -------------- 10. Model MD_SOURCES --------------
+# -------------- 9. Model MD_SOURCES --------------
 class MD_SOURCES(models.Model):
     SO_CODE = models.CharField (max_length=4, primary_key=True)
     SO_DESC = models.CharField (max_length=30)

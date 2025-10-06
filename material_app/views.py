@@ -153,6 +153,16 @@ def daftar_materials(request):
 
 
 
+
+
+
+
+
+
+
+
+
+
 # ================= MENU PRODUCTIONS ==================
 def daftar_produksi(request):
     sfc_list = MD_SEMI_FINISHED_CLASSES.objects.filter(SFC_CODE__in=['AL', 'AX'])
@@ -184,15 +194,18 @@ def daftar_produksi(request):
     else:
         production_list_query = DC_PRODUCTION_DATA.objects.all().order_by('-PS_DATE')[:10]
 
+
+
     # Ambil mapping MAT_SAP_CODE -> MAT_CODE
     mat_map = {}
     if sfc_code:
         mat_map = dict(MD_MATERIALS.objects.filter(SFC_CODE=sfc_code).values_list('MAT_SAP_CODE', 'MAT_CODE'))
+
         # Untuk dropdown IP Materials
         unique_mat_sap_codes = DC_PRODUCTION_DATA.objects.filter(MAT_SAP_CODE__in=mat_map.keys()).values_list('MAT_SAP_CODE', flat=True).distinct()
         materials = [{'MAT_SAP_CODE': code, 'MAT_CODE': mat_map.get(code, '')} for code in unique_mat_sap_codes]
 
-    # Filter SFC jika dipilih
+    # Filter SFC 
     if sfc_code and mat_map:
         production_list_query = production_list_query.filter(MAT_SAP_CODE__in=mat_map.keys())
 
@@ -200,10 +213,10 @@ def daftar_produksi(request):
     if mat_info:
         production_list_query = production_list_query.filter(MAT_SAP_CODE=mat_info)
 
-    # Jika user tidak isi tanggal, otomatis set 3 hari terakhir (berlaku baik pilih SFC atau IP Materials)
+    # Jika user tidak isi tanggal, otomatis set 3 hari terakhir
     if (sfc_code or mat_info) and not start_date and not end_date:
         end_dt = datetime.now()
-        start_dt = end_dt - timedelta(days=2)  # 3 hari (hari ini + 2 sebelumnya)
+        start_dt = end_dt - timedelta(days=2)  
         start_date = start_dt.strftime("%Y-%m-%d")
         end_date = end_dt.strftime("%Y-%m-%d")
 
@@ -265,13 +278,10 @@ def daftar_produksi(request):
 
 
 
-
-
-
 # ========================= TRACEABILITY BY MACHINE ==========================
 def traceability_by_machine(request):
     # --- Ambil parameter dari form (GET) ---
-    trc_code = request.GET.get('trc_code')               # production phase (TRC_PP_CODE)
+    trc_code = request.GET.get('trc_code')               # production phases (TRC_PP_CODE)
     mch_info = request.GET.get('mch_info')               # "TRC_PP_CODE|TRC_MCH_CODE"
     start_date_raw = request.GET.get('start_date')       # "YYYY-mm-dd|shift"
     end_date_raw = request.GET.get('end_date')           # "YYYY-mm-dd|shift"
@@ -298,8 +308,8 @@ def traceability_by_machine(request):
         if 8 <= hour < 16:
             return 2
         return 3
-
-    # 1) Daftar production phase
+    
+    # 1) Daftar form production phase (TRC_PP_CODE)
     pp_desc_subquery = MD_PRODUCTION_PHASES.objects.filter(
         PP_CODE=OuterRef('TRC_PP_CODE')
     ).values('PP_DESC')[:1]
@@ -312,7 +322,7 @@ def traceability_by_machine(request):
         .order_by('TRC_PP_CODE')
     )
 
-    # 2) Daftar mesin (hanya muncul kalau trc_code dipilih)
+    # 2) Daftar mesin (hanya muncul ketika trc_code dipilih)
     machines = []
     if trc_code:
         machines = (
@@ -881,103 +891,18 @@ def traceability_by_cu(request):
 
 
 
-# ================ TRACEABILITY BY MATERIALS =================
-def traceability_by_materials(request):
-    allowed_sfc_code = ['C0', 'CC', 'CE', 'CP', 'CX', 'FB', 'RC', 'TB', 'TT']
 
-    # ------------ Parameter Pemanggilan ------------
-    sfc_code = request.GET.get('sfc_code')
-    mat_info = request.GET.get('mat_info')
-    start_date_raw = request.GET.get('start_date')
-    end_date_raw = request.GET.get('end_date')
-    trc_fl_phase = request.GET.get('trc_fl_phase')
 
-    # --- helper parse tanggal|shift ---
-    def parse_date_shift(raw_value):
-        if not raw_value:
-            return None, None
-        try:
-            date_part, shift_part = raw_value.split('|')
-            date_obj = datetime.strptime(date_part, "%Y-%m-%d").date()
-            return date_obj, int(shift_part)
-        except Exception:
-            return None, None
 
-    start_date, start_shift = parse_date_shift(start_date_raw)
-    end_date, end_shift = parse_date_shift(end_date_raw)
 
-    def hour_to_shift(hour):
-        if 0 <= hour < 8: return 1
-        if 8 <= hour < 16: return 2
-        return 3
 
-    # --- 1) Dropdown SFC ---
-    sfc_list = (
-        MD_SEMI_FINISHED_CLASSES.objects
-        .filter(SFC_CODE__in=allowed_sfc_code)
-        .values('SFC_CODE', 'SFC_DESC')
-        .distinct()
-        .order_by('SFC_CODE')
-    )
 
-    # --- 2) Dropdown Materials (TRC_MAT_SAP_CODE dari WMS_TRACEABILITY, filter SFC_CODE) ---
-    material_list = []
-    if sfc_code:
-        # Ambil TRC_MAT_SAP_CODE dari WMS_TRACEABILITY
-        wms_mats = (
-            WMS_TRACEABILITY.objects
-            .filter(TRC_MAT_SAP_CODE__isnull=False, TRC_MAT_SAP_CODE__gt='')
-            .values('TRC_MAT_SAP_CODE', 'TRC_CNT_CODE', 'TRC_MAT_VARIANT')
-            .distinct()
-            .order_by('TRC_MAT_SAP_CODE')
-        )
 
-        for mat in wms_mats:
-            # Cek apakah TRC_MAT_SAP_CODE ini ada di MD_MATERIALS dengan SFC_CODE sama dengan form
-            if MD_MATERIALS.objects.filter(MAT_SAP_CODE=mat['TRC_MAT_SAP_CODE'], SFC_CODE=sfc_code).exists():
-                mat_code = MD_MATERIALS.objects.filter(MAT_SAP_CODE=mat['TRC_MAT_SAP_CODE']).values('MAT_CODE').first()
-                mat_desc = MD_MATERIALS.objects.filter(MAT_SAP_CODE=mat['TRC_MAT_SAP_CODE']).values('MAT_DESC').first()
-                material_list.append({
-                    'TRC_MAT_SAP_CODE': mat['TRC_MAT_SAP_CODE'],  # tetap dari WMS_TRACEABILITY
-                    'TRC_CNT_CODE': mat['TRC_CNT_CODE'],
-                    'TRC_MAT_VARIANT': mat['TRC_MAT_VARIANT'],
-                    'MAT_CODE': mat_code['MAT_CODE'] if mat_code else '',
-                    'MAT_DESC': mat_desc['MAT_DESC'] if mat_desc else '',
-                })
 
-    # --- 3) Dropdown Phase ---
-    phase = (
-        WMS_TRACEABILITY.objects
-        .values('TRC_FL_PHASE')
-        .distinct()
-        .order_by('TRC_FL_PHASE')
-    )
 
-    # --- 4) Dropdown Date+Shift ---
-    date_shift_choices = []
-    date_shift_raw_qs = (
-        WMS_TRACEABILITY.objects
-        .annotate(date=TruncDate('TRC_START_TIME'))
-        .annotate(hour=ExtractHour('TRC_START_TIME'))
-        .values('date', 'hour')
-        .distinct()
-        .order_by('-date', 'hour')
-    )
 
-    seen = set()
-    for rec in date_shift_raw_qs:
-        date = rec.get('date')
-        hour = rec.get('hour')
-        if date is None or hour is None:
-            continue
-        shift = hour_to_shift(hour)
-        key = (date, shift)
-        if key in seen:
-            continue
-        seen.add(key)
-        label = f"{date.strftime('%d/%m/%Y')} - Shift {shift}"
-        value = f"{date.isoformat()}|{shift}"
-        date_shift_choices.append({'value': value, 'label': label})
+
+
 
    # ================ TRACEABILITY BY MATERIALS =================
 def traceability_by_materials(request):
