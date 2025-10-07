@@ -834,7 +834,7 @@ def traceability_by_cu(request):
 
 # ================ TRACEABILITY BY MATERIALS =================
 def traceability_by_materials(request):
-    allowed_sfc_code = ['C0', 'CC', 'CE', 'CP', 'CX', 'FB', 'RC', 'TB', 'TT']
+    allowed_sfc_code = ['BR', 'C0', 'CC', 'CE', 'CP', 'CX', 'FB', 'RC', 'TB', 'TT']
 
     # ------------ Parameter Pemanggilan ------------
     sfc_code = request.GET.get('sfc_code')
