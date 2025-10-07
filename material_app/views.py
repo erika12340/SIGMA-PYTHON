@@ -5,7 +5,7 @@ from django.db.models import OuterRef, Subquery
 from django.db.models.functions import TruncDate, ExtractHour
 from django.db.models import Q
 from django.db.models import Min
-from django.db.models import OuterRef, Subquery, Q, F, IntegerField, Value
+from django.db.models import OuterRef, Subquery, Q
 
 
 # =================== MENU DASHBOARD ========================
@@ -274,11 +274,6 @@ def daftar_produksi(request):
 
 
 
-
-
-from datetime import datetime, time
-from django.db.models import Q, OuterRef, Subquery
-from django.db.models.functions import TruncDate, ExtractHour
 
 # ========================= TRACEABILITY BY MACHINE ==========================
 def traceability_by_machine(request):
@@ -570,32 +565,6 @@ def traceability_by_machine(request):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # ======================== TRACEABILITY BY CONTAINMENT UNIT (CU) ========================
 def traceability_by_cu(request):
     allowed_so_codes = ['00CE', '00CP', '00CX', '00FB', '00RC', '00TB', '00TT', 'SM11', 'SM21', 'TLV1']
@@ -618,14 +587,29 @@ def traceability_by_cu(request):
         except:
             return None, None
 
-    start_date, start_shift = parse_date_shift(start_date_raw)
-    end_date, end_shift = parse_date_shift(end_date_raw)
+    # ===== Helper shift => datetime range =====
+    def get_shift_datetime_range(date_obj, shift_num):
+        if shift_num == 1:
+            start_dt = datetime.combine(date_obj, time(0, 0, 0))
+            end_dt = datetime.combine(date_obj, time(8, 0, 0))
+        elif shift_num == 2:
+            start_dt = datetime.combine(date_obj, time(8, 0, 0))
+            end_dt = datetime.combine(date_obj, time(16, 0, 0))
+        elif shift_num == 3:
+            start_dt = datetime.combine(date_obj, time(16, 0, 0))
+            end_dt = datetime.combine(date_obj, time(23, 59, 59))
+        else:
+            return None, None
+        return start_dt, end_dt
 
-    # Shift berdasarkan jam
+    # ===== Shift dari jam (untuk dropdown shift) =====
     def hour_to_shift(hour):
         if 0 <= hour < 8: return 1
         if 8 <= hour < 16: return 2
         return 3
+
+    start_date, start_shift = parse_date_shift(start_date_raw)
+    end_date, end_shift = parse_date_shift(end_date_raw)
 
     # ============= DROPDOWN SOURCE =============
     sources = (
@@ -697,13 +681,11 @@ def traceability_by_cu(request):
         except ValueError:
             trc_so_code, trc_cu_ext_progr = None, None
 
-        # === ambil data CU untuk card Containment Unit ===
         data_cu = {
             'TRC_SO_CODE': trc_so_code,
             'TRC_CU_EXT_PROGR': trc_cu_ext_progr
         }
 
-        # === ambil data Materials untuk card Materials ===
         materials = (
             WMS_TRACEABILITY.objects
             .filter(TRC_SO_CODE=trc_so_code, TRC_CU_EXT_PROGR=trc_cu_ext_progr)
@@ -725,22 +707,21 @@ def traceability_by_cu(request):
             .first()
         )
 
-        # ================= Query utama traceability =================
+        # === Range waktu konkret berdasarkan shift ===
         traceability_qs = WMS_TRACEABILITY.objects.filter(
             TRC_SO_CODE=trc_so_code,
             TRC_CU_EXT_PROGR=trc_cu_ext_progr,
-            TRC_FL_PHASE=trc_fl_phase,
-            TRC_START_TIME__date__range=(start_date, end_date)
+            TRC_FL_PHASE=trc_fl_phase
         )
 
-        # Filter shift untuk start_date
-        if start_shift:
-            if start_shift == 1:
-                traceability_qs = traceability_qs.filter(TRC_START_TIME__hour__gte=0, TRC_START_TIME__hour__lt=8)
-            elif start_shift == 2:
-                traceability_qs = traceability_qs.filter(TRC_START_TIME__hour__gte=8, TRC_START_TIME__hour__lt=16)
-            elif start_shift == 3:
-                traceability_qs = traceability_qs.filter(TRC_START_TIME__hour__gte=16, TRC_START_TIME__hour__lte=23)
+        if start_shift and end_shift:
+            start_dt, _ = get_shift_datetime_range(start_date, start_shift)
+            _, end_dt = get_shift_datetime_range(end_date, end_shift)
+
+            traceability_qs = traceability_qs.filter(
+                Q(TRC_START_TIME__range=(start_dt, end_dt)) |
+                Q(TRC_END_TIME__range=(start_dt, end_dt))
+            )
 
         traceability_qs = traceability_qs.annotate(
             MAT_CODE=Subquery(
@@ -801,11 +782,13 @@ def traceability_by_cu(request):
 
         # ===== Build Tree =====
         for item in traceability_raw:
-            baris1_phase, baris2_phase = ('C','P') if trc_fl_phase == 'C' else ('P','C')
+            baris1_phase, baris2_phase = ('C', 'P') if trc_fl_phase == 'C' else ('P', 'C')
             if item['TRC_FL_PHASE'] == baris1_phase:
                 baris1 = item
                 baris2 = WMS_TRACEABILITY.objects.filter(
-                    TRC_SO_CODE=item['TRC_SO_CODE'], TRC_CU_EXT_PROGR=item['TRC_CU_EXT_PROGR'], TRC_FL_PHASE=baris2_phase
+                    TRC_SO_CODE=item['TRC_SO_CODE'],
+                    TRC_CU_EXT_PROGR=item['TRC_CU_EXT_PROGR'],
+                    TRC_FL_PHASE=baris2_phase
                 ).annotate(
                     MAT_CODE=Subquery(MD_MATERIALS.objects.filter(MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')).values('MAT_CODE')[:1]),
                     WM_NAME=Subquery(MD_WORKERS.objects.filter(WM_CODE=OuterRef('TRC_WM_CODE')).values('WM_NAME')[:1])
@@ -819,6 +802,7 @@ def traceability_by_cu(request):
                 traceability_cu.append(node)
                 traceability_cu += get_child_cu_tree(item['TRC_SO_CODE'], item['TRC_CU_EXT_PROGR'], level=1)
 
+    # ===== Context to Template =====
     context = {
         'sources': sources,
         'cu_list': cu_list,
@@ -833,6 +817,7 @@ def traceability_by_cu(request):
         'data_cu': data_cu,
         'materials': materials,
     }
+
     return render(request, 'traceability_by_cu.html', context)
 
 
@@ -847,71 +832,7 @@ def traceability_by_cu(request):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-   # ================ TRACEABILITY BY MATERIALS =================
+# ================ TRACEABILITY BY MATERIALS =================
 def traceability_by_materials(request):
     allowed_sfc_code = ['C0', 'CC', 'CE', 'CP', 'CX', 'FB', 'RC', 'TB', 'TT']
 
