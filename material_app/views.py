@@ -898,7 +898,8 @@ def traceability_by_cu(request):
 
 
 
-# C == P, P == C, BARIS1 == C, BARIS2 == P. 
+# C == P, P == C, BARIS1 == C, BARIS2 == P.  
+# jadi ketika trc_fl_phase yangterpilih itu P dia tidak berpatok ke tanggal tapi cari TRC_SO_CODE TRC_CU_EXT_PROGR nya yang berstatus P 
 
 
 
