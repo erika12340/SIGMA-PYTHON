@@ -911,6 +911,9 @@ def traceability_by_cu(request):
 
 
 
+
+
+
    # ================ TRACEABILITY BY MATERIALS =================
 def traceability_by_materials(request):
     allowed_sfc_code = ['C0', 'CC', 'CE', 'CP', 'CX', 'FB', 'RC', 'TB', 'TT']
