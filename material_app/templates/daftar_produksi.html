@@ -1,17 +1,16 @@
 {% extends "templates2/index.html" %}
 {% block content %}
 
-
 <!-- content -->
 <div class="container mt-4">
-    <h3 class="judul mb-4"  >Data Materials</h3>
+    <h3 class="judul mb-4">Data Materials</h3>
     <!-- Form Dropdown dalam Card -->
     <div class="card mb-4 shadow-sm">
         <div class="card-body">
             <h5 class="card-title mb-3">Filter Data Produksi</h5>
             <form method="get" action="daftar_produksi" id="filterForm">
                 <div class="row g-3">
-                    
+
                     <!-- Pilih SFC -->
                     <div class="col-md-3">
                         <label for="sfc" class="form-label fw-bold">Semi Finished :</label>
@@ -31,7 +30,8 @@
                         <select name="mat_info" id="mat" class="form-select" onchange="this.form.submit()">
                             <option value="">-- Select IP Materials --</option>
                             {% for m in materials %}
-                            <option value="{{ m.MAT_SAP_CODE }}" {% if selected_mat_info == m.MAT_SAP_CODE %}selected{% endif %}>
+                            <option value="{{ m.MAT_SAP_CODE }}"
+                                {% if selected_mat_info == m.MAT_SAP_CODE %}selected{% endif %}>
                                 {{ m.MAT_CODE }} - {{ m.MAT_SAP_CODE }}
                             </option>
                             {% endfor %}
@@ -40,16 +40,16 @@
 
                     <!-- Tanggal Awal -->
                     <div class="col-md-3">
-                        <label for="start_date" class="form-label fw-bold" >Tanggal Awal:</label>
+                        <label for="start_date" class="form-label fw-bold">Tanggal Awal:</label>
                         <input type="date" name="start_date" id="start_date" class="form-control"
-                               value="{{ selected_start_date|default:'' }}">
+                            value="{{ selected_start_date|default:'' }}">
                     </div>
 
                     <!-- Tanggal Akhir -->
                     <div class="col-md-3">
                         <label for="end_date" class="form-label fw-bold">Tanggal Akhir:</label>
                         <input type="date" name="end_date" id="end_date" class="form-control"
-                               value="{{ selected_end_date|default:'' }}">
+                            value="{{ selected_end_date|default:'' }}">
                     </div>
                 </div>
 
@@ -107,7 +107,6 @@
     </div>
     {% endif %}
 </div>
-
 <!-- end content -->
 
 <!-- JS  -->
@@ -147,7 +146,6 @@
 <script>
     $('#sfc').select2();
     $('#mat').select2();
-
 </script>
 
 <!-- UNTUK JS TANGGAL -->

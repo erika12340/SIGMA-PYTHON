@@ -3,22 +3,38 @@
 
 <style>
     .material-item {
-            display: none;
+        display: none;
     }
 
-    .level-1 { margin-left: 1em; }
-    .level-2 { margin-left: 4em; }
-    .level-3 { margin-left: 8em; }
-    .level-4 { margin-left: 12em; }
-    .level-5 { margin-left: 16em; }
-    .level-6 { margin-left: 20em; }
-    
+    .level-1 {
+        margin-left: 1em;
+    }
+
+    .level-2 {
+        margin-left: 4em;
+    }
+
+    .level-3 {
+        margin-left: 8em;
+    }
+
+    .level-4 {
+        margin-left: 12em;
+    }
+
+    .level-5 {
+        margin-left: 16em;
+    }
+
+    .level-6 {
+        margin-left: 20em;
+    }
 </style>
 
 <!-- Content -->
 <div class="container mt-4">
-    <h3 class="judul mb-4"  >Data Materials</h3>
-  <!-- Form Dropdown dalam Card -->
+    <h3 class="judul mb-4">Data Materials</h3>
+    <!-- Form Dropdown dalam Card -->
     <div class="card mb-4 shadow-sm">
         <div class="card-body">
             <h5 class="card-title mb-3">Filter Data Materials</h5>
@@ -35,7 +51,7 @@
                             {% endfor %}
                         </select>
                     </div>
-                    
+
                     <div class="col-md-6">
                         <label for="mat" class="form-label fw-bold">IP Materials :</label>
                         <select name="mat_info" id="mat" class="form-select" onchange="this.form.submit()">
@@ -51,7 +67,7 @@
                 </div>
             </form>
 
-             <!-- Tombol Reset -->
+            <!-- Tombol Reset -->
             <div class="row mt-4">
                 <div class="col-md-12">
                     <a href="daftar_materials" class="btn btn-primary btn-reset">Reset</a>

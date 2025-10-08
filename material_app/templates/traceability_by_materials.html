@@ -32,7 +32,7 @@
 
     .baris2 {
         border-radius: 7px;
-        margin-left: 8px;
+        margin-left: 2em;
         display: inline-block;
         background-color: rgb(219, 213, 251);
         padding: 2px 4px;
@@ -84,8 +84,8 @@
                             {% for p in phase %}
                             <option value="{{ p.TRC_FL_PHASE }}"
                                 {% if p.TRC_FL_PHASE == selected_phase %}selected{% endif %}>
-                                {% if p.TRC_FL_PHASE == "C" %} Consumed
-                                {% elif p.TRC_FL_PHASE == "P" %} Produced
+                                {% if p.TRC_FL_PHASE == "C" %}C (Consumed)
+                                {% elif p.TRC_FL_PHASE == "P" %}P (Produced)
                                 {% else %}{{ p.TRC_FL_PHASE }}{% endif %}
                             </option>
                             {% endfor %}
@@ -120,9 +120,11 @@
                     </div>
                 </form>
 
-                <!-- Button Reset -->
-                <div class="col-md-12 text-end mt-3">
-                    <a href="trceability_by_materials" class="btn btn-primary btnreset">Reset</a>
+                <!-- Tombol Reset -->
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <a href="traceability_by_materials" class="btn btn-primary btn-reset">Reset</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -152,7 +154,7 @@
                             <br>
                             {% if row.baris2 %}
                             <div class="baris2">
-                                {{ row.baris2.TRC_PP_CODE }}
+                                {{ row.baris2.TRC_PP_CODE }} -
                                 {{ row.baris2.TRC_MCH_CODE }} -
                                 ({{ row.baris2.TRC_START_TIME }} -
                                 {{ row.baris2.TRC_END_TIME }})

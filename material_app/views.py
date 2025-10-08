@@ -4,9 +4,7 @@ from datetime import datetime, timedelta, time
 from django.db.models import OuterRef, Subquery
 from django.db.models.functions import TruncDate, ExtractHour
 from django.db.models import Q
-from django.db.models import Min
 from django.db.models import OuterRef, Subquery, Q
-
 
 # =================== MENU DASHBOARD ========================
 def index(request):
@@ -147,22 +145,6 @@ def daftar_materials(request):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # ================= MENU PRODUCTIONS ==================
 def daftar_produksi(request):
     sfc_list = MD_SEMI_FINISHED_CLASSES.objects.filter(SFC_CODE__in=['AL', 'AX'])
@@ -255,23 +237,6 @@ def daftar_produksi(request):
     }
 
     return render(request, 'daftar_produksi.html', context)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -539,24 +504,6 @@ def traceability_by_machine(request):
     }
 
     return render(request, 'traceability_by_machine.html', context)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -979,20 +926,7 @@ def traceability_by_cu(request):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-#  =================== TRACEABILITY MATERIALS =====================
+#  ======================= TRACEABILITY MATERIALS ==========================
 def traceability_by_materials(request):
     allowed_sfc_code = ['C0', 'CC', 'CE', 'CP', 'CX', 'FB', 'RC', 'TB', 'TT']
 
@@ -1107,11 +1041,10 @@ def traceability_by_materials(request):
             .order_by('TRC_START_TIME')
         )
 
-        # Filter shift dengan logic overlapping waktu
+        # Filter shift (time and date)
         if start_shift:
             shift_start = None
             shift_end = None
-
             if start_shift == 1:
                 shift_start = datetime.combine(start_date, time(0, 0, 0))
                 shift_end = datetime.combine(start_date, time(8, 0, 0))
@@ -1147,7 +1080,7 @@ def traceability_by_materials(request):
             'TRC_CU_EXT_PROGR','TRC_FL_PHASE','MAT_CODE','WM_NAME'
         ))
 
-# === FUNGSI REKURSIF UNTUK CHILD TREE ===
+        # === Rekursi Traceability Tree ===
         def get_child_materials_tree(parent_so, parent_cu, level=1):
             child_nodes = []
 
@@ -1164,7 +1097,7 @@ def traceability_by_materials(request):
                     if not child_so or not child_cu:
                         continue
 
-                    # Ambil detail baris1 (FL_PHASE = 'P')
+                    # ========= Ambil detail baris1 (FL_PHASE = 'P') ==========
                     detail1 = WMS_TRACEABILITY.objects.filter(
                         TRC_SO_CODE=child_so,
                         TRC_CU_EXT_PROGR=child_cu,
@@ -1182,7 +1115,7 @@ def traceability_by_materials(request):
                         'TRC_END_TIME', 'TRC_CU_EXT_PROGR', 'TRC_FL_PHASE', 'MAT_CODE', 'WM_NAME'
                     ).first()
 
-                    # Ambil detail baris2 (FL_PHASE = 'C')
+                    # ======== Ambil detail baris2 (FL_PHASE = 'C') ===========
                     detail2 = WMS_TRACEABILITY.objects.filter(
                         TRC_SO_CODE=child_so,
                         TRC_CU_EXT_PROGR=child_cu,
@@ -1273,7 +1206,7 @@ def traceability_by_materials(request):
                         child_nodes += get_child_materials_tree(child_so, child_cu, level + 1)
             return child_nodes
 
-        # === BUILD ROOT & CHILD ===
+        # === BUILD ROOT & CHILD KALO FL PHASE ( VIEW DATA BUILD P == C OR C == P) ===
         for item in traceability_raw:
             baris1_phase, baris2_phase = ('C','P') if trc_fl_phase=='C' else ('P','C')
             if item['TRC_FL_PHASE'] == baris1_phase:
@@ -1314,3 +1247,5 @@ def traceability_by_materials(request):
     }
 
     return render(request, 'traceability_by_materials.html', context)
+
+

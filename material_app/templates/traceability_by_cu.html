@@ -32,7 +32,7 @@
 
     .baris2 {
         border-radius: 7px;
-        margin-left: 8px;
+        margin-left: 2em;
         display: inline-block;
         background-color: rgb(219, 213, 251);
         padding: 2px 4px;
@@ -78,14 +78,14 @@
 
                     <!-- Filter Traceability Phase -->
                     <div class="col-md-4">
-                        <label for="trc_fl_phase" class="form-label fw-bold">Traceability Phase :</label>
+                        <label for="trc_fl_phase" class="form-label fw-bold">FL Phase :</label>
                         <select name="trc_fl_phase" id="trc_fl_phase" class="form-select" onchange="this.form.submit()">
                             <option value="">-- Pilih Traceability Phase --</option>
                             {% for p in phase %}
                             <option value="{{ p.TRC_FL_PHASE }}"
                                 {% if p.TRC_FL_PHASE == selected_phase %}selected{% endif %}>
                                 {% if p.TRC_FL_PHASE == "C" %}C (Consumed)
-                                {% elif p.TRC_FL_PHASE == "P" %}P (Production)
+                                {% elif p.TRC_FL_PHASE == "P" %}P (Produced)
                                 {% else %}{{ p.TRC_FL_PHASE }}{% endif %}
                             </option>
                             {% endfor %}
@@ -120,8 +120,11 @@
                     </div>
                 </form>
 
-                <div class="col-md-12 text-end mt-2">
-                    <a href="traceability_by_cu" class="btn btn-primary">Reset</a>
+                <!-- Tombol Reset -->
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <a href="traceability_by_cu" class="btn btn-primary btn-reset">Reset</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -174,7 +177,7 @@
                             <br>
                             {% if row.baris2 %}
                             <div class="baris2">
-                                {{ row.baris2.TRC_PP_CODE }}
+                                {{ row.baris2.TRC_PP_CODE }} -
                                 {{ row.baris2.TRC_MCH_CODE }} -
                                 ({{ row.baris2.TRC_START_TIME }} -
                                 {{ row.baris2.TRC_END_TIME }})
