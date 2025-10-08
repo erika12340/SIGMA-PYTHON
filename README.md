@@ -1,12 +1,19 @@
 # SIGMA "SISTEM INFORMASI "
+
 ## SETUP
 
 - python -m venv env (buat env)
 - env\scripts\activate (masuk env)
-- pip install -r requirements.txt 
+- pip install -r requirements.txt
 - pip freeze > requirements.txt
 - python manage.py runserver (run system)
 
 ## database
+
 - pip install python-decouple
+
+## CHILD NYA MATERIALS DAN CU
+
+1. AMBIL TRC_SO_CODE DAN TRC_EXT_PROGRT NYA TERUS CARI DI WMS_TRACEABILITY_CU SEBAGAI CHILD_SO_CODE DAN CHILD_EXT_PROGRT
+2. LALU AMBIL SO_CODE DAN EXT_PROGRT DI WMS_TRACEABILITY_CU UNTUK DI CARI LAGU DI WMS_TRACEABILITY SEBAGAI TRC_SO_CODE DAN TRC_EXT_PROGRT KALO BARIS1 AMBIL DATA P BARIS2 AMBIL DATA C SEPERTI SETERUSNYA UNTUK CHILDNYA
 
