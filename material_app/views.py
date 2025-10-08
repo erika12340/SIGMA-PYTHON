@@ -572,7 +572,12 @@ def traceability_by_machine(request):
 
 
 
-# ==============TRACEABILITY BY CONTAINMENT UNIT (CU) ===================
+
+
+
+
+
+# ============== TRACEABILITY BY CONTAINMENT UNIT (CU) ===================
 def traceability_by_cu(request):
     # ============= Ambil Parameter dari Form ============
     so_code = request.GET.get('source_code')
@@ -673,11 +678,6 @@ def traceability_by_cu(request):
         value = f"{date.isoformat()}|{shift}"
         date_shift_choices.append({'value': value, 'label': label})
 
-
-
-
-
-
     # ============== Tampil data =================
     traceability_cu = []
     data_cu = None
@@ -748,63 +748,131 @@ def traceability_by_cu(request):
             'TRC_START_TIME', 'TRC_END_TIME', 'MAT_CODE', 'WM_NAME'
         ))
 
-        # --- Fungsi rekursif untuk child tree ---
+# ============ Pengaturan Child Parent ====================
         def get_child_cu_tree(parent_so, parent_cu, level=1):
             child_nodes = []
-            parent_links = WMS_TRACEABILITY_CU.objects.filter(
-                SO_CODE=parent_so,
-                CU_EXT_PROGR=parent_cu
-            )
 
-            for link in parent_links:
-                child_so = link.CHILD_SO_CODE
-                child_cu = link.CHILD_CU_EXT_PROGR
-                if not child_cu:
-                    continue
+            if trc_fl_phase == 'P':
+                parent_links = WMS_TRACEABILITY_CU.objects.filter(
+                    CHILD_SO_CODE=parent_so,
+                    CHILD_CU_EXT_PROGR=parent_cu
+                ).values('SO_CODE', 'CU_EXT_PROGR')
 
-                # ambil detail baris1
-                detail1 = WMS_TRACEABILITY.objects.filter(
-                    TRC_SO_CODE=child_so,
-                    TRC_CU_EXT_PROGR=child_cu,
-                    TRC_FL_PHASE='C'
-                ).annotate(
-                    MAT_CODE=Subquery(MD_MATERIALS.objects.filter(MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')).values('MAT_CODE')[:1]),
-                    WM_NAME=Subquery(MD_WORKERS.objects.filter(WM_CODE=OuterRef('TRC_WM_CODE')).values('WM_NAME')[:1])
-                ).values(
-                    'TRC_PP_CODE','TRC_MCH_CODE','TRC_SO_CODE',
-                    'TRC_MAT_SAP_CODE','TRC_WM_CODE','TRC_START_TIME',
-                    'TRC_END_TIME','TRC_CU_EXT_PROGR','TRC_FL_PHASE','MAT_CODE','WM_NAME'
-                ).first()
+                for link in parent_links:
+                    child_so = link['SO_CODE']
+                    child_cu = link['CU_EXT_PROGR']
 
-                # ambil detail baris2
-                detail2 = None
-                if detail1:
-                    other_phase = 'P' if detail1['TRC_FL_PHASE'] == 'C' else 'C'
+                    if not child_so or not child_cu:
+                        continue
+
+                    # Ambil detail baris1 (FL_PHASE = 'P')
+                    detail1 = WMS_TRACEABILITY.objects.filter(
+                        TRC_SO_CODE=child_so,
+                        TRC_CU_EXT_PROGR=child_cu,
+                        TRC_FL_PHASE='P'
+                    ).annotate(
+                        MAT_CODE=Subquery(MD_MATERIALS.objects.filter(
+                            MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')
+                        ).values('MAT_CODE')[:1]),
+                        WM_NAME=Subquery(MD_WORKERS.objects.filter(
+                            WM_CODE=OuterRef('TRC_WM_CODE')
+                        ).values('WM_NAME')[:1])
+                    ).values(
+                        'TRC_PP_CODE', 'TRC_MCH_CODE', 'TRC_SO_CODE',
+                        'TRC_MAT_SAP_CODE', 'TRC_WM_CODE', 'TRC_START_TIME',
+                        'TRC_END_TIME', 'TRC_CU_EXT_PROGR', 'TRC_FL_PHASE', 'MAT_CODE', 'WM_NAME'
+                    ).first()
+
+                    # Ambil detail baris2 (FL_PHASE = 'C')
                     detail2 = WMS_TRACEABILITY.objects.filter(
                         TRC_SO_CODE=child_so,
                         TRC_CU_EXT_PROGR=child_cu,
-                        TRC_FL_PHASE=other_phase
+                        TRC_FL_PHASE='C'
                     ).annotate(
-                        MAT_CODE=Subquery(MD_MATERIALS.objects.filter(MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')).values('MAT_CODE')[:1]),
-                        WM_NAME=Subquery(MD_WORKERS.objects.filter(WM_CODE=OuterRef('TRC_WM_CODE')).values('WM_NAME')[:1])
+                        MAT_CODE=Subquery(MD_MATERIALS.objects.filter(
+                            MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')
+                        ).values('MAT_CODE')[:1]),
+                        WM_NAME=Subquery(MD_WORKERS.objects.filter(
+                            WM_CODE=OuterRef('TRC_WM_CODE')
+                        ).values('WM_NAME')[:1])
                     ).values(
-                        'TRC_PP_CODE','TRC_MCH_CODE','TRC_SO_CODE',
-                        'TRC_MAT_SAP_CODE','TRC_WM_CODE','TRC_START_TIME',
-                        'TRC_END_TIME','TRC_CU_EXT_PROGR','TRC_FL_PHASE','MAT_CODE','WM_NAME'
+                        'TRC_PP_CODE', 'TRC_MCH_CODE', 'TRC_SO_CODE',
+                        'TRC_MAT_SAP_CODE', 'TRC_WM_CODE', 'TRC_START_TIME',
+                        'TRC_END_TIME', 'TRC_CU_EXT_PROGR', 'TRC_FL_PHASE', 'MAT_CODE', 'WM_NAME'
                     ).first()
 
-                if detail1:
-                    node = {
-                        'type': 'root',   # agar template bisa pakai format yang sama
-                        'level': level,
-                        'baris1': detail1,
-                        'baris2': detail2
-                    }
-                    child_nodes.append(node)
-                    child_nodes += get_child_cu_tree(child_so, child_cu, level+1)
+                    if detail1:
+                        node = {
+                            'type': 'root',
+                            'level': level,
+                            'baris1': detail1,
+                            'baris2': detail2
+                        }
+                        child_nodes.append(node)
+                        # Rekursif ke child dari data baru
+                        child_nodes += get_child_cu_tree(child_so, child_cu, level + 1)
 
+            else:
+                # Phase C - logika lama tetap
+                parent_links = WMS_TRACEABILITY_CU.objects.filter(
+                    SO_CODE=parent_so,
+                    CU_EXT_PROGR=parent_cu
+                ).values('CHILD_SO_CODE', 'CHILD_CU_EXT_PROGR')
+
+                for link in parent_links:
+                    child_so = link['CHILD_SO_CODE']
+                    child_cu = link['CHILD_CU_EXT_PROGR']
+
+                    if not child_so or not child_cu:
+                        continue
+
+                    detail1 = WMS_TRACEABILITY.objects.filter(
+                        TRC_SO_CODE=child_so,
+                        TRC_CU_EXT_PROGR=child_cu,
+                        TRC_FL_PHASE='C'
+                    ).annotate(
+                        MAT_CODE=Subquery(MD_MATERIALS.objects.filter(
+                            MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')
+                        ).values('MAT_CODE')[:1]),
+                        WM_NAME=Subquery(MD_WORKERS.objects.filter(
+                            WM_CODE=OuterRef('TRC_WM_CODE')
+                        ).values('WM_NAME')[:1])
+                    ).values(
+                        'TRC_PP_CODE', 'TRC_MCH_CODE', 'TRC_SO_CODE',
+                        'TRC_MAT_SAP_CODE', 'TRC_WM_CODE', 'TRC_START_TIME',
+                        'TRC_END_TIME', 'TRC_CU_EXT_PROGR', 'TRC_FL_PHASE', 'MAT_CODE', 'WM_NAME'
+                    ).first()
+
+                    detail2 = None
+                    if detail1:
+                        other_phase = 'P' if detail1['TRC_FL_PHASE'] == 'C' else 'C'
+                        detail2 = WMS_TRACEABILITY.objects.filter(
+                            TRC_SO_CODE=child_so,
+                            TRC_CU_EXT_PROGR=child_cu,
+                            TRC_FL_PHASE=other_phase
+                        ).annotate(
+                            MAT_CODE=Subquery(MD_MATERIALS.objects.filter(
+                                MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')
+                            ).values('MAT_CODE')[:1]),
+                            WM_NAME=Subquery(MD_WORKERS.objects.filter(
+                                WM_CODE=OuterRef('TRC_WM_CODE')
+                            ).values('WM_NAME')[:1])
+                        ).values(
+                            'TRC_PP_CODE', 'TRC_MCH_CODE', 'TRC_SO_CODE',
+                            'TRC_MAT_SAP_CODE', 'TRC_WM_CODE', 'TRC_START_TIME',
+                            'TRC_END_TIME', 'TRC_CU_EXT_PROGR', 'TRC_FL_PHASE', 'MAT_CODE', 'WM_NAME'
+                        ).first()
+
+                    if detail1:
+                        node = {
+                            'type': 'root',
+                            'level': level,
+                            'baris1': detail1,
+                            'baris2': detail2
+                        }
+                        child_nodes.append(node)
+                        child_nodes += get_child_cu_tree(child_so, child_cu, level + 1)
             return child_nodes
-
 
         # --- Build traceability_tree ---
         if trc_fl_phase == 'C':
@@ -851,16 +919,21 @@ def traceability_by_cu(request):
             baris1_phase = 'P'
             baris2_phase = 'C'
 
+            # Ambil data baris1 dari WMS_TRACEABILITY yang phase = 'P'
             baris1_qs = WMS_TRACEABILITY.objects.filter(
                 TRC_SO_CODE=trc_so_code,
                 TRC_CU_EXT_PROGR=trc_cu_ext_progr,
                 TRC_FL_PHASE=baris1_phase
             ).annotate(
                 MAT_CODE=Subquery(
-                    MD_MATERIALS.objects.filter(MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')).values('MAT_CODE')[:1]
+                    MD_MATERIALS.objects.filter(
+                        MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')
+                    ).values('MAT_CODE')[:1]
                 ),
                 WM_NAME=Subquery(
-                    MD_WORKERS.objects.filter(WM_CODE=OuterRef('TRC_WM_CODE')).values('WM_NAME')[:1]
+                    MD_WORKERS.objects.filter(
+                        WM_CODE=OuterRef('TRC_WM_CODE')
+                    ).values('WM_NAME')[:1]
                 )
             ).values(
                 'TRC_PP_CODE', 'TRC_MCH_CODE', 'TRC_SO_CODE',
@@ -870,16 +943,21 @@ def traceability_by_cu(request):
             )
 
             for baris1 in baris1_qs:
+                # Ambil pelengkap baris2 dari WMS_TRACEABILITY phase = 'C'
                 baris2 = WMS_TRACEABILITY.objects.filter(
                     TRC_SO_CODE=baris1['TRC_SO_CODE'],
                     TRC_CU_EXT_PROGR=baris1['TRC_CU_EXT_PROGR'],
                     TRC_FL_PHASE=baris2_phase
                 ).annotate(
                     MAT_CODE=Subquery(
-                        MD_MATERIALS.objects.filter(MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')).values('MAT_CODE')[:1]
+                        MD_MATERIALS.objects.filter(
+                            MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')
+                        ).values('MAT_CODE')[:1]
                     ),
                     WM_NAME=Subquery(
-                        MD_WORKERS.objects.filter(WM_CODE=OuterRef('TRC_WM_CODE')).values('WM_NAME')[:1]
+                        MD_WORKERS.objects.filter(
+                            WM_CODE=OuterRef('TRC_WM_CODE')
+                        ).values('WM_NAME')[:1]
                     )
                 ).values(
                     'TRC_PP_CODE', 'TRC_MCH_CODE', 'TRC_SO_CODE',
@@ -896,6 +974,7 @@ def traceability_by_cu(request):
                 }
                 traceability_cu.append(node)
                 traceability_cu += get_child_cu_tree(baris1['TRC_SO_CODE'], baris1['TRC_CU_EXT_PROGR'], level=1)
+
 
     # === Context For Template ===
     context = {
@@ -914,21 +993,9 @@ def traceability_by_cu(request):
     }
     return render(request, 'traceability_by_cu.html', context)
 
-
-
-
-
-# 1. SEHARUSNYA DATA TAMPIL BERDASARKAN WHERE TRC_SO_CODE, AND TRC_CU_EXT_PROGR, DAN FL PHASE
-# 2. DENGAN KETENTUAN TRC_FL_PHASE misal ketika pilih form cu terus pilih form trc_fl_phase berstatus C maka baris1 berstatus C BARIS2 BERSTATUS P, SELANJUTNYA KALO form trc_fl_phase berstatus P maka baris1 berstatus P BARIS2 BERSTATUS C. 
-# 3. NAH BARU KALO TANGGAL TUH DI PAKE BUAT FILTER TRC_START_TIME DAN TRC_END_TIME itu buat pengaturan pada baris 2 jadi yang utamanya baris 2, yang baris 1 menyesuaikan baris 2 dengan pengaturan DI POIN 1, JADI DATA YANG TAMPIL DENGAN PENGATURAN TANGGAL TUH YA UNTUK PENGATURAN BARIS 2 NYA KALO BARIS 1 ITU MENYESUAIKAN BARIS 2 DENGAN STATUSNYA YANG SUDAH DI JELASKAN PADA POIN 1
-# 1. Untuk logika yang berstatus C sudah benar data tampil sesuai database tapi untuk yang berstatus P itu data ga tampil. seharusnya data yang ketika fl_phase yang terpilih itu P maka cari dulu data P nya dan yang ditampilkan yang berstatus C nya.
-# C == P, P == C, BARIS1 == C, BARIS2 == P.  
-# Ketika TF_FL_PHASE yang terpilih itu C maka yang tampil itu berdasarkan TRC_SO_CODE TRC_CU_EXT_PROGR DAN TANGGAL, TAPI KETIKA TRC_FL_PHASE TERPILIHNYA ADALAH P MAKA DATA TAMPIL  BERDASARKAN TRC_SO_CODE TRC_CU_EXT_PROGR SAJA
-# notes (Tapi child nya belum muncul) pengaturan childnya adalah 
-# 1. apabila yang terpilih FL_PHASE nya C maka cara mencari childnya cari  TRC_SO_CODE dan  TRC_CU_EXT_PROGR di WMS_TRACEABILITY_CU Sebagai  SO_CODE CU_EXT_PROGR Lalu nanti ambil  data KOLOM  CHILD_SO_CODE CHILD_CU_EXT_PROGR 
-# ( Untuk data yang di tampilkan cari cari lagi CHILD_SO_CODE CHILD_CU_EXT_PROGR di MODEL WMS_TRACEABILITY SEBAGAI TRC_SO_CODE TRC_CU_EXT_PROGR)
-# 2. apabila yang terpilih FL_PHASE nya P maka cara mencari childnya cari  TRC_SO_CODE dan  TRC_CU_EXT_PROGR di WMS_TRACEABILITY_CU Sebagai CHILD_SO_CODE CHILD_CU_EXT_PROGR dan ambil data kolom SO_CODE dan CU_EXT_PROGR 
-# (Untuk data yang di tampilkan cari cari lagi SO_CODE CU_EXT_PROGR di MODEL WMS_TRACEABILITY SEBAGAI TRC_SO_CODE TRC_CU_EXT_PROGR) DATA TAMPIL SESUAI ROOT NYA YA 
+# NOTES BIAR GA LUPA
+# 1. AMBIL TRC_SO_CODE DAN TRC_EXT_PROGRT NYA TERUS CARI DI WMS_TRACEABILITY_CU SEBAGAI CHILD_SO_CODE DAN CHILD_EXT_PROGRT
+# 2. LALU AMBIL SO_CODE DAN EXT_PROGRT DI WMS_TRACEABILITY_CU UNTUK DI CARI LAGU DI WMS_TRACEABILITY SEBAGAI TRC_SO_CODE DAN TRC_EXT_PROGRT  KALO BARIS1 AMBIL DATA P BARIS2 AMBIL DATA C SEPERTI SETERUSNYA UNTUK CHILDNYA
 
 
 
@@ -938,11 +1005,17 @@ def traceability_by_cu(request):
 
 
 
-<<<<<<< HEAD
-=======
 
->>>>>>> 1437ae45c24e7ff3526168ae88e4b9dbc8ae7644
-# ================ TRACEABILITY BY MATERIALS =================
+
+
+
+
+
+
+
+
+
+
 def traceability_by_materials(request):
     allowed_sfc_code = ['BR', 'C0', 'CC', 'CE', 'CP', 'CX', 'FB', 'RC', 'TB', 'TT']
 
@@ -1057,9 +1130,7 @@ def traceability_by_materials(request):
             elif shift == 3:
                 return time(16, 0, 0), time(23, 59, 59)
             else:
-                return time(0, 0, 0), time(23, 59, 59)  # fallback, full day
-
-        from django.db.models import Q
+                return time(0, 0, 0), time(23, 59, 59)  # fallback
 
         traceability_qs = (
             WMS_TRACEABILITY.objects
@@ -1068,22 +1139,14 @@ def traceability_by_materials(request):
             .filter(TRC_FL_PHASE=trc_fl_phase)
         )
 
+        # filter shift jika dipilih
         if start_shift:
-            start_shift_start_time, start_shift_end_time = shift_time_range(start_shift)
-            start_shift_start_dt = datetime.combine(start_date, start_shift_start_time)
-            start_shift_end_dt = datetime.combine(start_date, start_shift_end_time)
+            start_time, end_time = shift_time_range(start_shift)
+            start_dt = datetime.combine(start_date, start_time)
+            end_dt = datetime.combine(start_date, end_time)
 
             traceability_qs = traceability_qs.filter(
-                Q(
-                    ~(
-                        Q(TRC_END_TIME__lt=start_shift_start_dt) |
-                        Q(TRC_START_TIME__gt=start_shift_end_dt)
-                    )
-                ) |
-                Q(
-                    Q(TRC_END_TIME__gt=start_shift_start_dt, TRC_END_TIME__lt=start_shift_end_dt) |
-                    Q(TRC_START_TIME__gt=start_shift_start_dt, TRC_START_TIME__lt=start_shift_end_dt)
-                )
+                Q(TRC_END_TIME__gte=start_dt) & Q(TRC_START_TIME__lte=end_dt)
             )
 
         traceability_qs = traceability_qs.order_by('TRC_START_TIME')
@@ -1105,103 +1168,167 @@ def traceability_by_materials(request):
             'TRC_CU_EXT_PROGR', 'TRC_FL_PHASE', 'MAT_CODE', 'WM_NAME'
         ))
 
-        # === FUNGSI REKURSIF UNTUK CHILD TREE ===
-        def get_child_cu_tree(current_so, current_cu, level=1):
+       
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        def get_child_cu_tree(parent_so, parent_cu, level=1):
             child_nodes = []
 
-            if trc_fl_phase == 'C':
-                # fase C → cari anak
-                links = WMS_TRACEABILITY_CU.objects.filter(
-                    SO_CODE=current_so,
-                    CU_EXT_PROGR=current_cu
-                )
-                for link in links:
-                    next_so = link.CHILD_SO_CODE
-                    next_cu = link.CHILD_CU_EXT_PROGR
-                    if not next_cu:
+            if trc_fl_phase == 'P':
+                parent_links = WMS_TRACEABILITY_CU.objects.filter(
+                    CHILD_SO_CODE=parent_so,
+                    CHILD_CU_EXT_PROGR=parent_cu
+                ).values('SO_CODE', 'CU_EXT_PROGR')
+
+                for link in parent_links:
+                    child_so = link['SO_CODE']
+                    child_cu = link['CU_EXT_PROGR']
+
+                    if not child_so or not child_cu:
                         continue
-                    # Ambil data child di WMS_TRACEABILITY
+
+                    # Ambil detail baris1 (FL_PHASE = 'P')
                     detail1 = WMS_TRACEABILITY.objects.filter(
-                        TRC_SO_CODE=next_so,
-                        TRC_CU_EXT_PROGR=next_cu,
+                        TRC_SO_CODE=child_so,
+                        TRC_CU_EXT_PROGR=child_cu,
+                        TRC_FL_PHASE='P'
+                    ).annotate(
+                        MAT_CODE=Subquery(MD_MATERIALS.objects.filter(
+                            MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')
+                        ).values('MAT_CODE')[:1]),
+                        WM_NAME=Subquery(MD_WORKERS.objects.filter(
+                            WM_CODE=OuterRef('TRC_WM_CODE')
+                        ).values('WM_NAME')[:1])
+                    ).values(
+                        'TRC_PP_CODE', 'TRC_MCH_CODE', 'TRC_SO_CODE',
+                        'TRC_MAT_SAP_CODE', 'TRC_WM_CODE', 'TRC_START_TIME',
+                        'TRC_END_TIME', 'TRC_CU_EXT_PROGR', 'TRC_FL_PHASE', 'MAT_CODE', 'WM_NAME'
+                    ).first()
+
+                    # Ambil detail baris2 (FL_PHASE = 'C')
+                    detail2 = WMS_TRACEABILITY.objects.filter(
+                        TRC_SO_CODE=child_so,
+                        TRC_CU_EXT_PROGR=child_cu,
                         TRC_FL_PHASE='C'
                     ).annotate(
-                                                MAT_CODE=Subquery(MD_MATERIALS.objects.filter(MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')).values('MAT_CODE')[:1]),
-                        WM_NAME=Subquery(MD_WORKERS.objects.filter(WM_CODE=OuterRef('TRC_WM_CODE')).values('WM_NAME')[:1])
+                        MAT_CODE=Subquery(MD_MATERIALS.objects.filter(
+                            MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')
+                        ).values('MAT_CODE')[:1]),
+                        WM_NAME=Subquery(MD_WORKERS.objects.filter(
+                            WM_CODE=OuterRef('TRC_WM_CODE')
+                        ).values('WM_NAME')[:1])
                     ).values(
-                        'TRC_PP_CODE','TRC_MCH_CODE','TRC_SO_CODE','TRC_MAT_SAP_CODE','TRC_WM_CODE',
-                        'TRC_START_TIME','TRC_END_TIME','TRC_CU_EXT_PROGR','TRC_FL_PHASE','MAT_CODE','WM_NAME'
+                        'TRC_PP_CODE', 'TRC_MCH_CODE', 'TRC_SO_CODE',
+                        'TRC_MAT_SAP_CODE', 'TRC_WM_CODE', 'TRC_START_TIME',
+                        'TRC_END_TIME', 'TRC_CU_EXT_PROGR', 'TRC_FL_PHASE', 'MAT_CODE', 'WM_NAME'
+                    ).first()
+
+                    if detail1:
+                        node = {
+                            'type': 'child',
+                            'level': level,
+                            'baris1': detail1,
+                            'baris2': detail2
+                        }
+                        child_nodes.append(node)
+                        # Rekursif ke child dari data baru
+                        child_nodes += get_child_cu_tree(child_so, child_cu, level + 1)
+
+            else:
+                # Phase C
+                parent_links = WMS_TRACEABILITY_CU.objects.filter(
+                    SO_CODE=parent_so,
+                    CU_EXT_PROGR=parent_cu
+                ).values('CHILD_SO_CODE', 'CHILD_CU_EXT_PROGR')
+
+                for link in parent_links:
+                    child_so = link['CHILD_SO_CODE']
+                    child_cu = link['CHILD_CU_EXT_PROGR']
+
+                    if not child_so or not child_cu:
+                        continue
+
+                    detail1 = WMS_TRACEABILITY.objects.filter(
+                        TRC_SO_CODE=child_so,
+                        TRC_CU_EXT_PROGR=child_cu,
+                        TRC_FL_PHASE='C'
+                    ).annotate(
+                        MAT_CODE=Subquery(MD_MATERIALS.objects.filter(
+                            MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')
+                        ).values('MAT_CODE')[:1]),
+                        WM_NAME=Subquery(MD_WORKERS.objects.filter(
+                            WM_CODE=OuterRef('TRC_WM_CODE')
+                        ).values('WM_NAME')[:1])
+                    ).values(
+                        'TRC_PP_CODE', 'TRC_MCH_CODE', 'TRC_SO_CODE',
+                        'TRC_MAT_SAP_CODE', 'TRC_WM_CODE', 'TRC_START_TIME',
+                        'TRC_END_TIME', 'TRC_CU_EXT_PROGR', 'TRC_FL_PHASE', 'MAT_CODE', 'WM_NAME'
                     ).first()
 
                     detail2 = None
                     if detail1:
                         other_phase = 'P' if detail1['TRC_FL_PHASE'] == 'C' else 'C'
                         detail2 = WMS_TRACEABILITY.objects.filter(
-                            TRC_SO_CODE=next_so,
-                            TRC_CU_EXT_PROGR=next_cu,
+                            TRC_SO_CODE=child_so,
+                            TRC_CU_EXT_PROGR=child_cu,
                             TRC_FL_PHASE=other_phase
                         ).annotate(
-                            MAT_CODE=Subquery(MD_MATERIALS.objects.filter(MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')).values('MAT_CODE')[:1]),
-                            WM_NAME=Subquery(MD_WORKERS.objects.filter(WM_CODE=OuterRef('TRC_WM_CODE')).values('WM_NAME')[:1])
+                            MAT_CODE=Subquery(MD_MATERIALS.objects.filter(
+                                MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')
+                            ).values('MAT_CODE')[:1]),
+                            WM_NAME=Subquery(MD_WORKERS.objects.filter(
+                                WM_CODE=OuterRef('TRC_WM_CODE')
+                            ).values('WM_NAME')[:1])
                         ).values(
-                            'TRC_PP_CODE','TRC_MCH_CODE','TRC_SO_CODE','TRC_MAT_SAP_CODE','TRC_WM_CODE',
-                            'TRC_START_TIME','TRC_END_TIME','TRC_CU_EXT_PROGR','TRC_FL_PHASE','MAT_CODE','WM_NAME'
+                            'TRC_PP_CODE', 'TRC_MCH_CODE', 'TRC_SO_CODE',
+                            'TRC_MAT_SAP_CODE', 'TRC_WM_CODE', 'TRC_START_TIME',
+                            'TRC_END_TIME', 'TRC_CU_EXT_PROGR', 'TRC_FL_PHASE', 'MAT_CODE', 'WM_NAME'
                         ).first()
 
                     if detail1:
-                        node = {'type': 'child','level': level,'baris1': detail1,'baris2': detail2}
+                        node = {
+                            'type': 'child',
+                            'level': level,
+                            'baris1': detail1,
+                            'baris2': detail2
+                        }
                         child_nodes.append(node)
-                        child_nodes += get_child_cu_tree(next_so, next_cu, level+1)
-
-            else:
-                # fase P → cari parent
-                links = WMS_TRACEABILITY_CU.objects.filter(
-                    CHILD_SO_CODE=current_so,
-                    CHILD_CU_EXT_PROGR=current_cu
-                )
-                for link in links:
-                    parent_so = link.SO_CODE
-                    parent_cu = link.CU_EXT_PROGR
-                    if not parent_cu:
-                        continue
-                    # Ambil data parent di WMS_TRACEABILITY
-                    detail1 = WMS_TRACEABILITY.objects.filter(
-                        TRC_SO_CODE=parent_so,
-                        TRC_CU_EXT_PROGR=parent_cu,
-                        TRC_FL_PHASE='P'
-                    ).annotate(
-                        MAT_CODE=Subquery(MD_MATERIALS.objects.filter(MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')).values('MAT_CODE')[:1]),
-                        WM_NAME=Subquery(MD_WORKERS.objects.filter(WM_CODE=OuterRef('TRC_WM_CODE')).values('WM_NAME')[:1])
-                    ).values(
-                        'TRC_PP_CODE','TRC_MCH_CODE','TRC_SO_CODE','TRC_MAT_SAP_CODE','TRC_WM_CODE',
-                        'TRC_START_TIME','TRC_END_TIME','TRC_CU_EXT_PROGR','TRC_FL_PHASE','MAT_CODE','WM_NAME'
-                    ).first()
-
-                    detail2 = None
-                    if detail1:
-                        other_phase = 'C' if detail1['TRC_FL_PHASE'] == 'P' else 'P'
-                        detail2 = WMS_TRACEABILITY.objects.filter(
-                            TRC_SO_CODE=parent_so,
-                            TRC_CU_EXT_PROGR=parent_cu,
-                            TRC_FL_PHASE=other_phase
-                        ).annotate(
-                            MAT_CODE=Subquery(MD_MATERIALS.objects.filter(MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')).values('MAT_CODE')[:1]),
-                            WM_NAME=Subquery(MD_WORKERS.objects.filter(WM_CODE=OuterRef('TRC_WM_CODE')).values('WM_NAME')[:1])
-                        ).values(
-                            'TRC_PP_CODE','TRC_MCH_CODE','TRC_SO_CODE','TRC_MAT_SAP_CODE','TRC_WM_CODE',
-                            'TRC_START_TIME','TRC_END_TIME','TRC_CU_EXT_PROGR','TRC_FL_PHASE','MAT_CODE','WM_NAME'
-                        ).first()
-
-                    if detail1:
-                        node = {'type': 'child','level': level,'baris1': detail1,'baris2': detail2}
-                        child_nodes.append(node)
-                        child_nodes += get_child_cu_tree(parent_so, parent_cu, level+1)
+                        child_nodes += get_child_cu_tree(child_so, child_cu, level + 1)
 
             return child_nodes
 
-        # === BUILD ROOT & CHILD ===
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        # === BUILD ROOT & CHILD NODES ===
         for item in traceability_raw:
             baris1_phase, baris2_phase = ('C', 'P') if trc_fl_phase == 'C' else ('P', 'C')
+
             if item['TRC_FL_PHASE'] == baris1_phase:
                 baris1 = item
                 baris2 = WMS_TRACEABILITY.objects.filter(
@@ -1209,16 +1336,30 @@ def traceability_by_materials(request):
                     TRC_CU_EXT_PROGR=item['TRC_CU_EXT_PROGR'],
                     TRC_FL_PHASE=baris2_phase
                 ).annotate(
-                    MAT_CODE=Subquery(MD_MATERIALS.objects.filter(MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')).values('MAT_CODE')[:1]),
-                    WM_NAME=Subquery(MD_WORKERS.objects.filter(WM_CODE=OuterRef('TRC_WM_CODE')).values('WM_NAME')[:1])
+                    MAT_CODE=Subquery(MD_MATERIALS.objects.filter(
+                        MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')
+                    ).values('MAT_CODE')[:1]),
+                    WM_NAME=Subquery(MD_WORKERS.objects.filter(
+                        WM_CODE=OuterRef('TRC_WM_CODE')
+                    ).values('WM_NAME')[:1])
                 ).values(
-                    'TRC_PP_CODE','TRC_MCH_CODE','TRC_SO_CODE','TRC_MAT_SAP_CODE','TRC_WM_CODE',
-                    'TRC_START_TIME','TRC_END_TIME','TRC_CU_EXT_PROGR','TRC_FL_PHASE','MAT_CODE','WM_NAME'
+                    'TRC_PP_CODE', 'TRC_MCH_CODE', 'TRC_SO_CODE',
+                    'TRC_MAT_SAP_CODE', 'TRC_WM_CODE', 'TRC_START_TIME',
+                    'TRC_END_TIME', 'TRC_CU_EXT_PROGR', 'TRC_FL_PHASE', 'MAT_CODE', 'WM_NAME'
                 ).first()
 
-                node = {'type': 'root','level': 0,'baris1': baris1,'baris2': baris2}
+                node = {
+                    'type': 'root',
+                    'level': 0,
+                    'baris1': baris1,
+                    'baris2': baris2
+                }
                 traceability_materials.append(node)
-                traceability_materials += get_child_cu_tree(item['TRC_SO_CODE'], item['TRC_CU_EXT_PROGR'], level=1)
+
+                # 🔥 Tambahkan child rekursif
+                traceability_materials += get_child_cu_tree(
+                    item['TRC_SO_CODE'], item['TRC_CU_EXT_PROGR'], level=1
+                )
 
     # === RENDER CONTEXT ===
     context = {
@@ -1234,8 +1375,5 @@ def traceability_by_materials(request):
         'selected_phase': trc_fl_phase,
     }
 
-<<<<<<< HEAD
     return render(request, 'traceability_by_materials.html', context)
-=======
-    return render(request, 'traceability_by_materials.html', context)
->>>>>>> 1437ae45c24e7ff3526168ae88e4b9dbc8ae7644
+

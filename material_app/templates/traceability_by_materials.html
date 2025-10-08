@@ -6,18 +6,35 @@
         display: none;
     }
 
-    .level-1 { margin-left: 1em; }
-    .level-2 { margin-left: 4em; }
-    .level-3 { margin-left: 8em; }
-    .level-4 { margin-left: 12em; }
-    .level-5 { margin-left: 16em; }
-    .level-6 { margin-left: 20em; }
-    
+    .level-1 {
+        margin-left: 1em;
+    }
+
+    .level-2 {
+        margin-left: 4em;
+    }
+
+    .level-3 {
+        margin-left: 8em;
+    }
+
+    .level-4 {
+        margin-left: 12em;
+    }
+
+    .level-5 {
+        margin-left: 16em;
+    }
+
+    .level-6 {
+        margin-left: 20em;
+    }
+
     .baris2 {
         border-radius: 7px;
-        margin-left: 8px; 
-        display: inline-block; 
-        background-color: rgb(219, 213, 251); 
+        margin-left: 8px;
+        display: inline-block;
+        background-color: rgb(219, 213, 251);
         padding: 2px 4px;
     }
 </style>
@@ -30,7 +47,7 @@
         <div class="card mb-4 shadow-sm">
             <div class="card-body">
                 <form method="get" action="traceability_by_materials" class="row g-3" id="filterForm">
-                    
+
                     <!-- Semifinished -->
                     <div class="col-md-4">
                         <label for="sfc" class="form-label fw-bold">Semifinished Class :</label>
@@ -50,10 +67,11 @@
                         <select name="mat_info" id="mat" class="form-select" onchange="this.form.submit()">
                             <option value="">-- Select Materials --</option>
                             {% for m in material_list %}
-                                <option value="{{ m.TRC_MAT_SAP_CODE }}" {% if m.TRC_MAT_SAP_CODE == selected_mat_info %}selected{% endif %}>
+                            <option value="{{ m.TRC_MAT_SAP_CODE }}"
+                                {% if m.TRC_MAT_SAP_CODE == selected_mat_info %}selected{% endif %}>
                                 {{ m.TRC_MAT_SAP_CODE }} - {{ m.TRC_CNT_CODE }} - {{ m.TRC_MAT_VARIANT }}
                                 ({{ m.MAT_CODE }} {{ m.MAT_DESC }})
-                                </option>
+                            </option>
                             {% endfor %}
                         </select>
                     </div>
@@ -64,7 +82,8 @@
                         <select name="trc_fl_phase" id="trc_fl_phase" class="form-select" onchange="this.form.submit()">
                             <option value="">-- Select FL Phase --</option>
                             {% for p in phase %}
-                            <option value="{{ p.TRC_FL_PHASE }}" {% if p.TRC_FL_PHASE == selected_phase %}selected{% endif %}>
+                            <option value="{{ p.TRC_FL_PHASE }}"
+                                {% if p.TRC_FL_PHASE == selected_phase %}selected{% endif %}>
                                 {% if p.TRC_FL_PHASE == "C" %} Consumed
                                 {% elif p.TRC_FL_PHASE == "P" %} Produced
                                 {% else %}{{ p.TRC_FL_PHASE }}{% endif %}
@@ -79,7 +98,8 @@
                         <select name="start_date" id="start_date" class="form-select" onchange="this.form.submit()">
                             <option value="">-- Select Date & Shift --</option>
                             {% for opt in date_shift_choices %}
-                            <option value="{{ opt.value }}" {% if selected_start_date == opt.value %}selected{% endif %}>
+                            <option value="{{ opt.value }}"
+                                {% if selected_start_date == opt.value %}selected{% endif %}>
                                 {{ opt.label }}
                             </option>
                             {% endfor %}
@@ -93,7 +113,7 @@
                             <option value="">-- Select Date & Shift --</option>
                             {% for opt in date_shift_choices %}
                             <option value="{{ opt.value }}" {% if selected_end_date == opt.value %}selected{% endif %}>
-                            {{ opt.label }}
+                                {{ opt.label }}
                             </option>
                             {% endfor %}
                         </select>
@@ -118,32 +138,29 @@
                         <div data-bs-spy="scroll" data-bs-target="#list-example" data-bs-offset="0"
                             class="scrollspy-example" tabindex="0">
                             <button class="toggle-btn" data-id="{{ forloop.counter }}">▶</button>
-
                             <!-- traceability views by machine -->
                             {% if row.type == "root" %}
-
-                                <!-- Root node -->
-                                {{ row.baris1.TRC_SO_CODE }} 
-                                {{ row.baris1.TRC_CU_EXT_PROGR }} -
-                                {{ row.baris1.MAT_CODE }} -
-                                {{ row.baris1.TRC_MAT_SAP_CODE }} -
-                                ({{ row.baris1.TRC_START_TIME }} - 
-                                {{ row.baris1.TRC_END_TIME }}) -
-                                ({{ row.baris1.TRC_WM_CODE }} - 
-                                {{ row.baris1.WM_NAME }})
-                                <br>
-                                {% if row.baris2 %}
-                                <div class="baris2">
-                                    {{ row.baris2.TRC_PP_CODE }} 
-                                    {{ row.baris2.TRC_MCH_CODE }} -
-                                    ({{ row.baris2.TRC_START_TIME }} - 
-                                    {{ row.baris2.TRC_END_TIME }})
-                                    ({{ row.baris2.TRC_WM_CODE }} - 
-                                    {{ row.baris2.WM_NAME }})
-                                </div>
-                                {% endif %}
+                            <!-- Root node -->
+                            {{ row.baris1.TRC_SO_CODE }}
+                            {{ row.baris1.TRC_CU_EXT_PROGR }} -
+                            {{ row.baris1.MAT_CODE }} -
+                            {{ row.baris1.TRC_MAT_SAP_CODE }} -
+                            ({{ row.baris1.TRC_START_TIME }} -
+                            {{ row.baris1.TRC_END_TIME }}) -
+                            ({{ row.baris1.TRC_WM_CODE }} -
+                            {{ row.baris1.WM_NAME }})
+                            <br>
+                            {% if row.baris2 %}
+                            <div class="baris2">
+                                {{ row.baris2.TRC_PP_CODE }}
+                                {{ row.baris2.TRC_MCH_CODE }} -
+                                ({{ row.baris2.TRC_START_TIME }} -
+                                {{ row.baris2.TRC_END_TIME }})
+                                ({{ row.baris2.TRC_WM_CODE }} -
+                                {{ row.baris2.WM_NAME }})
+                            </div>
                             {% endif %}
-
+                            {% endif %}
                         </div>
                     </div>
                     {% endfor %}
@@ -169,42 +186,42 @@
 
 <!-- JAVA SCRIPT LINE CHILD -->
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    // Tampilkan semua level-1 (root)
-    document.querySelectorAll(".material-item.level-1").forEach(item => item.style.display = "block");
-    document.querySelectorAll(".toggle-btn").forEach(btn => {
-        btn.addEventListener("click", function () {
-            let currentItem = this.parentElement.parentElement;
-            let currentLevel = parseInt(currentItem.className.match(/level-(\d+)/)[1]);
-            let next = currentItem.nextElementSibling;
-            let isExpanding = this.textContent === "▶";
-            this.textContent = isExpanding ? "▼" : "▶";
-            while (next && next.classList.contains("material-item")) {
-                let level = parseInt(next.className.match(/level-(\d+)/)[1]);
-                if (level <= currentLevel) break;
-                if (level === currentLevel + 1) {
-                    next.style.display = isExpanding ? "block" : "none";
+    document.addEventListener("DOMContentLoaded", function () {
+        // Tampilkan semua level-1 (root)
+        document.querySelectorAll(".material-item.level-1").forEach(item => item.style.display = "block");
+        document.querySelectorAll(".toggle-btn").forEach(btn => {
+            btn.addEventListener("click", function () {
+                let currentItem = this.parentElement.parentElement;
+                let currentLevel = parseInt(currentItem.className.match(/level-(\d+)/)[1]);
+                let next = currentItem.nextElementSibling;
+                let isExpanding = this.textContent === "▶";
+                this.textContent = isExpanding ? "▼" : "▶";
+                while (next && next.classList.contains("material-item")) {
+                    let level = parseInt(next.className.match(/level-(\d+)/)[1]);
+                    if (level <= currentLevel) break;
+                    if (level === currentLevel + 1) {
+                        next.style.display = isExpanding ? "block" : "none";
+                    }
+                    if (!isExpanding && level > currentLevel) {
+                        let toggle = next.querySelector(".toggle-btn");
+                        if (toggle) toggle.textContent = "▶";
+                        next.style.display = "none";
+                    }
+                    next = next.nextElementSibling;
                 }
-                if (!isExpanding && level > currentLevel) {
-                    let toggle = next.querySelector(".toggle-btn");
-                    if (toggle) toggle.textContent = "▶";
-                    next.style.display = "none";
-                }
-                next = next.nextElementSibling;
-            }
+            });
         });
     });
-});
 </script>
 
 
 <!-- JS SELECT2-->
 <script>
-$('#mat').select2();
-$('#sfc').select2();
-$('#trc_fl_phase').select2();
-$('#start_date').select2();
-$('#end_date').select2();
+    $('#mat').select2();
+    $('#sfc').select2();
+    $('#trc_fl_phase').select2();
+    $('#start_date').select2();
+    $('#end_date').select2();
 </script>
 
 {% endblock %}
