@@ -239,15 +239,10 @@ def daftar_produksi(request):
     return render(request, 'daftar_produksi.html', context)
 
 
-
-
-
-
-
 # ========================= TRACEABILITY BY MACHINE ==========================
 def traceability_by_machine(request):
     # --- Ambil parameter dari form (GET) ---
-    pp_code = request.GET.get('pp_code')               # production phases (TRC_PP_CODE)
+    trc_code = request.GET.get('trc_code')               # production phases (TRC_PP_CODE)
     mch_info = request.GET.get('mch_info')               # "TRC_PP_CODE|TRC_MCH_CODE"
     start_date_raw = request.GET.get('start_date')       # "YYYY-mm-dd|shift"
     end_date_raw = request.GET.get('end_date')           # "YYYY-mm-dd|shift"
@@ -302,28 +297,28 @@ def traceability_by_machine(request):
         .order_by('TRC_PP_CODE')
     )
 
-    # 2) Daftar mesin (hanya muncul ketika pp_code dipilih)
+    # 2) Daftar mesin (hanya muncul ketika trc_code dipilih)
     machines = []
-    if pp_code:
+    if trc_code:
         machines = (
             WMS_TRACEABILITY.objects
-            .filter(TRC_PP_CODE=pp_code)
+            .filter(TRC_PP_CODE=trc_code)
             .values('TRC_PP_CODE', 'TRC_MCH_CODE')
             .distinct()
             .order_by('TRC_MCH_CODE')
         )
 
-    # 3) Daftar phase (dengan pengecualian berdasarkan pp_code)
+    # 3) Daftar phase (dengan pengecualian berdasarkan trc_code)
     phase_qs = WMS_TRACEABILITY.objects.all()
 
-    if pp_code:
+    if trc_code:
         # Filter berdasarkan production phase
-        phase_qs = phase_qs.filter(TRC_PP_CODE=pp_code)
+        phase_qs = phase_qs.filter(TRC_PP_CODE=trc_code)
 
         # Pengecualian FL_PHASE
-        if pp_code == 'B02':
+        if trc_code == 'B02':
             phase_qs = phase_qs.exclude(TRC_FL_PHASE='P')
-        elif pp_code == 'R01':
+        elif trc_code == 'R01':
             phase_qs = phase_qs.exclude(TRC_FL_PHASE='C')
 
     phase = (
@@ -332,6 +327,7 @@ def traceability_by_machine(request):
         .distinct()
         .order_by('TRC_FL_PHASE')
     )
+
 
     # 4) Daftar pilihan tanggal|shift
     date_shift_choices = []
@@ -362,11 +358,12 @@ def traceability_by_machine(request):
     traceability_tree = []
 
     # 5) Build queryset hanya jika SEMUA form dipilih
-    if pp_code and mch_info and start_date and end_date and trc_fl_phase:
+    if trc_code and mch_info and start_date and end_date and trc_fl_phase:
         traceability_qs = WMS_TRACEABILITY.objects.all()
 
-        # filter pp_code
-        traceability_qs = traceability_qs.filter(TRC_PP_CODE=pp_code)
+
+        # filter trc_code
+        traceability_qs = traceability_qs.filter(TRC_PP_CODE=trc_code)
 
         # filter mesin
         try:
@@ -514,13 +511,19 @@ def traceability_by_machine(request):
         'phase': phase,
         'date_shift_choices': date_shift_choices,
         'traceability_tree': traceability_tree,
-        'selected_trc': pp_code,
+        'selected_trc': trc_code,
         'selected_mch_info': mch_info,
         'selected_start_date': start_date_raw,
         'selected_end_date': end_date_raw,
         'selected_phase': trc_fl_phase,
     }
+
     return render(request, 'traceability_by_machine.html', context)
+
+
+
+
+
 
 
 
@@ -1291,4 +1294,3 @@ def traceability_by_materials(request):
     }
 
     return render(request, 'traceability_by_materials.html', context)
-
