@@ -239,7 +239,6 @@ def daftar_produksi(request):
     return render(request, 'daftar_produksi.html', context)
 
 
-
 # ========================= TRACEABILITY BY MACHINE ==========================
 def traceability_by_machine(request):
     # --- Ambil parameter dari form (GET) ---
@@ -309,13 +308,26 @@ def traceability_by_machine(request):
             .order_by('TRC_MCH_CODE')
         )
 
-    # 3) Daftar phase
+    # 3) Daftar phase (dengan pengecualian berdasarkan trc_code)
+    phase_qs = WMS_TRACEABILITY.objects.all()
+
+    if trc_code:
+        # Filter berdasarkan production phase
+        phase_qs = phase_qs.filter(TRC_PP_CODE=trc_code)
+
+        # Pengecualian FL_PHASE
+        if trc_code == 'B02':
+            phase_qs = phase_qs.exclude(TRC_FL_PHASE='P')
+        elif trc_code == 'R01':
+            phase_qs = phase_qs.exclude(TRC_FL_PHASE='C')
+
     phase = (
-        WMS_TRACEABILITY.objects
+        phase_qs
         .values('TRC_FL_PHASE')
         .distinct()
         .order_by('TRC_FL_PHASE')
     )
+
 
     # 4) Daftar pilihan tanggal|shift
     date_shift_choices = []
@@ -347,7 +359,8 @@ def traceability_by_machine(request):
 
     # 5) Build queryset hanya jika SEMUA form dipilih
     if trc_code and mch_info and start_date and end_date and trc_fl_phase:
-        traceability_qs = WMS_TRACEABILITY.objects.all().order_by('TRC_START_TIME')
+        traceability_qs = WMS_TRACEABILITY.objects.all()
+
 
         # filter trc_code
         traceability_qs = traceability_qs.filter(TRC_PP_CODE=trc_code)
@@ -382,6 +395,8 @@ def traceability_by_machine(request):
                 MD_WORKERS.objects.filter(WM_CODE=OuterRef('TRC_WM_CODE')).values('WM_NAME')[:1]
             )
         )
+
+        traceability_qs = traceability_qs.order_by('TRC_START_TIME')
 
         traceability_raw = list(traceability_qs.values(
             'TRC_PP_CODE', 'TRC_MCH_CODE', 'TRC_SO_CODE', 'TRC_MAT_SAP_CODE',
@@ -504,6 +519,18 @@ def traceability_by_machine(request):
     }
 
     return render(request, 'traceability_by_machine.html', context)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -926,13 +953,33 @@ def traceability_by_cu(request):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #  ======================= TRACEABILITY MATERIALS ==========================
 def traceability_by_materials(request):
-    allowed_sfc_code = ['C0', 'CC', 'CE', 'CP', 'CX', 'FB', 'RC', 'TB', 'TT']
+    allowed_sfc_code = ['BR','C0', 'CC', 'CE', 'CP', 'CX', 'FB', 'RC', 'TB', 'TT']
 
     # ------------ Parameter Pemanggilan ------------
     sfc_code = request.GET.get('sfc_code')
-    mat_info = request.GET.get('mat_info')        # hanya TRC_MAT_SAP_CODE
+    mat_info = request.GET.get('mat_info')
     start_date_raw = request.GET.get('start_date')
     end_date_raw = request.GET.get('end_date')
     trc_fl_phase = request.GET.get('trc_fl_phase')
@@ -1248,4 +1295,7 @@ def traceability_by_materials(request):
 
     return render(request, 'traceability_by_materials.html', context)
 
+<<<<<<< HEAD
 # notes ( Kalo FL_PHASE nya P Mengambil semua baris2 yang berstatus C (contoh misal data baris 2 yang berstatus c ada lebih dari 1 berarti di tampilkan juga sebanyak data baris 2 yang ada)) dan childnya menyesuaikan. 
+=======
+>>>>>>> 1746a717f9965c467c44ce9b8325f424e21da6f9
