@@ -1294,8 +1294,3 @@ def traceability_by_materials(request):
     }
 
     return render(request, 'traceability_by_materials.html', context)
-
-<<<<<<< HEAD
-# notes ( Kalo FL_PHASE nya P Mengambil semua baris2 yang berstatus C (contoh misal data baris 2 yang berstatus c ada lebih dari 1 berarti di tampilkan juga sebanyak data baris 2 yang ada)) dan childnya menyesuaikan. 
-=======
->>>>>>> 1746a717f9965c467c44ce9b8325f424e21da6f9
