@@ -1293,8 +1293,4 @@ def traceability_by_materials(request):
         'selected_phase': trc_fl_phase,
     }
 
-<<<<<<< HEAD
     return render(request, 'traceability_by_materials.html', context)
-=======
-    return render(request, 'traceability_by_materials.html', context)
->>>>>>> ebc6ff27d811190796ebc99ed4c969de72eb0e92
