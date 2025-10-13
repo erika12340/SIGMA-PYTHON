@@ -239,16 +239,25 @@ def daftar_produksi(request):
     return render(request, 'daftar_produksi.html', context)
 
 
+
+
+
+
+
+
+
+
 # ========================= TRACEABILITY BY MACHINE ==========================
 def traceability_by_machine(request):
     # --- Ambil parameter dari form (GET) ---
-    trc_code = request.GET.get('trc_code')               # production phases (TRC_PP_CODE)
+    trc_code = request.GET.get('trc_code')               # production phases(TRC_PP_CODE)
     mch_info = request.GET.get('mch_info')               # "TRC_PP_CODE|TRC_MCH_CODE"
     start_date_raw = request.GET.get('start_date')       # "YYYY-mm-dd|shift"
     end_date_raw = request.GET.get('end_date')           # "YYYY-mm-dd|shift"
-    trc_fl_phase = request.GET.get('trc_fl_phase')       # C atau P 
+    trc_fl_phase = request.GET.get('trc_fl_phase')       # C atau P
 
     # --- helper parse tanggal|shift ---
+    # return (date_obj, shift_int) atau (None, None) jika gagal parsing
     def parse_date_shift(raw_value):
         if not raw_value:
             return None, None
@@ -260,6 +269,7 @@ def traceability_by_machine(request):
         except Exception:
             return None, None
 
+    # Menentukan waktu mulai dan selesai berdasarkan shift
     def get_shift_datetime_range(date_obj, shift_num):
         if shift_num == 1:
             start_dt = datetime.combine(date_obj, time(0, 0, 0))
@@ -274,6 +284,7 @@ def traceability_by_machine(request):
             return None, None
         return start_dt, end_dt
 
+    # konversi jam ke shift
     def hour_to_shift(hour):
         if 0 <= hour < 8:
             return 1
@@ -328,7 +339,6 @@ def traceability_by_machine(request):
         .order_by('TRC_FL_PHASE')
     )
 
-
     # 4) Daftar pilihan tanggal|shift
     date_shift_choices = []
     date_shift_raw_qs = (
@@ -360,7 +370,6 @@ def traceability_by_machine(request):
     # 5) Build queryset hanya jika SEMUA form dipilih
     if trc_code and mch_info and start_date and end_date and trc_fl_phase:
         traceability_qs = WMS_TRACEABILITY.objects.all()
-
 
         # filter trc_code
         traceability_qs = traceability_qs.filter(TRC_PP_CODE=trc_code)
@@ -471,6 +480,7 @@ def traceability_by_machine(request):
                 baris1_phase = item.get('TRC_FL_PHASE')
                 baris2_phase = 'P' if baris1_phase == 'C' else 'C'
 
+            # cari baris1
             if item['TRC_FL_PHASE'] == baris1_phase:
                 baris1 = item
                 baris2 = WMS_TRACEABILITY.objects.filter(

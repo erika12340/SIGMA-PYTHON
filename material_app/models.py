@@ -128,8 +128,6 @@ class WMS_TRACEABILITY_CU(models.Model):
             ('SO_CODE', 'CHILD_CU_CODE', 'CU_EXT_PROGR')
         )
 
-
-
 # -------------- 9. Model MD_SOURCES --------------
 class MD_SOURCES(models.Model):
     SO_CODE = models.CharField (max_length=4, primary_key=True)
