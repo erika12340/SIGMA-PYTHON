@@ -430,16 +430,16 @@ if 0 <= hour < 8: return 1 if 8 <=hour < 16: return 2 return 3 sfc_list=( MD_SEM
     {% endblock %}
 
 
-
-
-
     <!-- 
-1. menu machine (Building gada FL PHASE P)
-2. Menu machine (S02 tidak ada FL PHASE C)
-3. Tidak ada loading setelah pilih filter
-4. SEMUA MENU (data yang tampil di urutkan berdasarkan data yang paling lama) 
+1. menu machine (Building gada FL PHASE P) DONE
+2. Menu machine (S02 tidak ada FL PHASE C) DONE
+3. Tidak ada loading setelah pilih filter (jadi pilih filter dulu habis itu load untuk tampil data)
+4. SEMUA MENU (data yang tampil di urutkan berdasarkan data yang paling lama) DONE
+PAKE (traceability_qs = traceability_qs.order_by('TRC_START_TIME')) AND (traceability_qs = WMS_TRACEABILITY.objects.all())
+
 5. Menu Materials ketika FL_PHASE = 'C' itu sudah benar, 
-tetapi ketika FL_PHASE ='P' data baris2 tidak terfilter berdasarkan shift atau jam. seharusnya diambil berdasarkan baris1 yang memiliki status C, misal baris1 memiliki baris2 2 data 
+tetapi ketika FL_PHASE ='P' data baris2 tidak terfilter berdasarkan shift atau jam. seharusnya diambil berdasarkan baris1 yang memiliki status C, misal baris1 memiliki baris2 2 data
+
 ROOT 1 - Baris1 A
     - Baris2 A1
         - Child dari Baris2 A1
@@ -448,7 +448,6 @@ ROOT 1 - Baris1 A
 maka harus tampil semua sepeti perumpamaan ku diatas. 
 notes kalo yang FL_PHASE = 'C' itu sudah benar menggunakan pengaturan tanggal jam dan lainnya data yang tampil juga sudah benar. 
 
-6. Menu CU sama seperti menu materials
 
 ALUR FORM MATERIALS
 1. Pilih form tanggal
@@ -468,9 +467,7 @@ ROOT 1 - Baris1 A
                 - Child dari Baris2 A2
 
 
-
 ---- PENGATURAN DATA FORM BERDASARKAN FILTER TANGGAL ----
-
 SELECT [TRC_MCH_CODE]
 FROM [PCS].[dbo].[WMS_TRACEABILITY] 
 	WHERE
