@@ -1294,3 +1294,4 @@ def traceability_by_materials(request):
     }
 
     return render(request, 'traceability_by_materials.html', context)
+
