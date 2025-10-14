@@ -809,7 +809,7 @@ def traceability_by_cu(request):
                         'TRC_PP_CODE', 'TRC_MCH_CODE', 'TRC_SO_CODE',
                         'TRC_MAT_SAP_CODE', 'TRC_WM_CODE', 'TRC_START_TIME',
                         'TRC_END_TIME', 'TRC_CU_EXT_PROGR', 'TRC_FL_PHASE', 'MAT_CODE', 'WM_NAME'
-                    ).first()
+                    ).order_by('TRC_START_TIME').first()
 
                     detail2 = None
                     if detail1:
@@ -908,7 +908,7 @@ def traceability_by_cu(request):
                 'TRC_MAT_SAP_CODE', 'TRC_WM_CODE', 'TRC_START_TIME',
                 'TRC_END_TIME', 'TRC_CU_EXT_PROGR', 'TRC_FL_PHASE',
                 'MAT_CODE', 'WM_NAME'
-            )
+            ).order_by('TRC_START_TIME')
 
             for baris1 in baris1_qs:
                 # Ambil pelengkap baris2 dari WMS_TRACEABILITY phase = 'C'
@@ -1170,7 +1170,7 @@ def traceability_by_materials(request):
                         'TRC_PP_CODE', 'TRC_MCH_CODE', 'TRC_SO_CODE',
                         'TRC_MAT_SAP_CODE', 'TRC_WM_CODE', 'TRC_START_TIME',
                         'TRC_END_TIME', 'TRC_CU_EXT_PROGR', 'TRC_FL_PHASE', 'MAT_CODE', 'WM_NAME'
-                    ).first()
+                    ).order_by('TRC_START_TIME').first()
 
                     # ======== Ambil detail baris2 (FL_PHASE = 'C') ===========
                     detail2 = WMS_TRACEABILITY.objects.filter(
@@ -1230,7 +1230,7 @@ def traceability_by_materials(request):
                         'TRC_PP_CODE', 'TRC_MCH_CODE', 'TRC_SO_CODE',
                         'TRC_MAT_SAP_CODE', 'TRC_WM_CODE', 'TRC_START_TIME',
                         'TRC_END_TIME', 'TRC_CU_EXT_PROGR', 'TRC_FL_PHASE', 'MAT_CODE', 'WM_NAME'
-                    ).first()
+                    ).order_by('TRC_START_TIME').first()
 
                     detail2 = None
                     if detail1:
@@ -1279,7 +1279,7 @@ def traceability_by_materials(request):
                     'TRC_PP_CODE','TRC_MCH_CODE','TRC_SO_CODE',
                     'TRC_MAT_SAP_CODE','TRC_WM_CODE','TRC_START_TIME',
                     'TRC_END_TIME','TRC_CU_EXT_PROGR','TRC_FL_PHASE','MAT_CODE','WM_NAME'
-                ).first()
+                ).order_by('TRC_START_TIME').first()
 
                 node = {
                     'type': 'root',
