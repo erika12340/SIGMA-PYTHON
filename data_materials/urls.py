@@ -6,7 +6,7 @@ from django.conf import settings
 app_name = 'material_app'
 
 urlpatterns = [
-    path('', index, name='index'),
+    path('', dashboard, name='index'),
     path('daftar_materials', daftar_materials, name='daftar_material'),
     path('daftar_produksi', daftar_produksi, name='daftar_produksi'),
     path('traceability_by_machine', traceability_by_machine, name='traceability_by_machine'),

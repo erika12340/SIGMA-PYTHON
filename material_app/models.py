@@ -60,8 +60,8 @@ class DC_PRODUCTION_DATA(models.Model):
     PS_QUANTITY = models.CharField(max_length=8)
     PS_DECLARE_SEC = models.CharField(max_length=8)
     PS_START_PROD = models.DateTimeField(max_length=8)
-    PS_DATE = models.DateTimeField(max_length=8)
     PS_END_PROD = models.DateTimeField(max_length=8)
+    PS_DATE = models.DateTimeField(max_length=8)
     CNT_CODE = models.CharField(max_length=3)
     MAT_VARIANT = models.CharField(max_length=10)
 
