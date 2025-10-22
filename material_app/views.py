@@ -365,7 +365,6 @@ def daftar_produksi(request):
         'PS_END_PROD',
         'PS_DATE'
     )
-
     production_list = list(production_list_query)
     for p in production_list:
         p['MAT_CODE'] = MD_MATERIALS.objects.filter(MAT_SAP_CODE=p['MAT_SAP_CODE']).first()
@@ -381,21 +380,7 @@ def daftar_produksi(request):
         'selected_end_date': end_date,
         'error_message': error_message,
     }
-
     return render(request, 'daftar_produksi.html', context)
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -412,8 +397,7 @@ def traceability_by_machine(request):
     end_date_raw = request.GET.get('end_date')           # "YYYY-mm-dd|shift"
     trc_fl_phase = request.GET.get('trc_fl_phase')       # C atau P
 
-    # --- helper parse tanggal|shift ---
-    # return (date_obj, shift_int) atau (None, None) jika gagal parsing
+    # --- parse tanggal|shift ---
     def parse_date_shift(raw_value):
         if not raw_value:
             return None, None
@@ -475,7 +459,7 @@ def traceability_by_machine(request):
             .order_by('TRC_MCH_CODE')
         )
 
-    # 3) Daftar phase (dengan pengecualian berdasarkan trc_code)
+    # 3) Daftar phase 
     phase_qs = WMS_TRACEABILITY.objects.all()
 
     if trc_code:
