@@ -2,7 +2,22 @@
 body{
     background: url('../img/3.png') no-repeat center center fixed;
     background-size: cover;
+    padding-top: 70px;  /* sesuaikan tinggi navbar kamu */
+    padding-bottom: 70px; /* sesuaikan tinggi footer kamu */
+    overflow-y: auto;
 }
+
+
+/* -------------- FOOTER ------------- */
+
+footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1030;
+}
+
 
 /* -------------- NAVBAR ------------- */
 .navbar {
@@ -12,6 +27,10 @@ body{
     padding: 1rem 2rem;                  
     position: relative;      
     z-index: 1000;                     
+}
+
+.nav-item{
+    color: black;
 }
 
 /* Warna teks navbar dan brand */
@@ -61,7 +80,18 @@ body{
     color: #f8c146;
 }
 
-/* css label form */
+/* untuk bg tombol toggler navbar */
+.navbar-toggler-icon{
+    background: white;
+}
+
+
+
+
+
+
+
+/* ---------- CSS Form Label ---------- */
 .form-label{
     color: #000;
 }
@@ -70,8 +100,47 @@ body{
     color:#ffffff;
 }
 
-/* CSS TOOGLE RESVONSIVE */
-.navbar-toggler{
-    background: #ffffff;
+/* untuk responsive form select */
+.select2-container {
+    width: 100% !important;
 }
 
+
+
+/* -------------- tree ---------------- */
+    .material-item {
+        display: none;
+    }
+
+    .level-1 {
+        margin-left: 1em;
+    }
+
+    .level-2 {
+        margin-left: 4em;
+    }
+
+    .level-3 {
+        margin-left: 8em;
+    }
+
+    .level-4 {
+        margin-left: 12em;
+    }
+
+    .level-5 {
+        margin-left: 16em;
+    }
+
+    .level-6 {
+        margin-left: 20em;
+    }
+
+
+  .baris2 {
+        border-radius: 7px;
+        margin-left: 2em;
+        display: inline-block;
+        background-color: rgba(0, 149, 255, 0.448);
+        padding: 2px 4px;
+    }

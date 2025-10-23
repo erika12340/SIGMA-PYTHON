@@ -2,18 +2,6 @@
 {% load static %}
 {% block content %}
 
-<style>
-  .btn-excel {
-      background-color: #01492b !important;
-      color: white !important;
-      border: none !important;
-      padding: 6px 12px !important;
-      border-radius: 4px !important;
-      text-decoration: none !important;
-      font-size: 14px !important;
-  }
-</style>
-
 
 <div class="content-wrapper text-light">
   <div class="container-xxl flex-grow-1 container-p-y">
@@ -21,7 +9,6 @@
     <!-- ==================== Total Data ====================== -->
     <div class="row gy-6">
       <h4 class="mb-4 fw-semibold text-white">Dashboard</h4>
-
       <!-- Filter Tanggal Total -->
       <div class="col-12 mb-4">
         <div class="card border border-secondary rounded-3 shadow-sm p-3 bg-dark">
@@ -75,7 +62,7 @@
         <form method="GET" class="row g-3 align-items-end">
 
           <!-- FILTER PS_DATE -->
-          <div class="col-md-4">
+          <div class="col-12 col-md-4 mb-3">
             <label class="form-label text-white mb-1">Tanggal Produksi</label>
             <select name="ps_date" id="ps_date"
                     class="form-control bg-dark text-white border-secondary">
@@ -89,7 +76,7 @@
           </div>
 
           <!-- FILTER SFC CODE -->
-          <div class="col-md-4">
+          <div class="col-12 col-md-4 mb-3">
             <label class="form-label text-white mb-1">SFC Code</label>
             <select name="sfc_code" id="sfc_code"
                     class="form-control bg-dark text-white border-secondary"
@@ -102,7 +89,7 @@
           </div>
 
           <!-- FILTER MAT SAP CODE -->
-          <div class="col-md-4">
+          <div class="col-12 col-md-4 mb-3">
             <label class="form-label text-white mb-1">MAT SAP Code</label>
             <select name="mat_sap_code" id="mat_sap_code"
                     class="form-control bg-dark text-white border-secondary"
@@ -113,6 +100,14 @@
               {% endfor %}
             </select>
           </div>
+
+          <!-- Tombol Reset -->
+          <div class="row mt-4">
+              <div class="col-md-12">
+                  <a href="{% url 'index'%}" class="btn btn-primary btn-reset">Reset</a>
+              </div>
+          </div>
+
         </form>
       </div>
     </div>
@@ -127,7 +122,7 @@
             <thead class="table-primary text-dark">
               <tr>
                 <th>No</th>
-                <th>Ip Materials</th>
+                <th>IP Materials</th>
                 <th>Kode Mesin</th>
                 <th>SFC Desc</th>
                 <th>Waktu Mulai</th>
@@ -186,11 +181,12 @@
   <!-- DATA TABLE -->
   <script>
       new DataTable('#datatable', {
+           responsive: true, // ← WAJIB untuk HP
           dom: '<"d-flex justify-content-between align-items-center mb-2"lBf>rt<"d-flex justify-content-between align-items-center mt-2"ip>',
           buttons: [
               {
                   extend: 'excelHtml5',
-                  className: 'btn-excel' // contoh pake kelas bootstrap
+                  className: 'btn-success' // contoh pake kelas bootstrap
               }
           ],
 
@@ -216,4 +212,5 @@
       $('#mat_sap_code').select2();
       $('#ps_date').select2();
   </script>
+
 {% endblock %}

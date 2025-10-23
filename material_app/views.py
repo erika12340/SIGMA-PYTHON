@@ -339,14 +339,28 @@ def daftar_materials(request):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 # ================= MENU PRODUCTIONS ==================
 def daftar_produksi(request):
+    # List SFC_CODE selalu tampil
     sfc_list = MD_SEMI_FINISHED_CLASSES.objects.filter(SFC_CODE__in=['AL', 'AX'])
 
-    sfc_code = request.GET.get('sfc_code')
-    mat_info = request.GET.get('mat_info')
+    # Ambil filter dari request
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
+    sfc_code = request.GET.get('sfc_code')
+    mat_info = request.GET.get('mat_info')
     error_message = None
 
     # Cek selisih tanggal
@@ -361,40 +375,31 @@ def daftar_produksi(request):
         except ValueError:
             error_message = "Format tanggal salah!"
 
-    production_list = []
-    materials = []
+    # ================= FILTER UNTUK TABEL =================
+    production_list_query = DC_PRODUCTION_DATA.objects.all()
 
-    # jika ada filter maka pake all tanpa limit 
-    if sfc_code or mat_info or start_date or end_date:
-        production_list_query = DC_PRODUCTION_DATA.objects.all()
-    else:
-        production_list_query = DC_PRODUCTION_DATA.objects.all().order_by('-PS_DATE')[:10]
-
-
-
-    # Ambil mapping MAT_SAP_CODE -> MAT_CODE
+    # Filter SFC_CODE -> hanya gunakan MAT_SAP_CODE yang sesuai SFC
     mat_map = {}
+    materials = []
     if sfc_code:
+        # Ambil mapping MAT_SAP_CODE -> MAT_CODE
         mat_map = dict(MD_MATERIALS.objects.filter(SFC_CODE=sfc_code).values_list('MAT_SAP_CODE', 'MAT_CODE'))
 
-        # Untuk dropdown IP Materials
-        unique_mat_sap_codes = DC_PRODUCTION_DATA.objects.filter(MAT_SAP_CODE__in=mat_map.keys()).values_list('MAT_SAP_CODE', flat=True).distinct()
-        materials = [{'MAT_SAP_CODE': code, 'MAT_CODE': mat_map.get(code, '')} for code in unique_mat_sap_codes]
+        # Dropdown materials hanya jika tanggal juga dipilih
+        if start_date and end_date:
+            materials_query = DC_PRODUCTION_DATA.objects.filter(
+                PS_DATE__date__gte=start_date,
+                PS_DATE__date__lte=end_date,
+                MAT_SAP_CODE__in=mat_map.keys()
+            ).values_list('MAT_SAP_CODE', flat=True).distinct()
+            materials = [{'MAT_SAP_CODE': code, 'MAT_CODE': mat_map.get(code, '')} for code in materials_query]
 
-    # Filter SFC 
-    if sfc_code and mat_map:
+        # Filter produksi sesuai MAT_SAP_CODE yang valid
         production_list_query = production_list_query.filter(MAT_SAP_CODE__in=mat_map.keys())
 
-    # Filter IP Materials
+    # Filter MAT_SAP_CODE jika sudah dipilih
     if mat_info:
         production_list_query = production_list_query.filter(MAT_SAP_CODE=mat_info)
-
-    # Jika user tidak isi tanggal, otomatis set 3 hari terakhir
-    if (sfc_code or mat_info) and not start_date and not end_date:
-        end_dt = datetime.now()
-        start_dt = end_dt - timedelta(days=2)  
-        start_date = start_dt.strftime("%Y-%m-%d")
-        end_date = end_dt.strftime("%Y-%m-%d")
 
     # Filter tanggal
     if start_date:
@@ -402,8 +407,12 @@ def daftar_produksi(request):
     if end_date:
         production_list_query = production_list_query.filter(PS_DATE__date__lte=end_date)
 
-    # Ambil data untuk tabel
-    production_list_query = production_list_query.values(
+    # Jika belum ada filter, batasi data awal 10 row terbaru
+    if not (start_date or end_date or sfc_code or mat_info):
+        production_list_query = production_list_query.order_by('-PS_DATE')[:10]
+
+    # Ambil data produksi untuk tabel
+    production_list = list(production_list_query.values(
         'MAT_SAP_CODE',
         'PP_CODE',
         'MCH_CODE',
@@ -412,15 +421,20 @@ def daftar_produksi(request):
         'PS_START_PROD',
         'PS_END_PROD',
         'PS_DATE'
-    )
-    production_list = list(production_list_query)
-    for p in production_list:
-        p['MAT_CODE'] = MD_MATERIALS.objects.filter(MAT_SAP_CODE=p['MAT_SAP_CODE']).first()
-        p['MAT_CODE'] = p['MAT_CODE'].MAT_CODE if p['MAT_CODE'] else ""
+    ))
 
+    # Optimasi assign MAT_CODE tanpa N+1 query
+    mat_codes_map = dict(MD_MATERIALS.objects.filter(
+        MAT_SAP_CODE__in=[p['MAT_SAP_CODE'] for p in production_list]
+    ).values_list('MAT_SAP_CODE', 'MAT_CODE'))
+
+    for p in production_list:
+        p['MAT_CODE'] = mat_codes_map.get(p['MAT_SAP_CODE'], '')
+
+    # ================= CONTEXT =================
     context = {
-        'sfc_list': sfc_list,
-        'materials': materials,
+        'sfc_list': sfc_list,       # selalu tampil
+        'materials': materials,     # tampil jika tanggal + SFC_CODE dipilih
         'production_list': production_list,
         'selected_sfc': sfc_code,
         'selected_mat_info': mat_info,
@@ -428,7 +442,21 @@ def daftar_produksi(request):
         'selected_end_date': end_date,
         'error_message': error_message,
     }
+
     return render(request, 'daftar_produksi.html', context)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -601,10 +629,6 @@ def traceability_by_machine(request):
             'TRC_FL_PHASE', 'MAT_CODE', 'WM_NAME'
         ))
 
-
-
-
-
         # --- Fungsi rekursif untuk child tree ---
         def get_child_cu_tree(parent_so, parent_cu, level=1):
             child_nodes = []
@@ -661,10 +685,6 @@ def traceability_by_machine(request):
                     child_nodes += get_child_cu_tree(child_so, child_cu, level+1)
 
             return child_nodes
-
-
-
-
 
         # --- Build traceability_tree ---
         for item in traceability_raw:
@@ -1332,9 +1352,6 @@ def traceability_by_materials(request):
             'TRC_WM_CODE','TRC_START_TIME','TRC_END_TIME',
             'TRC_CU_EXT_PROGR','TRC_FL_PHASE','MAT_CODE','WM_NAME'
         ))
-
-
-
 
         # === Rekursi Traceability Tree ===
         def get_child_materials_tree(parent_so, parent_cu, level=1):
