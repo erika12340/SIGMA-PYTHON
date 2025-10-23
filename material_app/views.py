@@ -9,36 +9,51 @@ from django.core.serializers.json import DjangoJSONEncoder
 import json
 
 # =================== MENU DASHBOARD ========================
+from datetime import date
+
+# =================== MENU DASHBOARD ========================
 def dashboard(request):
     # ===================== TOTAL DATA SECTION =====================
     selected_date = request.GET.get('date')
+    if not selected_date:
+        selected_date = date.today().strftime("%Y-%m-%d")  # default hari ini
+
     total_consumed = total_produced = total_produksi = 0
-    if selected_date:
-        try:
-            date_obj = datetime.strptime(selected_date, "%Y-%m-%d").date()
-            total_consumed = WMS_TRACEABILITY.objects.filter(
-                TRC_FL_PHASE='C',
-                TRC_START_TIME__date=date_obj
-            ).count()
-            total_produced = WMS_TRACEABILITY.objects.filter(
-                TRC_FL_PHASE='P',
-                TRC_START_TIME__date=date_obj
-            ).count()
-            total_produksi = (
-                DC_PRODUCTION_DATA.objects
-                .filter(PS_DATE__date=date_obj)
-                .aggregate(total=Sum('PS_QUANTITY'))['total'] or 0
-            )
-            total_produksi = round(total_produksi, 2)
-        except ValueError:
-            selected_date = None
+
+    try:
+        date_obj = datetime.strptime(selected_date, "%Y-%m-%d").date()
+        total_consumed = WMS_TRACEABILITY.objects.filter(
+            TRC_FL_PHASE='C',
+            TRC_START_TIME__date=date_obj
+        ).count()
+        total_produced = WMS_TRACEABILITY.objects.filter(
+            TRC_FL_PHASE='P',
+            TRC_START_TIME__date=date_obj
+        ).count()
+        total_produksi = (
+            DC_PRODUCTION_DATA.objects
+            .filter(PS_DATE__date=date_obj)
+            .aggregate(total=Sum('PS_QUANTITY'))['total'] or 0
+        )
+        total_produksi = round(total_produksi, 2)
+    except ValueError:
+        selected_date = None
+
 
     # ===================== FILTER FORM SECTION =====================
     sfc_code = request.GET.get('sfc_code')
     mat_sap_code = request.GET.get('mat_sap_code')
-    ps_date = request.GET.get('ps_date')  # hanya satu tanggal dipilih
+    ps_date = request.GET.get('ps_date')  # urutan pertama (tanggal)
 
-    # 1 Dropdown SFC_CODE dari MD_SEMI_FINISHED_CLASSES
+    #  Dropdown Tanggal (PS_DATE)
+    daftar_tanggal = (
+        DC_PRODUCTION_DATA.objects
+        .values_list('PS_DATE', flat=True)
+        .distinct()
+        .order_by('PS_DATE')
+    )
+
+    #  Dropdown SFC_CODE
     daftar_sfc = (
         MD_SEMI_FINISHED_CLASSES.objects
         .filter(SFC_CODE__in=['AL', 'AX'])
@@ -47,32 +62,32 @@ def dashboard(request):
         .order_by('SFC_CODE')
     )
 
-    # 2 Dropdown MAT_SAP_CODE berdasarkan SFC_CODE
+    # Dropdown MAT_SAP_CODE berdasarkan PS_DATE + SFC_CODE
     daftar_mat_sap = []
-    if sfc_code:
-        mat_codes = list(
-            MD_MATERIALS.objects
-            .filter(SFC_CODE=sfc_code)
-            .values_list('MAT_SAP_CODE', flat=True)
-        )
-        daftar_mat_sap = (
-            DC_PRODUCTION_DATA.objects
-            .filter(MAT_SAP_CODE__in=mat_codes)
-            .values_list('MAT_SAP_CODE', flat=True)
-            .distinct()
-            .order_by('MAT_SAP_CODE')
-        )
+    if ps_date and sfc_code:
+        try:
+            date_obj = datetime.strptime(ps_date, "%Y-%m-%d").date()
 
-    # 3 Dropdown PS_DATE berdasarkan MAT_SAP_CODE (opsional)
-    daftar_tanggal = []
-    if mat_sap_code:
-        daftar_tanggal = (
-            DC_PRODUCTION_DATA.objects
-            .filter(MAT_SAP_CODE=mat_sap_code)
-            .values_list('PS_DATE', flat=True)
-            .distinct()
-            .order_by('PS_DATE')
-        )
+            # ambil semua material berdasarkan SFC_CODE
+            mat_codes = list(
+                MD_MATERIALS.objects
+                .filter(SFC_CODE=sfc_code)
+                .values_list('MAT_SAP_CODE', flat=True)
+            )
+
+            # filter data produksi berdasarkan tanggal dan material yang sesuai
+            daftar_mat_sap = (
+                DC_PRODUCTION_DATA.objects
+                .filter(
+                    PS_DATE__date=date_obj,
+                    MAT_SAP_CODE__in=mat_codes
+                )
+                .values_list('MAT_SAP_CODE', flat=True)
+                .distinct()
+                .order_by('MAT_SAP_CODE')
+            )
+        except ValueError:
+            pass
 
     # ===================== TABEL PRODUKSI SECTION =====================
     tabel_data = []
@@ -86,7 +101,7 @@ def dashboard(request):
                     MAT_SAP_CODE=mat_sap_code,
                     PS_DATE__date=selected_dt
                 )
-                .values('MAT_SAP_CODE', 'MCH_CODE', 'PS_START_PROD', 'PS_END_PROD', 'PS_DATE')
+                .values('MAT_SAP_CODE', 'MCH_CODE', 'PS_START_PROD', 'PS_END_PROD', 'PS_DATE', 'SHF_CODE')
                 .order_by('PS_START_PROD')
             )
 
@@ -115,6 +130,7 @@ def dashboard(request):
                     'ps_date': row['PS_DATE'],
                     'mat_sap_code': row['MAT_SAP_CODE'],
                     'mch_code': row['MCH_CODE'],
+                    'shf_code': row['SHF_CODE'],
                     'sfc_code': sfc_code_row,
                     'sfc_desc': sfc_desc_row,
                     'ps_start_prod': start,
@@ -131,16 +147,48 @@ def dashboard(request):
         'total_consumed': total_consumed,
         'total_produced': total_produced,
         'total_produksi': total_produksi,
+
+        # Data dropdown
+        'daftar_tanggal': daftar_tanggal,
         'daftar_sfc': daftar_sfc,
         'daftar_mat_sap': daftar_mat_sap,
-        'daftar_tanggal': daftar_tanggal,
+
+        # Selected option
+        'selected_ps_date': ps_date,
         'selected_sfc': sfc_code,
         'selected_mat_sap': mat_sap_code,
-        'selected_ps_date': ps_date,
+
+        # Data tabel
         'tabel_data': tabel_data,
     }
 
     return render(request, 'templates2/dashboard.html', context)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

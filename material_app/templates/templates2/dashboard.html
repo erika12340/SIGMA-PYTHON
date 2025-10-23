@@ -22,20 +22,17 @@
     <div class="row gy-6">
       <h4 class="mb-4 fw-semibold text-white">Dashboard</h4>
 
-      <!-- Filter Tanggal Total Produksi -->
+      <!-- Filter Tanggal Total -->
       <div class="col-12 mb-4">
         <div class="card border border-secondary rounded-3 shadow-sm p-3 bg-dark">
           <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
             <label for="production-date" class="form-label mb-0 text-white">Pilih Tanggal Produksi:</label>
-            <input type="date" id="production-date"
-                   class="form-control w-auto bg-dark text-white border-secondary"
-                   onchange="filterByDate(this.value)"
-                   value="{{ selected_date|default:'' }}" />
+            <input type="date" id="production-date" class="form-control w-auto bg-dark text-white border-secondary" onchange="filterByDate(this.value)" value="{{ selected_date|default:'' }}" />
           </div>
         </div>
       </div>
 
-      <!-- Statistik Produksi -->
+      <!-- Statistik -->
       <div class="col-12">
         <div class="row g-4">
           <div class="col-md-4">
@@ -69,7 +66,6 @@
       </div>
     </div>
 
-    
     <!-- ==================== Filter & Tabel Produksi ====================== -->
     <div class="container mt-5">
       <h2 class="text-center mb-4 text-white">Durasi Mesin Produksi</h2>
@@ -78,8 +74,22 @@
       <div class="card border border-secondary p-3 mb-4"  style="background-color: rgba(0, 88, 203, 0.445);">
         <form method="GET" class="row g-3 align-items-end">
 
+          <!-- FILTER PS_DATE -->
+          <div class="col-md-4">
+            <label class="form-label text-white mb-1">Tanggal Produksi</label>
+            <select name="ps_date" id="ps_date"
+                    class="form-control bg-dark text-white border-secondary">
+              <option value="">-- Pilih Tanggal --</option>
+              {% for tgl in daftar_tanggal %}
+                <option value="{{ tgl|date:'Y-m-d' }}" {% if selected_ps_date == tgl|date:'Y-m-d' %}selected{% endif %}>
+                  {{ tgl|date:"Y-m-d" }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
           <!-- FILTER SFC CODE -->
-          <div class="col-md-3">
+          <div class="col-md-4">
             <label class="form-label text-white mb-1">SFC Code</label>
             <select name="sfc_code" id="sfc_code"
                     class="form-control bg-dark text-white border-secondary"
@@ -92,7 +102,7 @@
           </div>
 
           <!-- FILTER MAT SAP CODE -->
-          <div class="col-md-3">
+          <div class="col-md-4">
             <label class="form-label text-white mb-1">MAT SAP Code</label>
             <select name="mat_sap_code" id="mat_sap_code"
                     class="form-control bg-dark text-white border-secondary"
@@ -103,22 +113,6 @@
               {% endfor %}
             </select>
           </div>
-
-          <!-- FILTER PS_DATE -->
-          <div class="col-md-3">
-            <label class="form-label text-white mb-1">Tanggal Produksi</label>
-            <select name="ps_date" id="ps_date"
-                    class="form-control bg-dark text-white border-secondary">
-              <option value="">-- Pilih Tanggal --</option>
-              {% for tgl in daftar_tanggal %}
-                <option value="{{ tgl|date:'Y-m-d' }}" {% if selected_ps_date == tgl|date:'Y-m-d' %}selected{% endif %}>
-                  {{ tgl|date:"Y-m-d" }}
-                </option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="col-md-3">
-            <button type="submit" class="btn btn-primary w-100">Filter</button>
         </form>
       </div>
     </div>
@@ -139,6 +133,7 @@
                 <th>Waktu Mulai</th>
                 <th>Waktu Selesai</th>
                 <th>Durasi</th>
+                <th>Shift</th>
               </tr>
             </thead>
             <tbody>
@@ -152,6 +147,7 @@
                     <td>{{ row.ps_start_prod|date:"Y-m-d H:i" }}</td>
                     <td>{{ row.ps_end_prod|date:"Y-m-d H:i" }}</td>
                     <td>{{ row.durasi_jam|floatformat:2 }}</td>
+                    <td>{{ row.shf_code }}</td>
                   </tr>
                 {% endfor %}
               {% endif %}
@@ -183,7 +179,7 @@
   <script src="https://cdn.datatables.net/buttons/3.2.5/js/buttons.print.min.js"></script>
   <script src="https://cdn.datatables.net/buttons/3.2.5/js/buttons.colVis.min.js"></script>
 
-  <!-- Select2 (Optional, buat dropdown filter kalau kamu pakai) -->
+  <!-- Select2 -->
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 
