@@ -1204,6 +1204,9 @@ def traceability_by_cu(request):
 
 
 
+
+
+
 # ======================= TRACEABILITY MATERIALS ==========================
 def traceability_by_materials(request):
     # ------------ Parameter Pemanggilan ------------
@@ -1443,57 +1446,58 @@ def traceability_by_materials(request):
             return child_nodes
 
 
+      
+        for item in traceability_raw:
+            baris1_phase, baris2_phase = ('C', 'P') if trc_fl_phase == 'C' else ('P', 'C')
 
-    for item in traceability_raw:
-        # Tentukan pasangan phase
-        if trc_fl_phase == 'C':
-            baris1_phase = 'C'
-            baris2_phase = 'P'
-        else:
-            baris1_phase = 'P'
-            baris2_phase = 'C'
+            # dalam loop: for item in traceability_raw:
+            if item['TRC_FL_PHASE'] == baris1_phase:
+                baris1 = item
 
-        # Ambil baris1 sesuai phase
-        if item['TRC_FL_PHASE'] == baris1_phase:
-            baris1 = item
+                # jika form phase = 'P', ambil semua baris2 (phase 'C') tanpa filter waktu
+                if trc_fl_phase == 'P':
+                    baris2_qs = WMS_TRACEABILITY.objects.filter(
+                        TRC_SO_CODE=item['TRC_SO_CODE'],
+                        TRC_CU_EXT_PROGR=item['TRC_CU_EXT_PROGR'],
+                        TRC_FL_PHASE='C'
+                    )
+                else:
+                    # kalau bukan 'P', tetap pakai logic lama (filter waktu jika perlu)
+                    baris2_qs = WMS_TRACEABILITY.objects.filter(
+                        TRC_SO_CODE=item['TRC_SO_CODE'],
+                        TRC_CU_EXT_PROGR=item['TRC_CU_EXT_PROGR'],
+                        TRC_FL_PHASE=baris2_phase
+                    ).filter(
+                        Q(TRC_START_TIME__range=(shift_start_dt, shift_end_dt)) |
+                        Q(TRC_END_TIME__range=(shift_start_dt, shift_end_dt)) |
+                        Q(TRC_END_TIME__gte=shift_start_dt, TRC_START_TIME__lte=shift_end_dt)
+                    )
 
-            # Ambil semua baris2 tanpa filter waktu
-            baris2_qs = WMS_TRACEABILITY.objects.filter(
-                TRC_SO_CODE=item['TRC_SO_CODE'],
-                TRC_CU_EXT_PROGR=item['TRC_CU_EXT_PROGR'],
-                TRC_FL_PHASE=baris2_phase
-            )
+                # annotate + ambil semua hasil (list), bukan .first()
+                baris2_list = baris2_qs.annotate(
+                    MAT_CODE=Subquery(
+                        MD_MATERIALS.objects.filter(MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')).values('MAT_CODE')[:1]
+                    ),
+                    WM_NAME=Subquery(
+                        MD_WORKERS.objects.filter(WM_CODE=OuterRef('TRC_WM_CODE')).values('WM_NAME')[:1]
+                    )
+                ).values(
+                    'TRC_PP_CODE', 'TRC_MCH_CODE', 'TRC_SO_CODE',
+                    'TRC_MAT_SAP_CODE', 'TRC_WM_CODE', 'TRC_START_TIME',
+                    'TRC_END_TIME', 'TRC_CU_EXT_PROGR', 'TRC_FL_PHASE',
+                    'MAT_CODE', 'WM_NAME'
+                ).order_by('TRC_START_TIME')
 
-            # Annotate & ambil semua hasil (list)
-            baris2_list = baris2_qs.annotate(
-                MAT_CODE=Subquery(
-                    MD_MATERIALS.objects.filter(MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')).values('MAT_CODE')[:1]
-                ),
-                WM_NAME=Subquery(
-                    MD_WORKERS.objects.filter(WM_CODE=OuterRef('TRC_WM_CODE')).values('WM_NAME')[:1]
-                )
-            ).values(
-                'TRC_PP_CODE', 'TRC_MCH_CODE', 'TRC_SO_CODE',
-                'TRC_MAT_SAP_CODE', 'TRC_WM_CODE', 'TRC_START_TIME',
-                'TRC_END_TIME', 'TRC_CU_EXT_PROGR', 'TRC_FL_PHASE',
-                'MAT_CODE', 'WM_NAME'
-            ).order_by('TRC_START_TIME')
+                node = {
+                    'type': 'root',
+                    'level': 0,
+                    'baris1': baris1,
+                    'baris2': list(baris2_list)   # <= penting: jadikan list
+                }
+                traceability_materials.append(node)
 
-            node = {
-                'type': 'root',
-                'level': 0,
-                'baris1': baris1,
-                'baris2': list(baris2_list)  # jadi list biar bisa diproses di view
-            }
-            traceability_materials.append(node)
-
-            # Rekursif ke anak (kalau perlu)
-            traceability_materials += get_child_materials_tree(
-                item['TRC_SO_CODE'],
-                item['TRC_CU_EXT_PROGR'],
-                1
-            )
-
+                # tetap rekursif ke child (kalau kamu panggil get_child_materials_tree)
+                traceability_materials += get_child_materials_tree(item['TRC_SO_CODE'], item['TRC_CU_EXT_PROGR'], 1)
 
     # ======================= CONTEXT =======================
     context = {
