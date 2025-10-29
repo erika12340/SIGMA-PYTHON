@@ -843,6 +843,7 @@ def traceability_by_machine(request):
 
 
 # ======================= TRACEABILITY BY CONTAINMENT UNIT (CU) ==========================
+# ======================= TRACEABILITY BY CONTAINMENT UNIT (CU) ==========================
 def traceability_by_cu(request):
     # ------------ Parameter Pemanggilan ------------
     so_code = request.GET.get('source_code')
@@ -1078,38 +1079,33 @@ def traceability_by_cu(request):
         baris1_phase, baris2_phase = ('C', 'P') if trc_fl_phase == 'C' else ('P', 'C')
 
         for item in traceability_raw:
-            # Cek Baris1
             if item['TRC_FL_PHASE'] == baris1_phase:
                 baris1 = item
-            else:
-                baris1 = None
+                # Baris2 = phase lawan
+                baris2_list = list(WMS_TRACEABILITY.objects.filter(
+                    TRC_SO_CODE=item['TRC_SO_CODE'],
+                    TRC_CU_EXT_PROGR=item['TRC_CU_EXT_PROGR'],
+                    TRC_FL_PHASE=baris2_phase
+                ).filter(
+                    Q(TRC_START_TIME__range=(shift_start_dt, shift_end_dt)) |
+                    Q(TRC_END_TIME__range=(shift_start_dt, shift_end_dt)) |
+                    Q(TRC_END_TIME__gte=shift_start_dt, TRC_START_TIME__lte=shift_end_dt)
+                ).annotate(
+                    MAT_CODE=Subquery(
+                        MD_MATERIALS.objects.filter(MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')).values('MAT_CODE')[:1]
+                    ),
+                    WM_NAME=Subquery(
+                        MD_WORKERS.objects.filter(WM_CODE=OuterRef('TRC_WM_CODE')).values('WM_NAME')[:1]
+                    )
+                ).values(
+                    'TRC_PP_CODE', 'TRC_MCH_CODE', 'TRC_SO_CODE',
+                    'TRC_CU_EXT_PROGR', 'TRC_FL_PHASE',
+                    'TRC_MAT_SAP_CODE', 'TRC_WM_CODE',
+                    'TRC_START_TIME', 'TRC_END_TIME',
+                    'MAT_CODE', 'WM_NAME'
+                ).order_by('TRC_START_TIME'))
 
-            # Ambil Baris2
-            baris2_list = list(WMS_TRACEABILITY.objects.filter(
-                TRC_SO_CODE=item['TRC_SO_CODE'],
-                TRC_CU_EXT_PROGR=item['TRC_CU_EXT_PROGR'],
-                TRC_FL_PHASE=baris2_phase
-            ).filter(
-                Q(TRC_START_TIME__range=(shift_start_dt, shift_end_dt)) |
-                Q(TRC_END_TIME__range=(shift_start_dt, shift_end_dt)) |
-                Q(TRC_END_TIME__gte=shift_start_dt, TRC_START_TIME__lte=shift_end_dt)
-            ).annotate(
-                MAT_CODE=Subquery(
-                    MD_MATERIALS.objects.filter(MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE')).values('MAT_CODE')[:1]
-                ),
-                WM_NAME=Subquery(
-                    MD_WORKERS.objects.filter(WM_CODE=OuterRef('TRC_WM_CODE')).values('WM_NAME')[:1]
-                )
-            ).values(
-                'TRC_PP_CODE', 'TRC_MCH_CODE', 'TRC_SO_CODE',
-                'TRC_CU_EXT_PROGR', 'TRC_FL_PHASE',
-                'TRC_MAT_SAP_CODE', 'TRC_WM_CODE',
-                'TRC_START_TIME', 'TRC_END_TIME',
-                'MAT_CODE', 'WM_NAME'
-            ).order_by('TRC_START_TIME'))
-
-            # Hanya buat node kalau Baris1 atau Baris2 ada
-            if baris1 or baris2_list:
+                # Node root
                 node = {
                     'type': 'root',
                     'level': 0,
@@ -1138,6 +1134,10 @@ def traceability_by_cu(request):
     }
 
     return render(request, 'traceability_by_cu.html', context)
+
+
+
+
 
 
 

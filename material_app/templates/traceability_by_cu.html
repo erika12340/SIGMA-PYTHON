@@ -11,10 +11,12 @@
                 <!-- Start Date -->
                 <div class="col-md-4">
                     <label for="start_date" class="form-label fw-bold">From :</label>
-                    <select name="start_date" id="start_date" class="form-select">
+                    <select name="start_date" id="start_date" class="form-select" onchange="this.form.submit()">
                         <option value="">-- Pilih Tanggal & Shift --</option>
                         {% for opt in date_shift_choices %}
-                        <option value="{{ opt.value }}" {% if selected_start_date == opt.value %}selected{% endif %}>{{ opt.label }}</option>
+                        <option value="{{ opt.value }}" {% if selected_start_date == opt.value %}selected{% endif %}>
+                            {{ opt.label }}
+                        </option>
                         {% endfor %}
                     </select>
                 </div>
@@ -22,10 +24,12 @@
                 <!-- End Date -->
                 <div class="col-md-4">
                     <label for="end_date" class="form-label fw-bold">To :</label>
-                    <select name="end_date" id="end_date" class="form-select">
+                    <select name="end_date" id="end_date" class="form-select" onchange="this.form.submit()">
                         <option value="">-- Pilih Tanggal & Shift --</option>
                         {% for opt in date_shift_choices %}
-                        <option value="{{ opt.value }}" {% if selected_end_date == opt.value %}selected{% endif %}>{{ opt.label }}</option>
+                        <option value="{{ opt.value }}" {% if selected_end_date == opt.value %}selected{% endif %}>
+                            {{ opt.label }}
+                        </option>
                         {% endfor %}
                     </select>
                 </div>
@@ -33,7 +37,7 @@
                 <!-- Source -->
                 <div class="col-md-4">
                     <label for="source" class="form-label fw-bold">Source :</label>
-                    <select name="source_code" id="source" class="form-select">
+                    <select name="source_code" id="source" class="form-select" onchange="this.form.submit()">
                         <option value="">-- Pilih Source --</option>
                         {% for source in sources %}
                         <option value="{{ source.TRC_SO_CODE }}" {% if selected_so_code == source.TRC_SO_CODE %}selected{% endif %}>
@@ -45,22 +49,23 @@
 
                 <!-- Containment Unit -->
                 <div class="col-md-4">
-                    <label for="mat" class="form-label fw-bold">Containment Unit :</label>
-                    <select name="mat_info" id="cu" class="form-select">
+                    <label for="cu" class="form-label fw-bold">Containment Unit :</label>
+                    <select name="mat_info" id="cu" class="form-select" onchange="this.form.submit()">
                         <option value="">-- Pilih Containment --</option>
                         {% for cu in cu_list %}
                         <option value="{{ cu.TRC_SO_CODE }}|{{ cu.TRC_CU_EXT_PROGR }}"
-                            {% if mat_info == cu.TRC_SO_CODE|stringformat:"s"|add:"|"|add:cu.TRC_CU_EXT_PROGR|stringformat:"s" %}selected{% endif %}>
+                            {% if mat_info == cu.TRC_SO_CODE|add:"|"|add:cu.TRC_CU_EXT_PROGR %}selected{% endif %}>
                             {{ cu.TRC_SO_CODE }}{{ cu.TRC_CU_EXT_PROGR }}
                         </option>
                         {% endfor %}
                     </select>
                 </div>
 
+
                 <!-- Traceability Phase -->
                 <div class="col-md-4">
                     <label for="trc_fl_phase" class="form-label fw-bold">FL Phase :</label>
-                    <select name="trc_fl_phase" id="trc_fl_phase" class="form-select">
+                    <select name="trc_fl_phase" id="trc_fl_phase" class="form-select" onchange="this.form.submit()">
                         <option value="">-- Pilih Traceability Phase --</option>
                         {% for p in phase %}
                         <option value="{{ p.TRC_FL_PHASE }}" {% if p.TRC_FL_PHASE == selected_phase %}selected{% endif %}>
@@ -83,12 +88,13 @@
     </div>
 
     <!-- Data CU & Materials -->
+    {% if data_cu %}
     <div class="card mb-4">
         <div class="card-body">
             <div class="row mb-3">
                 <div class="col-md-6">
                     <label class="form-label">Containment Unit (CU)</label>
-                    <input type="text" class="form-control" readonly value="{% if data_cu %}{{ data_cu.TRC_SO_CODE }}{{ data_cu.TRC_CU_EXT_PROGR }}{% endif %}" />
+                    <input type="text" class="form-control" readonly value="{{ data_cu.TRC_SO_CODE }}{{ data_cu.TRC_CU_EXT_PROGR }}" />
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Materials</label>
@@ -98,46 +104,52 @@
             </div>
         </div>
     </div>
-<!-- Traceability Tree CU -->
-{% if traceability_cu %}
-<div class="card">
-    <div class="card-body">
-        <h5 class="card-title mb-3">Traceability Views</h5>
-        <div id="material-tree">
-            {% for row in traceability_cu %}
-            <div class="material-item level-{{ row.level|add:1 }} mb-2">
-                <div class="d-flex align-items-start">
-                    <button class="toggle-btn me-2" data-id="{{ forloop.counter }}">▶</button>
-                    
-                    <div class="baris1">
-                        {% if row.baris1 %}
-                        <strong>{{ row.baris1.TRC_SO_CODE }}</strong>
-                        {{ row.baris1.TRC_CU_EXT_PROGR }} -
-                        {{ row.baris1.MAT_CODE }} -
-                        {{ row.baris1.TRC_MAT_SAP_CODE }} -
-                        ({{ row.baris1.TRC_START_TIME }} - {{ row.baris1.TRC_END_TIME }}) -
-                        ({{ row.baris1.TRC_WM_CODE }} - {{ row.baris1.WM_NAME }})
-                        {% endif %}
-                    </div>
-                </div>
+    {% endif %}
 
-                {% if row.baris2 %}
-                <div class="baris2-wrapper ms-4 mt-1">
-                    {% for b2 in row.baris2 %}
-                    <div class="baris2 mb-1">
-                        {{ b2.TRC_PP_CODE }} - {{ b2.TRC_MCH_CODE }} -
-                        ({{ b2.TRC_START_TIME }} - {{ b2.TRC_END_TIME }}) -
-                        ({{ b2.TRC_WM_CODE }} - {{ b2.WM_NAME }})
+    <!-- Traceability Tree CU -->
+    {% if traceability_cu %}
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Traceability Views</h5>
+            <div id="material-tree">
+                {% for row in traceability_cu %}
+                <div class="material-item level-{{ row.level|add:1 }} mb-2">
+                    <div class="d-flex align-items-start">
+                        <button class="toggle-btn me-2" data-id="{{ forloop.counter }}">▶</button>
+                        <div class="baris1">
+                            {% if row.baris1 %}
+                            <strong>{{ row.baris1.TRC_SO_CODE }}</strong>
+                            {{ row.baris1.TRC_CU_EXT_PROGR }} -
+                            {{ row.baris1.MAT_CODE }} -
+                            {{ row.baris1.TRC_MAT_SAP_CODE }} -
+                            ({{ row.baris1.TRC_START_TIME }} - {{ row.baris1.TRC_END_TIME }}) -
+                            ({{ row.baris1.TRC_WM_CODE }} - {{ row.baris1.WM_NAME }})
+                            {% endif %}
+                        </div>
                     </div>
-                    {% endfor %}
+
+                    {% if row.baris2 %}
+                    <div class="baris2-wrapper ms-4 mt-1">
+                        {% for b2 in row.baris2 %}
+                        <div class="baris2 mb-1">
+                            {{ b2.TRC_PP_CODE }} - {{ b2.TRC_MCH_CODE }} -
+                            ({{ b2.TRC_START_TIME }} - {{ b2.TRC_END_TIME }}) -
+                            ({{ b2.TRC_WM_CODE }} - {{ b2.WM_NAME }})
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 </div>
-                {% endif %}
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
     </div>
+    {% endif %}
 </div>
-{% endif %}
+
+<!-- JS Toggle -->
+
+
 
 <!-- JS  -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
