@@ -970,7 +970,6 @@ def traceability_by_cu(request):
     data_cu = None
     materials = None
 
-    # ✅ Tambahkan default biar nggak error UnboundLocalError
     traceability_qs = WMS_TRACEABILITY.objects.none()
     traceability_raw = []
 
