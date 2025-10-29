@@ -1,158 +1,216 @@
 {% extends "templates2/index.html" %}
 {% load static %}
 {% block content %}
-
-
 <div class="content-wrapper text-light">
   <div class="container-xxl flex-grow-1 container-p-y">
 
-    <!-- ==================== Total Data ====================== -->
-    <div class="row gy-6">
-      <h4 class="mb-4 fw-semibold text-white">Dashboard</h4>
-      <!-- Filter Tanggal Total -->
-      <div class="col-12 mb-4">
-        <div class="card border border-secondary rounded-3 shadow-sm p-3 bg-dark">
-          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-            <label for="production-date" class="form-label mb-0 text-white">Pilih Tanggal Produksi:</label>
-            <input type="date" id="production-date" class="form-control w-auto bg-dark text-white border-secondary" onchange="filterByDate(this.value)" value="{{ selected_date|default:'' }}" />
-          </div>
-        </div>
-      </div>
+    <!-- ==================== Traceability Dashboard ====================== -->
+    <div class="row gy-6 mb-4">
+      <h4 class="mb-4 fw-semibold text-white fw-bold">Traceability Dashboard</h4>
 
-      <!-- Statistik -->
-      <div class="col-12">
-        <div class="row g-4">
-          <div class="col-md-4">
-            <div class="card border border-primary rounded-3 shadow"
-                 style="background-color: rgba(13, 110, 253, 0.25);">
-              <div class="card-body text-center py-4">
-                <h6 class="text-white mb-2">Total Consumed</h6>
-                <h3 class="mb-0 fw-bold text-white">{{ total_consumed|default:"--" }}</h3>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="card border border-success rounded-3 shadow"
-                 style="background-color: rgba(25, 135, 84, 0.3);">
-              <div class="card-body text-center py-4">
-                <h6 class="text-white mb-2">Total Produced</h6>
-                <h3 class="mb-0 fw-bold text-white">{{ total_produced|default:"--" }}</h3>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="card border border-warning rounded-3 shadow"
-                 style="background-color: rgba(255, 193, 7, 0.25);">
-              <div class="card-body text-center py-4">
-                <h6 class="text-white mb-2">Total Produksi</h6>
-                <h3 class="mb-0 fw-bold text-white">{{ total_produksi|default:"--" }}</h3>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+      <!-- ========== Filter Mesin dan Tanggal ========== -->
+      <div class="col-12 mb-3">
+        <div class="card border border-secondary rounded-3 shadow p-3" style="background-color: rgba(0, 88, 203, 0.445);">
+          <form method="get" class="row g-3" id="traceabilityForm">
+            <!-- Sertakan hidden input untuk filter Production supaya tidak hilang -->
+            <input type="hidden" name="ps_date" value="{{ selected_ps_date }}">
+            <input type="hidden" name="sfc_code" value="{{ selected_sfc }}">
+            <input type="hidden" name="mat_sap_code" value="{{ selected_mat_sap }}">
 
-    <!-- ==================== Filter & Tabel Produksi ====================== -->
-    <div class="container mt-5">
-      <h2 class="text-center mb-4 text-white">Durasi Mesin Produksi</h2>
-
-      <!-- =========== FILTER DATA DURASI MESIN BEKERJA ============= -->
-      <div class="card border border-secondary p-3 mb-4"  style="background-color: rgba(0, 88, 203, 0.445);">
-        <form method="GET" class="row g-3 align-items-end">
-
-          <!-- FILTER PS_DATE -->
-          <div class="col-12 col-md-4 mb-3">
-            <label class="form-label text-white mb-1">Tanggal Produksi</label>
-            <select name="ps_date" id="ps_date"
-                    class="form-control bg-dark text-white border-secondary">
-              <option value="">-- Pilih Tanggal --</option>
-              {% for tgl in daftar_tanggal %}
-                <option value="{{ tgl|date:'Y-m-d' }}" {% if selected_ps_date == tgl|date:'Y-m-d' %}selected{% endif %}>
-                  {{ tgl|date:"Y-m-d" }}
-                </option>
-              {% endfor %}
-            </select>
-          </div>
-
-          <!-- FILTER SFC CODE -->
-          <div class="col-12 col-md-4 mb-3">
-            <label class="form-label text-white mb-1">SFC Code</label>
-            <select name="sfc_code" id="sfc_code"
-                    class="form-control bg-dark text-white border-secondary"
-                    onchange="this.form.submit()">
-              <option value="">-- Pilih SFC --</option>
-              {% for sfc in daftar_sfc %}
-                <option value="{{ sfc }}" {% if selected_sfc == sfc %}selected{% endif %}>{{ sfc }}</option>
-              {% endfor %}
-            </select>
-          </div>
-
-          <!-- FILTER MAT SAP CODE -->
-          <div class="col-12 col-md-4 mb-3">
-            <label class="form-label text-white mb-1">MAT SAP Code</label>
-            <select name="mat_sap_code" id="mat_sap_code"
-                    class="form-control bg-dark text-white border-secondary"
-                    onchange="this.form.submit()">
-              <option value="">-- Pilih Material --</option>
-              {% for mat in daftar_mat_sap %}
-                <option value="{{ mat }}" {% if selected_mat_sap == mat %}selected{% endif %}>{{ mat }}</option>
-              {% endfor %}
-            </select>
-          </div>
-
-          <!-- Tombol Reset -->
-          <div class="row mt-4">
-              <div class="col-md-12">
-                  <a href="{% url 'index'%}" class="btn btn-primary btn-reset">Reset</a>
-              </div>
-          </div>
-
-        </form>
-      </div>
-    </div>
-
-      <!--============== TABEL =================-->
-      <div class="card border border-primary shadow bg-dark text-white mt-5">
-        <div class="card-header bg-primary text-white ">
-          <h5 class="mb-0">Data Durasi Produksi per Mesin</h5>
-        </div>
-        <div class="card-body table-responsive"  style="background-color: rgb(0, 44, 101);">
-          <table id="datatable" class="table table-hover table-bordered align-middle mb-0">
-            <thead class="table-primary text-dark">
-              <tr>
-                <th>No</th>
-                <th>IP Materials</th>
-                <th>Kode Mesin</th>
-                <th>SFC Desc</th>
-                <th>Waktu Mulai</th>
-                <th>Waktu Selesai</th>
-                <th>Durasi</th>
-                <th>Shift</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% if tabel_data %}
-                {% for row in tabel_data %}
-                  <tr>
-                    <td>{{ forloop.counter }}</td>
-                    <td>{{ row.mat_sap_code }}</td>
-                    <td>{{ row.mch_code }}</td>
-                    <td>{{ row.sfc_desc }}</td>
-                    <td>{{ row.ps_start_prod|date:"Y-m-d H:i" }}</td>
-                    <td>{{ row.ps_end_prod|date:"Y-m-d H:i" }}</td>
-                    <td>{{ row.durasi_jam|floatformat:2 }}</td>
-                    <td>{{ row.shf_code }}</td>
-                  </tr>
+            <!-- Start Date -->
+            <div class="col-md-3">
+              <label for="start_date" class="form-label fw-bold text-white">From :</label>
+              <select name="start_date" id="start_date" class="form-select" onchange="this.form.submit()">
+                <option value="">-- Select Tanggal & Shift --</option>
+                {% for opt in date_shift_choices %}
+                  <option value="{{ opt.value }}" {% if selected_start_date == opt.value %}selected{% endif %}>
+                    {{ opt.label }}
+                  </option>
                 {% endfor %}
-              {% endif %}
-            </tbody>
-          </table>
+              </select>
+            </div>
+
+            <!-- End Date -->
+            <div class="col-md-3">
+              <label for="end_date" class="form-label fw-bold text-white">To :</label>
+              <select name="end_date" id="end_date" class="form-select " onchange="this.form.submit()">
+                <option value="">-- Select Tanggal & Shift --</option>
+                {% for opt in date_shift_choices %}
+                  <option value="{{ opt.value }}" {% if selected_end_date == opt.value %}selected{% endif %}>
+                    {{ opt.label }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Production Phase -->
+            <div class="col-md-3">
+              <label for="trc" class="form-label fw-bold text-white">Production Phase :</label>
+              <select name="trc_code" id="trc" class="form-select" onchange="this.form.submit()">
+                <option value="">-- Select Fase --</option>
+                {% for trc in trc_list %}
+                  <option value="{{ trc.TRC_PP_CODE }}" {% if trc.TRC_PP_CODE == selected_trc %}selected{% endif %}>
+                    {{ trc.TRC_PP_CODE }} - {{ trc.PP_DESC }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Machine -->
+            <div class="col-md-3">
+              <label for="mch_info" class="form-label fw-bold text-white">Machine :</label>
+              <select name="mch_info" id="mch_info" class="form-select" onchange="this.form.submit()">
+                <option value="">-- Select Mesin --</option>
+                {% for m in machines %}
+                  {% with value=m.TRC_PP_CODE|add:"|"|add:m.TRC_MCH_CODE %}
+                    <option value="{{ value }}" {% if selected_mch_info == value %}selected{% endif %}>
+                      {{ m.TRC_PP_CODE }} - {{ m.TRC_MCH_CODE }}
+                    </option>
+                  {% endwith %}
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-12 mt-3">
+              <a href="{% url 'index' %}" class="btn btn-primary">Reset</a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Total Consumed & Produced -->
+      <div class="row mt-4">
+        <div class="col-md-6">
+          <div class="card border border-primary rounded-3 shadow p-3 text-center" style="background-color: rgba(13, 110, 253, 0.25);">
+            <h6 class="text-white">Total Consumed</h6>
+            <h3 class="text-white">{{ total_consumed }}</h3>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card border border-success rounded-3 shadow p-3 text-center" style="background-color: rgba(25, 135, 84, 0.3);">
+            <h6 class="text-white">Total Produced</h6>
+            <h3 class="text-white">{{ total_produced }}</h3>
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- ==================== Production Data Dashboard ====================== -->
+    <div class="row mb-5">
+      <h4 class="mb-4 fw-semibold text-white fw-bold">Production Data Dashboard</h4>
+
+      <!-- Filter Form -->
+      <div class="col-lg-8 mb-4">
+        <div class="card border border-secondary p-3 h-100" style="background-color: rgba(0, 88, 203, 0.445);">
+          <form method="get" class="row g-3 align-items-end" id="productionForm">
+            <!-- Sertakan hidden input untuk filter Traceability supaya tidak hilang -->
+            <input type="hidden" name="start_date" value="{{ selected_start_date }}">
+            <input type="hidden" name="end_date" value="{{ selected_end_date }}">
+            <input type="hidden" name="trc_code" value="{{ selected_trc }}">
+            <input type="hidden" name="mch_info" value="{{ selected_mch_info }}">
+
+            <!-- Tanggal Produksi -->
+            <div class="col-md-4">
+              <label class="form-label fw-bold text-white mb-1">Tanggal Produksi</label>
+              <select name="ps_date" id="ps_date" class="form-control bg-dark text-white border-secondary" onchange="this.form.submit()">
+                <option value="">-- Pilih Tanggal --</option>
+                {% for tgl in daftar_tanggal %}
+                  <option value="{{ tgl|date:'Y-m-d' }}" {% if selected_ps_date == tgl|date:'Y-m-d' %}selected{% endif %}>
+                    {{ tgl|date:"Y-m-d" }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- SFC Code -->
+            <div class="col-md-4">
+              <label for="sfc" class="form-label fw-bold text-white">Semifinished Class :</label>
+              <select name="sfc_code" id="sfc" class="form-select" onchange="this.form.submit()">
+                <option value="">-- Select SF --</option>
+                {% for sfc in sfc_list %}
+                    <option value="{{ sfc.SFC_CODE }}" {% if sfc.SFC_CODE == selected_sfc %}selected{% endif %}>
+                        {{ sfc.SFC_CODE }} - {{ sfc.SFC_DESC }}
+                    </option>
+                {% endfor %}
+              </select>
+            </div>
+
+
+            <!-- MAT SAP Code -->
+            <div class="col-md-4">
+              <label class="form-label fw-bold text-white mb-1">MAT SAP Code</label>
+              <select name="mat_sap_code" id="mat_sap_code" class="form-control bg-dark text-white border-secondary" onchange="this.form.submit()">
+                <option value="">-- Pilih Material --</option>
+                {% for mat in daftar_mat_sap %}
+                  <option value="{{ mat }}" {% if selected_mat_sap == mat %}selected{% endif %}>{{ mat }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Tombol Reset -->
+            <div class="col-12 mt-3">
+              <a href="{% url 'index' %}" class="btn btn-primary btn-reset">Reset</a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Card Total Quantity Produksi -->
+      <div class="col-lg-4 mb-4">
+        <div class="card border border-warning rounded-3 shadow h-100" style="background-color: rgba(255, 193, 7, 0.25);">
+          <div class="card-body text-center py-4">
+            <h6 class="text-white mb-2">Total Quantity Produksi</h6>
+            <h3 class="mb-0 fw-bold text-white">{{ total_quantity|default:"--" }}</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabel Production Data -->
+    <div class="card border border-primary shadow bg-dark text-white mt-3">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Production Data per Mesin</h5>
+      </div>
+      <div class="card-body table-responsive" style="background-color: rgb(0, 44, 101);">
+        <table id="datatable" class="table table-hover table-bordered align-middle mb-0">
+          <thead class="table-primary text-dark">
+            <tr>
+              <th>No</th>
+              <th>IP Materials</th>
+              <th>Kode Mesin</th>
+              <th>SFC Desc</th>
+              <th>Waktu Mulai</th>
+              <th>Waktu Selesai</th>
+              <th>Durasi</th>
+              <th>Quantity</th>
+              <th>Shift</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if tabel_data %}
+              {% for row in tabel_data %}
+                <tr>
+                  <td>{{ forloop.counter }}</td>
+                  <td>{{ row.mat_sap_code }}</td>
+                  <td>{{ row.mch_code }}</td>
+                  <td>{{ row.sfc_desc }}</td>
+                  <td>{{ row.ps_start_prod|date:"Y-m-d H:i" }}</td>
+                  <td>{{ row.ps_end_prod|date:"Y-m-d H:i" }}</td>
+                  <td>{{ row.durasi_hms }}</td>
+                  <td>{{ row.ps_quantity }}</td>
+                  <td>{{ row.shf_code }}</td>
+                </tr>
+              {% endfor %}
+          
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 </div>
+
  
 <!-- JS  -->
   <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
@@ -208,7 +266,13 @@
 
   <!-- SELECT 2 -->
   <script>
-      $('#sfc_code').select2();
+      $('#start_date').select2();
+      $('#end_date').select2();
+      $('#trc').select2();
+      $('#mch_info').select2();
+
+
+      $('#sfc').select2();
       $('#mat_sap_code').select2();
       $('#ps_date').select2();
   </script>

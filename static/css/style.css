@@ -138,9 +138,18 @@ footer {
 
 
   .baris2 {
-        border-radius: 7px;
-        margin-left: 2em;
-        display: inline-block;
-        background-color: rgba(0, 149, 255, 0.448);
-        padding: 2px 4px;
+    display: block;
+    margin-left: 1rem; /* jarak sedikit dari kiri */
+
+    white-space: normal; /* agar teks panjang turun ke bawah */
+    border-radius: 7px;
+    margin-left: 2em;
+    display: inline-block;
+    background-color: rgba(0, 149, 255, 0.448);
+    padding: 2px 4px;
+    margin-top: 2px;
     }
+
+    .baris2-wrapper {
+    display: block !important; /* pastikan bukan flex */
+  }

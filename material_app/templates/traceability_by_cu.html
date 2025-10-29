@@ -1,202 +1,143 @@
 {% extends "templates2/index.html" %}
 {% block content %}
 
-<style>
-    .material-item {
-        display: none;
-    }
-
-    .level-1 {
-        margin-left: 1em;
-    }
-
-    .level-2 {
-        margin-left: 4em;
-    }
-
-    .level-3 {
-        margin-left: 8em;
-    }
-
-    .level-4 {
-        margin-left: 12em;
-    }
-
-    .level-5 {
-        margin-left: 16em;
-    }
-
-    .level-6 {
-        margin-left: 20em;
-    }
-
-    .baris2 {
-        border-radius: 7px;
-        margin-left: 2em;
-        display: inline-block;
-        background-color: rgba(0, 149, 255, 0.448);
-        padding: 2px 4px;
-    }
-</style>
-
-<!-- content -->
 <div class="container">
     <h3 class="judul mb-4">By Containment Unit (CU)</h3>
-    <div class="container mt-4">
-        <!-- Filter Form -->
-        <div class="card mb-4 shadow-sm">
-            <div class="card-body">
-                <form method="get" action="traceability_by_cu" class="row g-3" id="filterForm">
-                    <!-- Filter Start Date -->
-                    <div class="col-md-4">
-                        <label for="start_date" class="form-label fw-bold">From :</label>
-                        <select name="start_date" id="start_date" class="form-select" onchange="this.form.submit()">
-                            <option value="">-- Pilih Tanggal & Shift --</option>
-                            {% for opt in date_shift_choices %}
-                            <option value="{{ opt.value }}"
-                                {% if selected_start_date == opt.value %}selected{% endif %}>
-                                {{ opt.label }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
 
-                    <!-- Filter End Date -->
-                    <div class="col-md-4">
-                        <label for="end_date" class="form-label fw-bold">To :</label>
-                        <select name="end_date" id="end_date" class="form-select" onchange="this.form.submit()">
-                            <option value="">-- Pilih Tanggal & Shift --</option>
-                            {% for opt in date_shift_choices %}
-                            <option value="{{ opt.value }}" {% if selected_end_date == opt.value %}selected{% endif %}>
-                                {{ opt.label }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    
-                    <!-- Filter Source -->
-                    <div class="col-md-4">
-                        <label for="source" class="form-label fw-bold">Source :</label>
-                        <select name="source_code" id="source" class="form-select" onchange="this.form.submit()">
-                            <option value="">-- Pilih Source --</option>
-                            {% for source in sources %}
-                            <option value="{{ source.TRC_SO_CODE }}"
-                                {% if selected_so_code == source.TRC_SO_CODE %}selected{% endif %}>
-                                {{ source.TRC_SO_CODE }} - {{ source.SO_DESC }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
+    <!-- Filter Form -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <form method="get" action="traceability_by_cu" class="row g-3" id="filterForm">
+                <!-- Start Date -->
+                <div class="col-md-4">
+                    <label for="start_date" class="form-label fw-bold">From :</label>
+                    <select name="start_date" id="start_date" class="form-select">
+                        <option value="">-- Pilih Tanggal & Shift --</option>
+                        {% for opt in date_shift_choices %}
+                        <option value="{{ opt.value }}" {% if selected_start_date == opt.value %}selected{% endif %}>{{ opt.label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-                    <!-- Filter Containment Unit -->
-                    <div class="col-md-4">
-                        <label for="mat" class="form-label fw-bold">Containment Unit :</label>
-                        <select name="mat_info" id="cu" class="form-select" onchange="this.form.submit()">
-                            <option value="">-- Pilih Containment --</option>
-                            {% for cu in cu_list %}
-                            <option value="{{ cu.TRC_SO_CODE }}|{{ cu.TRC_CU_EXT_PROGR }}"
-                                {% if mat_info == cu.TRC_SO_CODE|stringformat:"s"|add:"|"|add:cu.TRC_CU_EXT_PROGR|stringformat:"s" %}selected{% endif %}>
-                                {{ cu.TRC_SO_CODE }}{{ cu.TRC_CU_EXT_PROGR }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
+                <!-- End Date -->
+                <div class="col-md-4">
+                    <label for="end_date" class="form-label fw-bold">To :</label>
+                    <select name="end_date" id="end_date" class="form-select">
+                        <option value="">-- Pilih Tanggal & Shift --</option>
+                        {% for opt in date_shift_choices %}
+                        <option value="{{ opt.value }}" {% if selected_end_date == opt.value %}selected{% endif %}>{{ opt.label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-                    <!-- Filter Traceability Phase -->
-                    <div class="col-md-4">
-                        <label for="trc_fl_phase" class="form-label fw-bold">FL Phase :</label>
-                        <select name="trc_fl_phase" id="trc_fl_phase" class="form-select" onchange="this.form.submit()">
-                            <option value="">-- Pilih Traceability Phase --</option>
-                            {% for p in phase %}
-                            <option value="{{ p.TRC_FL_PHASE }}"
-                                {% if p.TRC_FL_PHASE == selected_phase %}selected{% endif %}>
-                                {% if p.TRC_FL_PHASE == "C" %}C (Consumed)
-                                {% elif p.TRC_FL_PHASE == "P" %}P (Produced)
-                                {% else %}{{ p.TRC_FL_PHASE }}{% endif %}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
+                <!-- Source -->
+                <div class="col-md-4">
+                    <label for="source" class="form-label fw-bold">Source :</label>
+                    <select name="source_code" id="source" class="form-select">
+                        <option value="">-- Pilih Source --</option>
+                        {% for source in sources %}
+                        <option value="{{ source.TRC_SO_CODE }}" {% if selected_so_code == source.TRC_SO_CODE %}selected{% endif %}>
+                            {{ source.TRC_SO_CODE }} - {{ source.SO_DESC }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-                    
-                </form>
+                <!-- Containment Unit -->
+                <div class="col-md-4">
+                    <label for="mat" class="form-label fw-bold">Containment Unit :</label>
+                    <select name="mat_info" id="cu" class="form-select">
+                        <option value="">-- Pilih Containment --</option>
+                        {% for cu in cu_list %}
+                        <option value="{{ cu.TRC_SO_CODE }}|{{ cu.TRC_CU_EXT_PROGR }}"
+                            {% if mat_info == cu.TRC_SO_CODE|stringformat:"s"|add:"|"|add:cu.TRC_CU_EXT_PROGR|stringformat:"s" %}selected{% endif %}>
+                            {{ cu.TRC_SO_CODE }}{{ cu.TRC_CU_EXT_PROGR }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-                <!-- Tombol Reset -->
-                <div class="row mt-4">
-                    <div class="col-md-12">
-                        <a href="traceability_by_cu" class="btn btn-primary btn-reset">Reset</a>
-                    </div>
+                <!-- Traceability Phase -->
+                <div class="col-md-4">
+                    <label for="trc_fl_phase" class="form-label fw-bold">FL Phase :</label>
+                    <select name="trc_fl_phase" id="trc_fl_phase" class="form-select">
+                        <option value="">-- Pilih Traceability Phase --</option>
+                        {% for p in phase %}
+                        <option value="{{ p.TRC_FL_PHASE }}" {% if p.TRC_FL_PHASE == selected_phase %}selected{% endif %}>
+                            {% if p.TRC_FL_PHASE == "C" %}C (Consumed)
+                            {% elif p.TRC_FL_PHASE == "P" %}P (Produced)
+                            {% else %}{{ p.TRC_FL_PHASE }}{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </form>
+
+            <!-- Reset -->
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <a href="traceability_by_cu" class="btn btn-primary btn-reset">Reset</a>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Menampilkan data containment unit (CU) dan Materials -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <form>
-                    <div class="row mb-3">
-                        <!-- Containment Unit -->
-                        <div class="col-md-6">
-                            <label class="form-label">Containment Unit (CU)</label>
-                            <input type="text" class="form-control" readonly
-                                value="{% if data_cu %}{{ data_cu.TRC_SO_CODE }}{{ data_cu.TRC_CU_EXT_PROGR }}{% endif %}" />
-                        </div>
-
-                        <!-- Materials -->
-                        <div class="col-md-6">
-                            <label class="form-label">Materials</label>
-                            <input type="text" class="form-control" readonly
-                                value="{% if materials %}{{ materials.MAT_CODE }} - {{ materials.TRC_MAT_SAP_CODE }} - {{ materials.TRC_MAT_VARIANT }} - {{ materials.TRC_CNT_CODE }} - {{ materials.MAT_DESC }}{% endif %}" />
-                        </div>
-                    </div>
-                </form>
+    <!-- Data CU & Materials -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Containment Unit (CU)</label>
+                    <input type="text" class="form-control" readonly value="{% if data_cu %}{{ data_cu.TRC_SO_CODE }}{{ data_cu.TRC_CU_EXT_PROGR }}{% endif %}" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Materials</label>
+                    <input type="text" class="form-control" readonly
+                        value="{% if materials %}{{ materials.MAT_CODE }} - {{ materials.TRC_MAT_SAP_CODE }} - {{ materials.TRC_MAT_VARIANT }} - {{ materials.TRC_CNT_CODE }} - {{ materials.MAT_DESC }}{% endif %}" />
+                </div>
             </div>
         </div>
+    </div>
+<!-- Traceability Tree CU -->
+{% if traceability_cu %}
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title mb-3">Traceability Views</h5>
+        <div id="material-tree">
+            {% for row in traceability_cu %}
+            <div class="material-item level-{{ row.level|add:1 }} mb-2">
+                <div class="d-flex align-items-start">
+                    <button class="toggle-btn me-2" data-id="{{ forloop.counter }}">▶</button>
+                    
+                    <div class="baris1">
+                        {% if row.baris1 %}
+                        <strong>{{ row.baris1.TRC_SO_CODE }}</strong>
+                        {{ row.baris1.TRC_CU_EXT_PROGR }} -
+                        {{ row.baris1.MAT_CODE }} -
+                        {{ row.baris1.TRC_MAT_SAP_CODE }} -
+                        ({{ row.baris1.TRC_START_TIME }} - {{ row.baris1.TRC_END_TIME }}) -
+                        ({{ row.baris1.TRC_WM_CODE }} - {{ row.baris1.WM_NAME }})
+                        {% endif %}
+                    </div>
+                </div>
 
-        <!-- traceability views by cu-->
-        {% if traceability_cu %}
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title mb-3">Traceability Views</h5>
-                <div id="material-tree">
-                    {% for row in traceability_cu %}
-                    <div class="material-item level-{{ row.level|add:1 }} mb-1">
-                        <div data-bs-spy="scroll" data-bs-target="#list-example" data-bs-offset="0"
-                            class="scrollspy-example" tabindex="0">
-                            <button class="toggle-btn" data-id="{{ forloop.counter }}">▶</button>
-                            <!-- traceability views by machine -->
-                            {% if row.type == "root" %}
-                            <!-- Root node -->
-                            {{ row.baris1.TRC_SO_CODE }}
-                            {{ row.baris1.TRC_CU_EXT_PROGR }} -
-                            {{ row.baris1.MAT_CODE }} -
-                            {{ row.baris1.TRC_MAT_SAP_CODE }} -
-                            ({{ row.baris1.TRC_START_TIME }} -
-                            {{ row.baris1.TRC_END_TIME }}) -
-                            ({{ row.baris1.TRC_WM_CODE }} -
-                            {{ row.baris1.WM_NAME }})
-                            <br>
-                            {% if row.baris2 %}
-                            <div class="baris2">
-                                {{ row.baris2.TRC_PP_CODE }} -
-                                {{ row.baris2.TRC_MCH_CODE }} -
-                                ({{ row.baris2.TRC_START_TIME }} -
-                                {{ row.baris2.TRC_END_TIME }})
-                                ({{ row.baris2.TRC_WM_CODE }} -
-                                {{ row.baris2.WM_NAME }})
-                            </div>
-                            {% endif %}
-                            {% endif %}
-                        </div>
+                {% if row.baris2 %}
+                <div class="baris2-wrapper ms-4 mt-1">
+                    {% for b2 in row.baris2 %}
+                    <div class="baris2 mb-1">
+                        {{ b2.TRC_PP_CODE }} - {{ b2.TRC_MCH_CODE }} -
+                        ({{ b2.TRC_START_TIME }} - {{ b2.TRC_END_TIME }}) -
+                        ({{ b2.TRC_WM_CODE }} - {{ b2.WM_NAME }})
                     </div>
                     {% endfor %}
                 </div>
+                {% endif %}
             </div>
+            {% endfor %}
         </div>
-        {% endif %}
     </div>
 </div>
-<!-- end contant -->
+{% endif %}
 
 <!-- JS  -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -209,39 +150,36 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 
-
-<!-- JAVA SCRIPT TOGGLE CHILD -->
+<!-- JS Toggle (samakan persis dengan menu Materials) -->
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        // Tampilkan semua level-1 (root)
-        document.querySelectorAll(".material-item.level-1").forEach(item => item.style.display = "block");
-        document.querySelectorAll(".toggle-btn").forEach(btn => {
-            btn.addEventListener("click", function () {
-                let currentItem = this.parentElement.parentElement;
-                let currentLevel = parseInt(currentItem.className.match(/level-(\d+)/)[1]);
-                let next = currentItem.nextElementSibling;
-                let isExpanding = this.textContent === "▶";
-                this.textContent = isExpanding ? "▼" : "▶";
-                while (next && next.classList.contains("material-item")) {
-                    let level = parseInt(next.className.match(/level-(\d+)/)[1]);
-                    if (level <= currentLevel) break;
-                    if (level === currentLevel + 1) {
-                        next.style.display = isExpanding ? "block" : "none";
-                    }
-                    if (!isExpanding && level > currentLevel) {
-                        let toggle = next.querySelector(".toggle-btn");
-                        if (toggle) toggle.textContent = "▶";
-                        next.style.display = "none";
-                    }
-                    next = next.nextElementSibling;
+document.addEventListener("DOMContentLoaded", function () {
+    // Tampilkan semua level-1 (root) awal
+    document.querySelectorAll(".material-item.level-1").forEach(item => item.style.display = "block");
+
+    document.querySelectorAll(".toggle-btn").forEach(btn => {
+        btn.addEventListener("click", function () {
+            let currentItem = this.closest(".material-item");
+            let currentLevel = parseInt(currentItem.className.match(/level-(\d+)/)[1]);
+            let next = currentItem.nextElementSibling;
+            let isExpanding = this.textContent === "▶";
+            this.textContent = isExpanding ? "▼" : "▶";
+
+            while (next && next.classList.contains("material-item")) {
+                let level = parseInt(next.className.match(/level-(\d+)/)[1]);
+                if (level <= currentLevel) break;
+                if (level === currentLevel + 1) next.style.display = isExpanding ? "block" : "none";
+                if (!isExpanding && level > currentLevel) {
+                    let toggle = next.querySelector(".toggle-btn");
+                    if (toggle) toggle.textContent = "▶";
+                    next.style.display = "none";
                 }
-            });
+                next = next.nextElementSibling;
+            }
         });
     });
+});
 </script>
-
-
-<!-- JS UNTUK FORM -->
+<!-- JS SELECT2-->
 <script>
     $('#source').select2();
     $('#cu').select2();
@@ -250,3 +188,4 @@
     $('#end_date').select2();
 </script>
 {% endblock %}
+
