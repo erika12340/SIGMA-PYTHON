@@ -24,7 +24,7 @@
               <select name="start_date" id="start_date" class="form-select" onchange="this.form.submit()">
                 <option value="">-- Select Tanggal & Shift --</option>
                 {% for opt in date_shift_choices %}
-                <option value="{{ opt.value }}" {% if selected_start_date==opt.value %}selected{% endif %}>
+                <option value="{{ opt.value }}" {% if selected_start_date == opt.value %}selected{% endif %}>
                   {{ opt.label }}
                 </option>
                 {% endfor %}
@@ -37,7 +37,7 @@
               <select name="end_date" id="end_date" class="form-select " onchange="this.form.submit()">
                 <option value="">-- Select Tanggal & Shift --</option>
                 {% for opt in date_shift_choices %}
-                <option value="{{ opt.value }}" {% if selected_end_date==opt.value %}selected{% endif %}>
+                <option value="{{ opt.value }}" {% if selected_end_date == opt.value %}selected{% endif %}>
                   {{ opt.label }}
                 </option>
                 {% endfor %}
@@ -50,7 +50,7 @@
               <select name="trc_code" id="trc" class="form-select" onchange="this.form.submit()">
                 <option value="">-- Select Fase --</option>
                 {% for trc in trc_list %}
-                <option value="{{ trc.TRC_PP_CODE }}" {% if trc.TRC_PP_CODE==selected_trc %}selected{% endif %}>
+                <option value="{{ trc.TRC_PP_CODE }}" {% if trc.TRC_PP_CODE == selected_trc %}selected{% endif %}>
                   {{ trc.TRC_PP_CODE }} - {{ trc.PP_DESC }}
                 </option>
                 {% endfor %}
@@ -64,7 +64,7 @@
                 <option value="">-- Select Mesin --</option>
                 {% for m in machines %}
                 {% with value=m.TRC_PP_CODE|add:"|"|add:m.TRC_MCH_CODE %}
-                <option value="{{ value }}" {% if selected_mch_info==value %}selected{% endif %}>
+                <option value="{{ value }}" {% if selected_mch_info == value %}selected{% endif %}>
                   {{ m.TRC_PP_CODE }} - {{ m.TRC_MCH_CODE }}
                 </option>
                 {% endwith %}
@@ -75,7 +75,6 @@
             <div class="col-12 mt-3">
               <a href="{% url 'index' %}" class="btn btn-primary">Reset</a>
             </div>
-
           </form>
         </div>
       </div>
@@ -120,7 +119,7 @@
                 onchange="this.form.submit()">
                 <option value="">-- Pilih Tanggal --</option>
                 {% for tgl in daftar_tanggal %}
-                <option value="{{ tgl|date:'Y-m-d' }}" {% if selected_ps_date==tgl|date:'Y-m-d' %}selected{% endif %}>
+                <option value="{{ tgl|date:'Y-m-d' }}" {% if selected_ps_date == tgl|date:'Y-m-d' %}selected{% endif %}>
                   {{ tgl|date:"Y-m-d" }}
                 </option>
                 {% endfor %}
@@ -133,7 +132,7 @@
               <select name="sfc_code" id="sfc" class="form-select" onchange="this.form.submit()">
                 <option value="">-- Select SF --</option>
                 {% for sfc in sfc_list %}
-                <option value="{{ sfc.SFC_CODE }}" {% if sfc.SFC_CODE==ps_data %}selected{% endif %}>
+                <option value="{{ sfc.SFC_CODE }}" {% if sfc.SFC_CODE == selected_sfc %}selected{% endif %}>
                   {{ sfc.SFC_CODE }} - {{ sfc.SFC_DESC }}
                 </option>
                 {% endfor %}
@@ -148,7 +147,7 @@
                 onchange="this.form.submit()">
                 <option value="">-- Pilih Material --</option>
                 {% for mat in daftar_mat_sap %}
-                <option value="{{ mat }}" {% if selected_mat_sap==mat %}selected{% endif %}>{{ mat }}</option>
+                <option value="{{ mat }}" {% if selected_mat_sap == mat %}selected{% endif %}>{{ mat }}</option>
                 {% endfor %}
               </select>
             </div>
@@ -248,12 +247,10 @@
   new DataTable('#datatable', {
     responsive: true, // ← WAJIB untuk HP
     dom: '<"d-flex justify-content-between align-items-center mb-2"lBf>rt<"d-flex justify-content-between align-items-center mt-2"ip>',
-    buttons: [
-      {
-        extend: 'excelHtml5',
-        className: 'btn-success' // contoh pake kelas bootstrap
-      }
-    ],
+    buttons: [{
+      extend: 'excelHtml5',
+      className: 'btn-success' // contoh pake kelas bootstrap
+    }],
 
     lengthMenu: [
       [5, 10, 25, -1],
