@@ -10,7 +10,8 @@
 
       <!-- ========== Filter Mesin dan Tanggal ========== -->
       <div class="col-12 mb-3">
-        <div class="card border border-secondary rounded-3 shadow p-3" style="background-color: rgba(0, 88, 203, 0.445);">
+        <div class="card border border-secondary rounded-3 shadow p-3"
+          style="background-color: rgba(0, 88, 203, 0.445);">
           <form method="get" class="row g-3" id="traceabilityForm">
             <!-- Sertakan hidden input untuk filter Production supaya tidak hilang -->
             <input type="hidden" name="ps_date" value="{{ selected_ps_date }}">
@@ -23,9 +24,9 @@
               <select name="start_date" id="start_date" class="form-select" onchange="this.form.submit()">
                 <option value="">-- Select Tanggal & Shift --</option>
                 {% for opt in date_shift_choices %}
-                  <option value="{{ opt.value }}" {% if selected_start_date == opt.value %}selected{% endif %}>
-                    {{ opt.label }}
-                  </option>
+                <option value="{{ opt.value }}" {% if selected_start_date==opt.value %}selected{% endif %}>
+                  {{ opt.label }}
+                </option>
                 {% endfor %}
               </select>
             </div>
@@ -36,9 +37,9 @@
               <select name="end_date" id="end_date" class="form-select " onchange="this.form.submit()">
                 <option value="">-- Select Tanggal & Shift --</option>
                 {% for opt in date_shift_choices %}
-                  <option value="{{ opt.value }}" {% if selected_end_date == opt.value %}selected{% endif %}>
-                    {{ opt.label }}
-                  </option>
+                <option value="{{ opt.value }}" {% if selected_end_date==opt.value %}selected{% endif %}>
+                  {{ opt.label }}
+                </option>
                 {% endfor %}
               </select>
             </div>
@@ -49,9 +50,9 @@
               <select name="trc_code" id="trc" class="form-select" onchange="this.form.submit()">
                 <option value="">-- Select Fase --</option>
                 {% for trc in trc_list %}
-                  <option value="{{ trc.TRC_PP_CODE }}" {% if trc.TRC_PP_CODE == selected_trc %}selected{% endif %}>
-                    {{ trc.TRC_PP_CODE }} - {{ trc.PP_DESC }}
-                  </option>
+                <option value="{{ trc.TRC_PP_CODE }}" {% if trc.TRC_PP_CODE==selected_trc %}selected{% endif %}>
+                  {{ trc.TRC_PP_CODE }} - {{ trc.PP_DESC }}
+                </option>
                 {% endfor %}
               </select>
             </div>
@@ -62,11 +63,11 @@
               <select name="mch_info" id="mch_info" class="form-select" onchange="this.form.submit()">
                 <option value="">-- Select Mesin --</option>
                 {% for m in machines %}
-                  {% with value=m.TRC_PP_CODE|add:"|"|add:m.TRC_MCH_CODE %}
-                    <option value="{{ value }}" {% if selected_mch_info == value %}selected{% endif %}>
-                      {{ m.TRC_PP_CODE }} - {{ m.TRC_MCH_CODE }}
-                    </option>
-                  {% endwith %}
+                {% with value=m.TRC_PP_CODE|add:"|"|add:m.TRC_MCH_CODE %}
+                <option value="{{ value }}" {% if selected_mch_info==value %}selected{% endif %}>
+                  {{ m.TRC_PP_CODE }} - {{ m.TRC_MCH_CODE }}
+                </option>
+                {% endwith %}
                 {% endfor %}
               </select>
             </div>
@@ -74,6 +75,7 @@
             <div class="col-12 mt-3">
               <a href="{% url 'index' %}" class="btn btn-primary">Reset</a>
             </div>
+
           </form>
         </div>
       </div>
@@ -81,13 +83,15 @@
       <!-- Total Consumed & Produced -->
       <div class="row mt-4">
         <div class="col-md-6">
-          <div class="card border border-primary rounded-3 shadow p-3 text-center" style="background-color: rgba(13, 110, 253, 0.25);">
+          <div class="card border border-primary rounded-3 shadow p-3 text-center"
+            style="background-color: rgba(13, 110, 253, 0.25);">
             <h6 class="text-white">Total Consumed</h6>
             <h3 class="text-white">{{ total_consumed }}</h3>
           </div>
         </div>
         <div class="col-md-6">
-          <div class="card border border-success rounded-3 shadow p-3 text-center" style="background-color: rgba(25, 135, 84, 0.3);">
+          <div class="card border border-success rounded-3 shadow p-3 text-center"
+            style="background-color: rgba(25, 135, 84, 0.3);">
             <h6 class="text-white">Total Produced</h6>
             <h3 class="text-white">{{ total_produced }}</h3>
           </div>
@@ -112,12 +116,13 @@
             <!-- Tanggal Produksi -->
             <div class="col-md-4">
               <label class="form-label fw-bold text-white mb-1">Tanggal Produksi</label>
-              <select name="ps_date" id="ps_date" class="form-control bg-dark text-white border-secondary" onchange="this.form.submit()">
+              <select name="ps_date" id="ps_date" class="form-control bg-dark text-white border-secondary"
+                onchange="this.form.submit()">
                 <option value="">-- Pilih Tanggal --</option>
                 {% for tgl in daftar_tanggal %}
-                  <option value="{{ tgl|date:'Y-m-d' }}" {% if selected_ps_date == tgl|date:'Y-m-d' %}selected{% endif %}>
-                    {{ tgl|date:"Y-m-d" }}
-                  </option>
+                <option value="{{ tgl|date:'Y-m-d' }}" {% if selected_ps_date==tgl|date:'Y-m-d' %}selected{% endif %}>
+                  {{ tgl|date:"Y-m-d" }}
+                </option>
                 {% endfor %}
               </select>
             </div>
@@ -128,9 +133,9 @@
               <select name="sfc_code" id="sfc" class="form-select" onchange="this.form.submit()">
                 <option value="">-- Select SF --</option>
                 {% for sfc in sfc_list %}
-                    <option value="{{ sfc.SFC_CODE }}" {% if sfc.SFC_CODE == selected_sfc %}selected{% endif %}>
-                        {{ sfc.SFC_CODE }} - {{ sfc.SFC_DESC }}
-                    </option>
+                <option value="{{ sfc.SFC_CODE }}" {% if sfc.SFC_CODE==ps_data %}selected{% endif %}>
+                  {{ sfc.SFC_CODE }} - {{ sfc.SFC_DESC }}
+                </option>
                 {% endfor %}
               </select>
             </div>
@@ -139,10 +144,11 @@
             <!-- MAT SAP Code -->
             <div class="col-md-4">
               <label class="form-label fw-bold text-white mb-1">MAT SAP Code</label>
-              <select name="mat_sap_code" id="mat_sap_code" class="form-control bg-dark text-white border-secondary" onchange="this.form.submit()">
+              <select name="mat_sap_code" id="mat_sap_code" class="form-control bg-dark text-white border-secondary"
+                onchange="this.form.submit()">
                 <option value="">-- Pilih Material --</option>
                 {% for mat in daftar_mat_sap %}
-                  <option value="{{ mat }}" {% if selected_mat_sap == mat %}selected{% endif %}>{{ mat }}</option>
+                <option value="{{ mat }}" {% if selected_mat_sap==mat %}selected{% endif %}>{{ mat }}</option>
                 {% endfor %}
               </select>
             </div>
@@ -157,7 +163,8 @@
 
       <!-- Card Total Quantity Produksi -->
       <div class="col-lg-4 mb-4">
-        <div class="card border border-warning rounded-3 shadow h-100" style="background-color: rgba(255, 193, 7, 0.25);">
+        <div class="card border border-warning rounded-3 shadow h-100"
+          style="background-color: rgba(255, 193, 7, 0.25);">
           <div class="card-body text-center py-4">
             <h6 class="text-white mb-2">Total Quantity Produksi</h6>
             <h3 class="mb-0 fw-bold text-white">{{ total_quantity|default:"--" }}</h3>
@@ -188,20 +195,20 @@
           </thead>
           <tbody>
             {% if tabel_data %}
-              {% for row in tabel_data %}
-                <tr>
-                  <td>{{ forloop.counter }}</td>
-                  <td>{{ row.mat_sap_code }}</td>
-                  <td>{{ row.mch_code }}</td>
-                  <td>{{ row.sfc_desc }}</td>
-                  <td>{{ row.ps_start_prod|date:"Y-m-d H:i" }}</td>
-                  <td>{{ row.ps_end_prod|date:"Y-m-d H:i" }}</td>
-                  <td>{{ row.durasi_hms }}</td>
-                  <td>{{ row.ps_quantity }}</td>
-                  <td>{{ row.shf_code }}</td>
-                </tr>
-              {% endfor %}
-          
+            {% for row in tabel_data %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ row.mat_sap_code }}</td>
+              <td>{{ row.mch_code }}</td>
+              <td>{{ row.sfc_desc }}</td>
+              <td>{{ row.ps_start_prod|date:"Y-m-d H:i" }}</td>
+              <td>{{ row.ps_end_prod|date:"Y-m-d H:i" }}</td>
+              <td>{{ row.durasi_hms }}</td>
+              <td>{{ row.ps_quantity }}</td>
+              <td>{{ row.shf_code }}</td>
+            </tr>
+            {% endfor %}
+
             {% endif %}
           </tbody>
         </table>
@@ -211,70 +218,70 @@
   </div>
 </div>
 
- 
+
 <!-- JS  -->
-  <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-  <!-- DataTables Core + Bootstrap 5 Integration -->
-  <script src="https://cdn.datatables.net/2.3.4/js/dataTables.js"></script>
-  <script src="https://cdn.datatables.net/2.3.4/js/dataTables.bootstrap5.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+<!-- DataTables Core + Bootstrap 5 Integration -->
+<script src="https://cdn.datatables.net/2.3.4/js/dataTables.js"></script>
+<script src="https://cdn.datatables.net/2.3.4/js/dataTables.bootstrap5.js"></script>
 
-  <!-- DataTables Buttons Extension -->
-  <script src="https://cdn.datatables.net/buttons/3.2.5/js/dataTables.buttons.js"></script>
-  <script src="https://cdn.datatables.net/buttons/3.2.5/js/buttons.bootstrap5.js"></script>
+<!-- DataTables Buttons Extension -->
+<script src="https://cdn.datatables.net/buttons/3.2.5/js/dataTables.buttons.js"></script>
+<script src="https://cdn.datatables.net/buttons/3.2.5/js/buttons.bootstrap5.js"></script>
 
-  <!-- Export Dependencies -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+<!-- Export Dependencies -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
 
-  <!-- Buttons Features -->
-  <script src="https://cdn.datatables.net/buttons/3.2.5/js/buttons.html5.min.js"></script>
-  <script src="https://cdn.datatables.net/buttons/3.2.5/js/buttons.print.min.js"></script>
-  <script src="https://cdn.datatables.net/buttons/3.2.5/js/buttons.colVis.min.js"></script>
+<!-- Buttons Features -->
+<script src="https://cdn.datatables.net/buttons/3.2.5/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/3.2.5/js/buttons.print.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/3.2.5/js/buttons.colVis.min.js"></script>
 
-  <!-- Select2 -->
-  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-
-  <!-- DATA TABLE -->
-  <script>
-      new DataTable('#datatable', {
-           responsive: true, // ← WAJIB untuk HP
-          dom: '<"d-flex justify-content-between align-items-center mb-2"lBf>rt<"d-flex justify-content-between align-items-center mt-2"ip>',
-          buttons: [
-              {
-                  extend: 'excelHtml5',
-                  className: 'btn-success' // contoh pake kelas bootstrap
-              }
-          ],
-
-          lengthMenu: [
-              [5, 10, 25, -1],
-              [5, 10, 25, "All"]
-          ],
-      });
-  </script>
-
-  <!-- Script Filter Total Produksi -->
-  <script>
-    function filterByDate(date) {
-      const url = new URL(window.location.href);
-      url.searchParams.set('date', date);
-      window.location.href = url.toString();
-    }
-  </script>
-
-  <!-- SELECT 2 -->
-  <script>
-      $('#start_date').select2();
-      $('#end_date').select2();
-      $('#trc').select2();
-      $('#mch_info').select2();
+<!-- Select2 -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 
-      $('#sfc').select2();
-      $('#mat_sap_code').select2();
-      $('#ps_date').select2();
-  </script>
+<!-- DATA TABLE -->
+<script>
+  new DataTable('#datatable', {
+    responsive: true, // ← WAJIB untuk HP
+    dom: '<"d-flex justify-content-between align-items-center mb-2"lBf>rt<"d-flex justify-content-between align-items-center mt-2"ip>',
+    buttons: [
+      {
+        extend: 'excelHtml5',
+        className: 'btn-success' // contoh pake kelas bootstrap
+      }
+    ],
+
+    lengthMenu: [
+      [5, 10, 25, -1],
+      [5, 10, 25, "All"]
+    ],
+  });
+</script>
+
+<!-- Script Filter Total Produksi -->
+<script>
+  function filterByDate(date) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('date', date);
+    window.location.href = url.toString();
+  }
+</script>
+
+<!-- SELECT 2 -->
+<script>
+  $('#start_date').select2();
+  $('#end_date').select2();
+  $('#trc').select2();
+  $('#mch_info').select2();
+
+
+  $('#sfc').select2();
+  $('#mat_sap_code').select2();
+  $('#ps_date').select2();
+</script>
 
 {% endblock %}
