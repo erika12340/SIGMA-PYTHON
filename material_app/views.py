@@ -16,7 +16,7 @@ def dashboard(request):
     selected_trc = request.GET.get('trc_code')
     selected_mch_info = request.GET.get('mch_info')
 
-    # ======= HELPER FUNCTIONS =======
+    # ======= HELPER FUNCTIONS =========
     def parse_date_shift(raw_value):
         if not raw_value:
             return None, None
@@ -25,7 +25,7 @@ def dashboard(request):
             return datetime.strptime(date_part, "%Y-%m-%d").date(), int(shift_part)
         except Exception:
             return None, None
-
+ 
     def get_shift_datetime_range(date_obj, shift_num):
         if shift_num == 1:
             return datetime.combine(date_obj, time(0,0,0)), datetime.combine(date_obj, time(8,0,0))
@@ -78,7 +78,7 @@ def dashboard(request):
             'value': f"{date_val.isoformat()}|{shift}",
             'label': f"{date_val.strftime('%d/%m/%Y')} - Shift {shift}"
         })
- 
+
     # ======= DROPDOWN PP_CODE =======
     trc_list_qs = WMS_TRACEABILITY.objects.filter(TRC_START_TIME__range=(start_dt,end_dt))
     pp_desc_subquery = MD_PRODUCTION_PHASES.objects.filter(
@@ -193,12 +193,6 @@ def dashboard(request):
         )
         .order_by('-TRC_START_TIME')
     )
-
-
-
-
-
-
 
     # =========================== PRODUCTION DATA DASHBOARD ===========================
     ps_date = request.GET.get('ps_date')
