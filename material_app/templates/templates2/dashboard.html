@@ -1,22 +1,19 @@
 {% extends "templates2/index.html" %}
 {% load static %}
 {% block content %}
+
 <div class="content-wrapper text-light">
   <div class="container-xxl flex-grow-1 container-p-y">
 
-    <!-- ==================== Traceability Dashboard ====================== -->
-    <div class="row gy-6 mb-4">
-      <h4 class="mb-4 fw-semibold text-white fw-bold">Traceability Dashboard</h4>
+    <!-- ==================== TRACEABILITY DASHBOARD ====================== -->
+    <div class="row gy-6">
+      <h3 class="mb-4 fw-semibold text-white fw-bold text-center">Traceability Dashboard</h3>
 
       <!-- ========== Filter Mesin dan Tanggal ========== -->
       <div class="col-12 mb-3">
         <div class="card border border-secondary rounded-3 shadow p-3"
           style="background-color: rgba(0, 88, 203, 0.445);">
           <form method="get" class="row g-3" id="traceabilityForm">
-            <!-- Sertakan hidden input untuk filter Production supaya tidak hilang -->
-            <input type="hidden" name="ps_date" value="{{ selected_ps_date }}">
-            <input type="hidden" name="sfc_code" value="{{ selected_sfc }}">
-            <input type="hidden" name="mat_sap_code" value="{{ selected_mat_sap }}">
 
             <!-- Start Date -->
             <div class="col-md-3">
@@ -79,7 +76,7 @@
         </div>
       </div>
 
-      <!-- Total Consumed & Produced -->
+      <!-- Total Consumed-->
       <div class="row mt-4">
         <div class="col-md-6">
           <div class="card border border-primary rounded-3 shadow p-3 text-center"
@@ -87,34 +84,89 @@
             <h6 class="text-white">Total Consumed</h6>
             <h3 class="text-white">{{ total_consumed }}</h3>
           </div>
+
+          <!-- Tabel Consumed -->
+          <div class="card border border-primary shadow bg-dark text-white mt-4">
+            <div class="card-header bg-primary text-white">
+              <h5 class="mb-0">Tabel Consumed</h5>
+            </div>
+            <div class="card-body table-responsive" style="background-color: rgb(0, 44, 101);">
+              
+              <table id="datatable1" class="table table-hover table-bordered align-middle mb-0">
+                <thead class="table-primary text-dark">
+                  <tr>
+                    <th>No</th>
+                    <th>Memproduksi</th>
+                    <th>Total Produced</th>
+                  </tr>
+                </thead>
+                </tbody>
+                  {% for row in consumed_summary %}
+                  <tr>
+                    <td>{{ forloop.counter}}</td>
+                    <td>{{ row.SFC_CODE}} - {{ row.SFC_DESC}}</td>
+                    <td>{{ row.total }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
+
+        <!-- Produced -->
         <div class="col-md-6">
           <div class="card border border-success rounded-3 shadow p-3 text-center"
             style="background-color: rgba(25, 135, 84, 0.3);">
             <h6 class="text-white">Total Produced</h6>
             <h3 class="text-white">{{ total_produced }}</h3>
           </div>
+
+          <!-- Tabel Produced -->
+          <div class="card border border-primary shadow bg-dark text-white mt-4">
+            <div class="card-header bg-primary text-white">
+              <h5 class="mb-0">Tabel Produced</h5>
+            </div>
+            <div class="card-body table-responsive" style="background-color: rgb(0, 44, 101);">
+              <table id="datatable2" class="table table-hover table-bordered align-middle mb-0">
+                <thead class="table-primary text-dark">
+                  <tr>
+                    <th>No</th>
+                    <th>Memproduksi</th>
+                    <th>Total Produced</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in produced_summary %}
+                  <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ row.SFC_CODE}} - {{ row.SFC_DESC}}</td>
+                    <td>{{ row.total }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- ==================== Production Data Dashboard ====================== -->
-    <div class="row mb-5">
-      <h4 class="mb-4 fw-semibold text-white fw-bold">Production Data Dashboard</h4>
+    <!-- Pemisah -->
+    <hr class="my-5" style="border: 2px solid #fff; box-shadow: 0 0 10px #3b76f5, 0 0 20px #3b76f5, 0 0 40px #3b76f5;">
+
+    <!-- ==================== PRODUCTION DASHBOARD ====================== -->
+    <div class="row mt-5">
+      <h3 class="mb-4 fw-semibold text-white fw-bold text-center">Production Data Dashboard</h3>
 
       <!-- Filter Form -->
       <div class="col-lg-8 mb-4">
         <div class="card border border-secondary p-3 h-100" style="background-color: rgba(0, 88, 203, 0.445);">
           <form method="get" class="row g-3 align-items-end" id="productionForm">
-            <!-- Sertakan hidden input untuk filter Traceability supaya tidak hilang -->
-            <input type="hidden" name="start_date" value="{{ selected_start_date }}">
-            <input type="hidden" name="end_date" value="{{ selected_end_date }}">
-            <input type="hidden" name="trc_code" value="{{ selected_trc }}">
-            <input type="hidden" name="mch_info" value="{{ selected_mch_info }}">
 
             <!-- Tanggal Produksi -->
             <div class="col-md-4">
-              <label class="form-label fw-bold text-white mb-1">Tanggal Produksi</label>
+              <label class="form-label fw-bold text-white mb-1">Production Date :</label>
               <select name="ps_date" id="ps_date" class="form-control bg-dark text-white border-secondary"
                 onchange="this.form.submit()">
                 <option value="">-- Pilih Tanggal --</option>
@@ -126,28 +178,31 @@
               </select>
             </div>
 
-            <!-- SFC Code -->
+            <!-- SFC (area)-->
             <div class="col-md-4">
-              <label for="sfc" class="form-label fw-bold text-white">Semifinished Class :</label>
-              <select name="sfc_code" id="sfc" class="form-select" onchange="this.form.submit()">
-                <option value="">-- Select SF --</option>
-                {% for sfc in sfc_list %}
-                <option value="{{ sfc.SFC_CODE }}" {% if sfc.SFC_CODE == selected_sfc %}selected{% endif %}>
-                  {{ sfc.SFC_CODE }} - {{ sfc.SFC_DESC }}
-                </option>
-                {% endfor %}
-              </select>
+              <label for="sfc" class="form-label fw-bold text-white">Area :</label>
+                <select name="sfc_code" id="sfc" class="form-select" onchange="this.form.submit()">
+                  <option value="">-- Select Area --</option>
+                  {% for sfc in sfc_list %}
+                  <option value="{{ sfc.SFC_CODE }}" {% if sfc.SFC_CODE == selected_sfc %}selected{% endif %}>
+                    {% if sfc.SFC_CODE == "AL" %}AL (Building)
+                    {% elif sfc.SFC_CODE == "AX" %}AX (Curing)
+                    {% else %}{{ sfc.SFC_CODE }}{% endif %}
+                  </option>
+                  {% endfor %}
+                </select>
             </div>
-
 
             <!-- MAT SAP Code -->
             <div class="col-md-4">
-              <label class="form-label fw-bold text-white mb-1">MAT SAP Code</label>
+              <label class="form-label fw-bold text-white mb-1">IP Materials :</label>
               <select name="mat_sap_code" id="mat_sap_code" class="form-control bg-dark text-white border-secondary"
                 onchange="this.form.submit()">
                 <option value="">-- Pilih Material --</option>
-                {% for mat in daftar_mat_sap %}
-                <option value="{{ mat }}" {% if selected_mat_sap == mat %}selected{% endif %}>{{ mat }}</option>
+                {% for m in daftar_mat_sap %}
+                <option value="{{ m.MAT_SAP_CODE }}" {% if selected_mat_sap == m.MAT_SAP_CODE %}selected{% endif %}>
+                  {{ m.MAT_CODE }} - {{ m.MAT_SAP_CODE }} - {{ m.CNT_CODE }} - {{ m.MAT_VARIANT }}
+                </option>
                 {% endfor %}
               </select>
             </div>
@@ -173,9 +228,9 @@
     </div>
 
     <!-- Tabel Production Data -->
-    <div class="card border border-primary shadow bg-dark text-white mt-3">
+    <div class="card border border-primary shadow bg-dark text-white">
       <div class="card-header bg-primary text-white">
-        <h5 class="mb-0">Production Data per Mesin</h5>
+        <h5 class="mb-0">Durasi Produksi</h5>
       </div>
       <div class="card-body table-responsive" style="background-color: rgb(0, 44, 101);">
         <table id="datatable" class="table table-hover table-bordered align-middle mb-0">
@@ -242,10 +297,28 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 
-<!-- DATA TABLE -->
+<!-- JS TABLE PRODUCED DAN CONSUMED-->
+<script>
+let table1 = new DataTable('#datatable1', {
+  lengthMenu: [
+    [5, 10, 25, -1],
+    [5, 10, 25, "All"]
+  ]
+});
+
+let table2 = new DataTable('#datatable2', {
+  lengthMenu: [
+    [5, 10, 25, -1],
+    [5, 10, 25, "All"]
+  ]
+});
+</script>
+
+
+<!-- JS TABEL PRODUCTION -->
 <script>
   new DataTable('#datatable', {
-    responsive: true, // ← WAJIB untuk HP
+    responsive: true, // for view smartphone
     dom: '<"d-flex justify-content-between align-items-center mb-2"lBf>rt<"d-flex justify-content-between align-items-center mt-2"ip>',
     buttons: [{
       extend: 'excelHtml5',
@@ -259,23 +332,16 @@
   });
 </script>
 
-<!-- Script Filter Total Produksi -->
-<script>
-  function filterByDate(date) {
-    const url = new URL(window.location.href);
-    url.searchParams.set('date', date);
-    window.location.href = url.toString();
-  }
-</script>
 
 <!-- SELECT 2 -->
 <script>
+  // DASHBOARD TRACEABILITY
   $('#start_date').select2();
   $('#end_date').select2();
   $('#trc').select2();
   $('#mch_info').select2();
 
-
+  // DASHBOARD PRODUCTION
   $('#sfc').select2();
   $('#mat_sap_code').select2();
   $('#ps_date').select2();

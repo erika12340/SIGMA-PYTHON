@@ -10,23 +10,24 @@
             <h5 class="card-title mb-3">Filter Data Produksi</h5>
             <form method="get" action="daftar_produksi" id="filterForm">
                 <div class="row g-3">
-                      <!-- Tanggal Awal -->
+
+                    <!-- Tanggal Awal -->
                     <div class="col-md-3">
                         <label for="start_date" class="form-label fw-bold">Tanggal Awal:</label>
-                        <input type="date" name="start_date" id="start_date" class="form-control"
-                            value="{{ selected_start_date|default:'' }}">
+                        <input type="text" name="start_date" id="start_date" class="form-control"
+                            lang="id" placeholder="dd-mm-yyyy" value="{{ selected_start_date|default:'' }}">
                     </div>
 
                     <!-- Tanggal Akhir -->
                     <div class="col-md-3">
                         <label for="end_date" class="form-label fw-bold">Tanggal Akhir:</label>
-                        <input type="date" name="end_date" id="end_date" class="form-control"
-                            value="{{ selected_end_date|default:'' }}">
+                        <input type="text" name="end_date" id="end_date" class="form-control"
+                           lang="id" placeholder="dd-mm-yyyy"  value="{{ selected_end_date|default:'' }}">
                     </div>
 
                     <!-- Pilih SFC -->
                     <div class="col-md-3">
-                        <label for="sfc" class="form-label fw-bold">Semi Finished :</label>
+                        <label for="sfc" class="form-label fw-bold">Pilih Area:</label>
                         <select name="sfc_code" id="sfc" class="form-select" onchange="this.form.submit()">
                             <option value="">-- Select SFC --</option>
                             {% for sfc in sfc_list %}
@@ -50,8 +51,6 @@
                             {% endfor %}
                         </select>
                     </div>
-
-                  
                 </div>
 
                 <!-- Tombol Reset -->
@@ -135,8 +134,27 @@
 <!-- Select2 (Optional, buat dropdown filter kalau kamu pakai) -->
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
+   
+    <script src="https://cdn.jsdelivr.net/npm/vanillajs-datepicker@1.3.1/dist/js/datepicker.min.js"></script>
 
+<!-- kalender -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const elem = document.getElementById('start_date');
+        const datepicker = new Datepicker(elem, {
+            buttonClass: 'btn', // Ensures Bootstrap button styling for navigation
+            format: 'dd-mm-yyyy' // Customize date format as needed
+        });
+    });
 
+    document.addEventListener('DOMContentLoaded', function() {
+        const elem = document.getElementById('end_date');
+        const datepicker = new Datepicker(elem, {
+            buttonClass: 'btn', // Ensures Bootstrap button styling for navigation
+            format: 'dd-mm-yyyy' // Customize date format as needed
+        });
+    });
+</script>
 
 <!-- DATA TABLE -->
 <script>

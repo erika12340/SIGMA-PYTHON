@@ -111,7 +111,15 @@
     <div class="card">
         <div class="card-body">
             <h5 class="card-title mb-3">Traceability Views</h5>
-            <div id="material-tree">
+            <div class="card mt-4 border-primary shadow-sm p-3 mb-3">
+                <h5 class="card-title mb-3">Keterangan :</h5>
+                <p class="card-text">
+                    <small class="text-muted">1. Apabila FL Phase yang terpilih adalah 'C' Data baris 1 = CONSUMED, dan baris 2 berwarna biru = PRODUCED
+                        <br> 2. Apabila FL Phase yang terpilih adalah 'P' Data baris 1 = PRODUCED, dan baris 2 berwarna biru = CONSUMED
+                    </small>
+                </p>
+            </div>
+            <div id="material-tree"  class="overflow-auto border rounded p-2 " style="max-height: 500px;">
                 {% for row in traceability_cu %}
                 <div class="material-item level-{{ row.level|add:1 }} mb-2">
                     <div class="d-flex align-items-start">

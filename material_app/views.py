@@ -8,6 +8,7 @@ from django.db.models import Sum, Count
 from django.core.serializers.json import DjangoJSONEncoder
 import json
 
+
 def dashboard(request):
     # ===================== TRACEABILITY DASHBOARD =====================
     start_date_raw = request.GET.get('start_date')
@@ -77,7 +78,7 @@ def dashboard(request):
             'value': f"{date_val.isoformat()}|{shift}",
             'label': f"{date_val.strftime('%d/%m/%Y')} - Shift {shift}"
         })
-
+ 
     # ======= DROPDOWN PP_CODE =======
     trc_list_qs = WMS_TRACEABILITY.objects.filter(TRC_START_TIME__range=(start_dt,end_dt))
     pp_desc_subquery = MD_PRODUCTION_PHASES.objects.filter(
@@ -106,21 +107,109 @@ def dashboard(request):
         else:
             mch_code = None  # aman kalau format tidak sesuai
 
-
     total_consumed = WMS_TRACEABILITY.objects.filter(TRC_FL_PHASE='C').filter(qs_filter).count()
     total_produced = WMS_TRACEABILITY.objects.filter(TRC_FL_PHASE='P').filter(qs_filter).count()
 
-    # ===================== PRODUCTION DATA DASHBOARD =====================
+
+    # ========= JOIN MD_MATERIALS KE MD_SEMI_FINISHED_CLASSES =========
+    materials = MD_MATERIALS.objects.filter(MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE'))
+
+    # ======== DETAIL TABEL CONSUMED DAN PRODUCED (SUMMARY) =========
+    consumed_summary = (
+        WMS_TRACEABILITY.objects
+        .filter(qs_filter, TRC_FL_PHASE='C')
+        .annotate(
+            SFC_CODE=Subquery(materials.values('SFC_CODE__SFC_CODE')[:1]),
+            SFC_DESC=Subquery(materials.values('SFC_CODE__SFC_DESC')[:1]),
+        )
+        .values(
+            'TRC_PP_CODE',
+            'TRC_MAT_SAP_CODE',
+            'SFC_CODE',
+            'SFC_DESC',
+        )
+        .annotate(total=Count('*'))
+        .order_by('-total', 'TRC_SO_CODE')
+    )
+
+    produced_summary = (
+        WMS_TRACEABILITY.objects
+        .filter(qs_filter, TRC_FL_PHASE='P')
+        .annotate(
+            SFC_CODE=Subquery(materials.values('SFC_CODE__SFC_CODE')[:1]),
+            SFC_DESC=Subquery(materials.values('SFC_CODE__SFC_DESC')[:1]),
+        )
+        .values(
+            'TRC_PP_CODE',
+            'TRC_MAT_SAP_CODE',
+            'SFC_CODE',
+            'SFC_DESC',
+        )
+        .annotate(total=Count('*'))
+        .order_by('-total', 'TRC_SO_CODE')
+    )
+
+    # ======== DETAIL ROWS (PER BARIS DATA) ========
+    consumed_details = (
+        WMS_TRACEABILITY.objects
+        .filter(qs_filter, TRC_FL_PHASE='C')
+        .annotate(
+            SFC_CODE=Subquery(materials.values('SFC_CODE__SFC_CODE')[:1]),
+            SFC_DESC=Subquery(materials.values('SFC_CODE__SFC_DESC')[:1]),
+        )
+        .values(
+            'TRC_PP_CODE',
+            'TRC_MCH_CODE',
+            'TRC_SO_CODE',
+            'TRC_CU_EXT_PROGR',
+            'TRC_MAT_SAP_CODE',
+            'TRC_MAT_VARIANT',
+            'SFC_CODE',
+            'SFC_DESC',
+            'TRC_START_TIME',
+            'TRC_END_TIME',
+        )
+        .order_by('-TRC_START_TIME')
+    )
+
+    produced_details = (
+        WMS_TRACEABILITY.objects
+        .filter(qs_filter, TRC_FL_PHASE='P')
+        .annotate(
+            SFC_CODE=Subquery(materials.values('SFC_CODE__SFC_CODE')[:1]),
+            SFC_DESC=Subquery(materials.values('SFC_CODE__SFC_DESC')[:1]),
+        )
+        .values(
+            'TRC_PP_CODE',
+            'TRC_MCH_CODE',
+            'TRC_SO_CODE',
+            'TRC_CU_EXT_PROGR',
+            'TRC_MAT_SAP_CODE',
+            'TRC_MAT_VARIANT',
+            'SFC_CODE',
+            'SFC_DESC',
+            'TRC_START_TIME',
+            'TRC_END_TIME',
+        )
+        .order_by('-TRC_START_TIME')
+    )
+
+
+
+
+
+
+
+    # =========================== PRODUCTION DATA DASHBOARD ===========================
     ps_date = request.GET.get('ps_date')
-    sfc_code = request.GET.get('sfc_code')
+    sfc_code = request.GET.get('sfc_code')  
     mat_sap_code = request.GET.get('mat_sap_code')
 
-    # List tanggal
+    # Filter Tanggal
     daftar_tanggal = DC_PRODUCTION_DATA.objects.values_list('PS_DATE', flat=True).distinct().order_by('-PS_DATE')
 
     # sfc_list = MD_SEMI_FINISHED_CLASSES.objects.all().order_by('SFC_CODE')
     sfc_list = MD_SEMI_FINISHED_CLASSES.objects.filter(SFC_CODE__in=['AL','AX']).order_by('SFC_CODE')
-
 
     # List MAT SAP
     daftar_mat_sap = []
@@ -134,13 +223,88 @@ def dashboard(request):
     if ps_date and sfc_code:
         try:
             selected_dt = datetime.strptime(ps_date, "%Y-%m-%d").date()
-            mat_codes = MD_MATERIALS.objects.filter(SFC_CODE=sfc_code).values_list('MAT_SAP_CODE', flat=True)
-            daftar_mat_sap = DC_PRODUCTION_DATA.objects.filter(
+
+            # Ambil semua MAT_SAP_CODE terkait SFC yang ada produksi pada tanggal itu
+            mat_sap_codes = DC_PRODUCTION_DATA.objects.filter(
                 PS_DATE__date=selected_dt,
-                MAT_SAP_CODE__in=mat_codes
-            ).values_list('MAT_SAP_CODE', flat=True).distinct().order_by('MAT_SAP_CODE')
+                MAT_SAP_CODE__in=MD_MATERIALS.objects.filter(SFC_CODE=sfc_code).values_list('MAT_SAP_CODE', flat=True)
+            ).values_list('MAT_SAP_CODE', flat=True)
+
+            # Hapus duplikat di Python
+            mat_sap_codes = list(set(mat_sap_codes))
+
+            # Ambil data lengkap dari MD_MATERIALS
+            daftar_mat_sap = MD_MATERIALS.objects.filter(MAT_SAP_CODE__in=mat_sap_codes).order_by('MAT_SAP_CODE')
+
         except ValueError:
             selected_dt = None
+
+    
+    # Ambil data tabel jika ps_date dan sfc_code terisi (mat_sap_code opsional)
+    if ps_date and sfc_code:
+        try:
+            if not selected_dt:
+                selected_dt = datetime.strptime(ps_date, "%Y-%m-%d").date()
+
+            # Filter data sesuai kondisi
+            filter_kwargs = {
+                'PS_DATE__date': selected_dt,
+            }
+
+            # Kalau mat_sap_code dipilih → filter spesifik, kalau tidak → ambil semua dari SFC
+            if mat_sap_code:
+                filter_kwargs['MAT_SAP_CODE'] = mat_sap_code
+            else:
+                mat_codes = MD_MATERIALS.objects.filter(SFC_CODE=sfc_code).values_list('MAT_SAP_CODE', flat=True)
+                filter_kwargs['MAT_SAP_CODE__in'] = mat_codes
+
+            produksi_qs = DC_PRODUCTION_DATA.objects.filter(**filter_kwargs).values(
+                'MAT_SAP_CODE', 'MCH_CODE', 'PS_START_PROD', 'PS_END_PROD', 'PS_DATE', 'SHF_CODE', 'PS_QUANTITY'
+            ).order_by('PS_START_PROD')
+
+            # Mapping MAT -> SFC
+            mat_sfc_map = dict(MD_MATERIALS.objects.filter(
+                MAT_SAP_CODE__in=[row['MAT_SAP_CODE'] for row in produksi_qs]
+            ).values_list('MAT_SAP_CODE', 'SFC_CODE'))
+
+            # Mapping SFC -> DESC
+            sfc_desc_map = dict(MD_SEMI_FINISHED_CLASSES.objects.filter(
+                SFC_CODE__in=set(mat_sfc_map.values())
+            ).values_list('SFC_CODE', 'SFC_DESC'))
+
+            for row in produksi_qs:
+                start, end = row['PS_START_PROD'], row['PS_END_PROD']
+
+                # Hitung durasi HH:MM:SS
+                if isinstance(start, datetime) and isinstance(end, datetime):
+                    durasi_seconds = max((end - start).total_seconds(), 0)
+                    hours = int(durasi_seconds // 3600)
+                    minutes = int((durasi_seconds % 3600) // 60)
+                    seconds = int(durasi_seconds % 60)
+                    durasi_hms = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+                else:
+                    durasi_hms = "00:00:00"
+
+                sfc_code_row = mat_sfc_map.get(row['MAT_SAP_CODE'])
+                tabel_data.append({
+                    'ps_date': row['PS_DATE'],
+                    'mat_sap_code': row['MAT_SAP_CODE'],
+                    'mch_code': row['MCH_CODE'],
+                    'shf_code': row['SHF_CODE'],
+                    'sfc_code': sfc_code_row,
+                    'sfc_desc': sfc_desc_map.get(sfc_code_row, ''),
+                    'ps_start_prod': start,
+                    'ps_end_prod': end,
+                    'durasi_hms': durasi_hms,
+                    'ps_quantity': row.get('PS_QUANTITY', 0)
+                })
+
+            # Hitung total_quantity
+            total_quantity = sum([row['PS_QUANTITY'] for row in produksi_qs if row.get('PS_QUANTITY')]) or 0
+
+        except ValueError:
+            selected_dt = None
+
 
     # Ambil data tabel jika semua filter terisi
     if ps_date and sfc_code and mat_sap_code:
@@ -200,15 +364,17 @@ def dashboard(request):
 
     context = {
     'title': 'Dashboard Produksi',
+
     # Production Data
     'daftar_tanggal': daftar_tanggal,
     'selected_ps_date': ps_date,
-    'sfc_list': sfc_list,  # <-- kirim sfc_list ke template
+    'sfc_list': sfc_list, 
     'selected_sfc': sfc_code,
     'daftar_mat_sap': daftar_mat_sap,
     'selected_mat_sap': mat_sap_code,
     'tabel_data': tabel_data,
     'total_quantity': total_quantity,
+
     # Traceability tetap seperti sebelumnya
     'date_shift_choices': date_shift_choices,
     'selected_start_date': start_date_raw,
@@ -219,8 +385,11 @@ def dashboard(request):
     'selected_mch_info': selected_mch_info,
     'total_consumed': total_consumed,
     'total_produced': total_produced,
-}
-
+    'consumed_details': consumed_details,
+    'produced_details': produced_details,
+    'consumed_summary': consumed_summary,
+    'produced_summary': produced_summary,
+    }
     return render(request,'templates2/dashboard.html',context)
 
 
@@ -240,48 +409,29 @@ def dashboard(request):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# ============ INFORMASI IP MATERIALS  =============
+# ============ INFORMASI DETAIL IP MATERIALS  =============
 def get_material_detail(mat_code):
     try:
         mat = MD_MATERIALS.objects.filter(MAT_CODE=mat_code).first()
 
         if not mat:
             return {}
-        
-        bom = MD_BOM.objects.filter(MAT_SAP_CODE=mat.MAT_SAP_CODE).first()
+
+        # MAT_OUT_MNG: jika 'F' atau None berarti ACTIVE, kalau 'T' berarti INACTIVE
+        if mat.MAT_OUT_MNG in ['F', None]:
+            status = 'ACTIVE'
+        else:
+            status = 'INACTIVE'
 
         return {
             'ip_code': mat.MAT_CODE,
             'spec': mat.MAT_SPEC_CODE,
             'mat_desc': mat.MAT_DESC,
-            'bom_status': bom.BV_STATUS if bom else '-',
+            'status': status,
         }
+
     except Exception as e:
-        
-        print("Error in get_material_detail:", e)
+        print("[ERROR] Gagal mengambil detail material:", e)
         return {}
 
 # =================== LINE MATERIALS ===================
@@ -408,10 +558,10 @@ def daftar_materials(request):
 
 
 
-
-
 # ================= MENU PRODUCTIONS ==================
 def daftar_produksi(request):
+    from datetime import datetime
+
     # ======== DATA DASAR =========
     sfc_list = MD_SEMI_FINISHED_CLASSES.objects.filter(SFC_CODE__in=['AL', 'AX'])
     materials = MD_MATERIALS.objects.all()
@@ -419,30 +569,39 @@ def daftar_produksi(request):
     # ======== AMBIL FILTER DARI REQUEST =========
     sfc_code = request.GET.get('sfc_code')
     mat_info = request.GET.get('mat_info')
-    start_date = request.GET.get('start_date')  # tanggal awal
-    end_date = request.GET.get('end_date')      # tanggal akhir
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
     error_message = None
 
-    # ======== VALIDASI SELISIH TANGGAL =========
-    if start_date and end_date:
-        try:
-            start_dt = datetime.strptime(start_date, "%Y-%m-%d")
-            end_dt = datetime.strptime(end_date, "%Y-%m-%d")
-            delta_days = (end_dt - start_dt).days
-            if delta_days > 30:
-                error_message = "Data tidak boleh lebih dari 30 hari!"
-                start_date = end_date = None
-        except ValueError:
-            error_message = "Format tanggal salah!"
+
+    # ======== VALIDASI DAN KONVERSI FORMAT TANGGAL =========
+    start_dt = None
+    end_dt = None
+
+    if start_date:
+        start_dt = datetime.strptime(start_date, "%d-%m-%Y").date()
+    if end_date:
+        end_dt = datetime.strptime(end_date, "%d-%m-%Y").date()
+
+    # Jika dua-duanya valid → cek selisih maksimal 30 hari
+    if start_dt and end_dt:
+        delta_days = (end_dt - start_dt).days
+        if delta_days > 30:
+            error_message = "Rentang tanggal tidak boleh lebih dari 30 hari!"
+            start_date = end_date = None
+            start_dt = end_dt = None
+
+    # Ganti variabel untuk filter ORM
+    start_date = start_dt
+    end_date = end_dt
+
 
     # ======== FILTER MATERIAL BERDASARKAN SFC =========
     if sfc_code:
         materials = materials.filter(SFC_CODE=sfc_code)
 
     # ======== TAMBAHKAN FILTER MATERIAL BERDASARKAN TANGGAL & SFC =========
-    # Jika user sudah pilih SFC + tanggal awal & akhir → tampilkan hanya material yang muncul di data produksi
     if sfc_code and start_date and end_date:
-        # Ambil semua MAT_SAP_CODE yang muncul di data produksi dalam rentang tanggal tsb
         sfc_mat_sap_codes = MD_MATERIALS.objects.filter(SFC_CODE=sfc_code).values_list('MAT_SAP_CODE', flat=True)
 
         produced_mat_sap_codes = DC_PRODUCTION_DATA.objects.filter(
@@ -451,7 +610,6 @@ def daftar_produksi(request):
             MAT_SAP_CODE__in=sfc_mat_sap_codes
         ).values_list('MAT_SAP_CODE', flat=True).distinct()
 
-        # Filter daftar material dropdown agar hanya menampilkan yang benar-benar diproduksi
         materials = materials.filter(MAT_SAP_CODE__in=produced_mat_sap_codes)
 
     # ======== AMBIL DATA PRODUKSI =========
@@ -467,11 +625,10 @@ def daftar_produksi(request):
     )
 
     # ======== FILTER MATERIAL DI PRODUKSI =========
+    # ======== FILTER MATERIAL DI PRODUKSI =========
     if mat_info:
-        mat_parts = mat_info.split('|')
-        mat_sap_code = mat_parts[1] if len(mat_parts) > 1 else None
-        if mat_sap_code:
-            production_list = production_list.filter(MAT_SAP_CODE=mat_sap_code)
+        production_list = production_list.filter(MAT_SAP_CODE=mat_info)
+
 
     # ======== FILTER TANGGAL DI PRODUKSI =========
     if start_date:
@@ -492,8 +649,8 @@ def daftar_produksi(request):
         'production_list': production_list,
         'selected_sfc': sfc_code,
         'selected_mat_info': mat_info,
-        'selected_start_date': start_date,
-        'selected_end_date': end_date,
+        'selected_start_date': request.GET.get('start_date', ''), 
+        'selected_end_date': request.GET.get('end_date', ''),
         'error_message': error_message,
     }
 

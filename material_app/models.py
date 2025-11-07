@@ -21,6 +21,7 @@ class MD_MATERIALS(models.Model):
     MAT_DESC = models.CharField(max_length=100)
     MAT_SPEC_CODE = models.CharField(max_length=10)
     MAT_MEASURE_UNIT = models.CharField(max_length=10)
+    MAT_OUT_MNG = models.CharField(max_length=1)
     SFC_CODE = models.ForeignKey('MD_SEMI_FINISHED_CLASSES', db_column='SFC_CODE', on_delete=models.SET_NULL, null=True)
 
     class Meta:
