@@ -1687,6 +1687,6 @@ def traceability_by_materials(request):
     return render(request, 'traceability_by_materials.html', context)
 
 
-def tracing_barcode():
+# def tracing_barcode():
 
-    return render ('tracing.html')
+#     return render ('tracing.html')
