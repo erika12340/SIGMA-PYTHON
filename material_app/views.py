@@ -13,7 +13,7 @@ def dashboard(request):
     # ===================== TRACEABILITY DASHBOARD =====================
     start_date_raw = request.GET.get('start_date')
     end_date_raw = request.GET.get('end_date')
-    selected_trc = request.GET.get('trc_code')
+    selected_pp = request.GET.get('trc_code')
     selected_mch_info = request.GET.get('mch_info')
 
     # ======= HELPER FUNCTIONS =========
@@ -91,21 +91,21 @@ def dashboard(request):
 
     # ======= DROPDOWN MESIN =======
     machines = []
-    if selected_trc:
-        machines_qs = WMS_TRACEABILITY.objects.filter(TRC_PP_CODE=selected_trc, TRC_START_TIME__range=(start_dt,end_dt))
+    if selected_pp:
+        machines_qs = WMS_TRACEABILITY.objects.filter(TRC_PP_CODE=selected_pp, TRC_START_TIME__range=(start_dt,end_dt))
         machines = machines_qs.values('TRC_PP_CODE','TRC_MCH_CODE').distinct().order_by('TRC_MCH_CODE')
 
     # ======= TOTAL CONSUMED & PRODUCED =======
     qs_filter = Q(TRC_START_TIME__range=(start_dt,end_dt))
-    if selected_trc:
-        qs_filter &= Q(TRC_PP_CODE=selected_trc)
+    if selected_pp:
+        qs_filter &= Q(TRC_PP_CODE=selected_pp)
     if selected_mch_info:
         parts = selected_mch_info.split('|')
         if len(parts) == 2:
             _, mch_code = parts
             qs_filter &= Q(TRC_MCH_CODE=mch_code)
         else:
-            mch_code = None  # aman kalau format tidak sesuai
+            mch_code = None
 
     total_consumed = WMS_TRACEABILITY.objects.filter(TRC_FL_PHASE='C').filter(qs_filter).count()
     total_produced = WMS_TRACEABILITY.objects.filter(TRC_FL_PHASE='P').filter(qs_filter).count()
@@ -374,7 +374,7 @@ def dashboard(request):
     'selected_start_date': start_date_raw,
     'selected_end_date': end_date_raw,
     'trc_list': trc_list,
-    'selected_trc': selected_trc,
+    'selected_pp': selected_pp,
     'machines': machines,
     'selected_mch_info': selected_mch_info,
     'total_consumed': total_consumed,

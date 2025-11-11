@@ -47,7 +47,7 @@
               <select name="trc_code" id="trc" class="form-select" onchange="this.form.submit()">
                 <option value="">-- Select Fase --</option>
                 {% for trc in trc_list %}
-                <option value="{{ trc.TRC_PP_CODE }}" {% if trc.TRC_PP_CODE == selected_trc %}selected{% endif %}>
+                <option value="{{ trc.TRC_PP_CODE }}" {% if trc.TRC_PP_CODE == selected_pp %}selected{% endif %}>
                   {{ trc.TRC_PP_CODE }} - {{ trc.PP_DESC }}
                 </option>
                 {% endfor %}
@@ -96,14 +96,16 @@
                 <thead class="table-primary text-dark">
                   <tr>
                     <th>No</th>
-                    <th>Memproduksi</th>
-                    <th>Total Produced</th>
+                    <th>IP Materials</th>
+                    <th>Data Consumed</th>
+                    <th>Total Consumed</th>
                   </tr>
                 </thead>
                 </tbody>
                   {% for row in consumed_summary %}
                   <tr>
                     <td>{{ forloop.counter}}</td>
+                    <td>{{ row.TRC_MAT_SAP_CODE}}</td>
                     <td>{{ row.SFC_CODE}} - {{ row.SFC_DESC}}</td>
                     <td>{{ row.total }}</td>
                   </tr>
@@ -132,7 +134,8 @@
                 <thead class="table-primary text-dark">
                   <tr>
                     <th>No</th>
-                    <th>Memproduksi</th>
+                    <th>IP Materials</th>
+                    <th>Data Produced</th>
                     <th>Total Produced</th>
                   </tr>
                 </thead>
@@ -140,7 +143,8 @@
                   {% for row in produced_summary %}
                   <tr>
                     <td>{{ forloop.counter }}</td>
-                    <td>{{ row.SFC_CODE}} - {{ row.SFC_DESC}}</td>
+                    <td>{{ row.TRC_MAT_SAP_CODE }}</td>
+                    <td>{{ row.SFC_CODE }} - {{ row.SFC_DESC }}</td>
                     <td>{{ row.total }}</td>
                   </tr>
                   {% endfor %}
