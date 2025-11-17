@@ -8,7 +8,6 @@ from django.db.models import Sum, Count
 from django.core.serializers.json import DjangoJSONEncoder
 import json
 
-
 def dashboard(request):
     # ===================== TRACEABILITY DASHBOARD =====================
     start_date_raw = request.GET.get('start_date')
@@ -567,27 +566,40 @@ def daftar_produksi(request):
     end_date = request.GET.get('end_date')
     error_message = None
 
-
     # ======== VALIDASI DAN KONVERSI FORMAT TANGGAL =========
     start_dt = None
     end_dt = None
 
     if start_date:
-        start_dt = datetime.strptime(start_date, "%d-%m-%Y").date()
+        # format dari <input type="date"> = YYYY-MM-DD
+        try:
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
+        except ValueError:
+            start_dt = None
+
     if end_date:
-        end_dt = datetime.strptime(end_date, "%d-%m-%Y").date()
+        try:
+            end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
+        except ValueError:
+            end_dt = None
 
     # Jika dua-duanya valid → cek selisih maksimal 30 hari
     if start_dt and end_dt:
         delta_days = (end_dt - start_dt).days
         if delta_days > 30:
             error_message = "Rentang tanggal tidak boleh lebih dari 30 hari!"
-            start_date = end_date = None
-            start_dt = end_dt = None
+            start_dt = None
+            end_dt = None
 
-    # Ganti variabel untuk filter ORM
+    # variabel final untuk filter ORM
     start_date = start_dt
     end_date = end_dt
+
+    # variabel untuk dikirim balik ke form
+    selected_start_date = start_dt.strftime("%Y-%m-%d") if start_dt else ""
+    selected_end_date = end_dt.strftime("%Y-%m-%d") if end_dt else ""
+
+
 
 
     # ======== FILTER MATERIAL BERDASARKAN SFC =========
@@ -618,7 +630,6 @@ def daftar_produksi(request):
         'PS_DATE'
     )
 
-    # ======== FILTER MATERIAL DI PRODUKSI =========
     # ======== FILTER MATERIAL DI PRODUKSI =========
     if mat_info:
         production_list = production_list.filter(MAT_SAP_CODE=mat_info)
