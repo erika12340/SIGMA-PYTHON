@@ -91,25 +91,25 @@
               <h5 class="mb-0">Tabel Consumed</h5>
             </div>
             <div class="card-body table-responsive" style="background-color: rgb(0, 44, 101);">
-              
+
               <table id="datatable1" class="table table-hover table-bordered align-middle mb-0">
                 <thead class="table-primary text-dark">
                   <tr>
                     <th>No</th>
                     <th>IP Materials</th>
-                    <th>Data Consumed</th>
+                    <th>Memproduksi</th>
                     <th>Total Consumed</th>
                   </tr>
                 </thead>
                 </tbody>
-                  {% for row in consumed_summary %}
-                  <tr>
-                    <td>{{ forloop.counter}}</td>
-                    <td>{{ row.TRC_MAT_SAP_CODE}}</td>
-                    <td>{{ row.SFC_CODE}} - {{ row.SFC_DESC}}</td>
-                    <td>{{ row.total }}</td>
-                  </tr>
-                  {% endfor %}
+                {% for row in consumed_summary %}
+                <tr>
+                  <td>{{ forloop.counter}}</td>
+                  <td>{{ row.TRC_MAT_SAP_CODE}}</td>
+                  <td>{{ row.SFC_CODE}} - {{ row.SFC_DESC}}</td>
+                  <td>{{ row.total }}</td>
+                </tr>
+                {% endfor %}
                 </tbody>
               </table>
             </div>
@@ -135,7 +135,7 @@
                   <tr>
                     <th>No</th>
                     <th>IP Materials</th>
-                    <th>Data Produced</th>
+                    <th>Memproduksi</th>
                     <th>Total Produced</th>
                   </tr>
                 </thead>
@@ -185,16 +185,16 @@
             <!-- SFC (area)-->
             <div class="col-md-4">
               <label for="sfc" class="form-label fw-bold text-white">Area :</label>
-                <select name="sfc_code" id="sfc" class="form-select" onchange="this.form.submit()">
-                  <option value="">-- Select Area --</option>
-                  {% for sfc in sfc_list %}
-                  <option value="{{ sfc.SFC_CODE }}" {% if sfc.SFC_CODE == selected_sfc %}selected{% endif %}>
-                    {% if sfc.SFC_CODE == "AL" %}AL (Building)
-                    {% elif sfc.SFC_CODE == "AX" %}AX (Curing)
-                    {% else %}{{ sfc.SFC_CODE }}{% endif %}
-                  </option>
-                  {% endfor %}
-                </select>
+              <select name="sfc_code" id="sfc" class="form-select" onchange="this.form.submit()">
+                <option value="">-- Select Area --</option>
+                {% for sfc in sfc_list %}
+                <option value="{{ sfc.SFC_CODE }}" {% if sfc.SFC_CODE == selected_sfc %}selected{% endif %}>
+                  {% if sfc.SFC_CODE == "AL" %}AL (Building)
+                  {% elif sfc.SFC_CODE == "AX" %}AX (Curing)
+                  {% else %}{{ sfc.SFC_CODE }}{% endif %}
+                </option>
+                {% endfor %}
+              </select>
             </div>
 
             <!-- MAT SAP Code -->
@@ -303,19 +303,19 @@
 
 <!-- JS TABLE PRODUCED DAN CONSUMED-->
 <script>
-let table1 = new DataTable('#datatable1', {
-  lengthMenu: [
-    [5, 10, 25, -1],
-    [5, 10, 25, "All"]
-  ]
-});
+  let table1 = new DataTable('#datatable1', {
+    lengthMenu: [
+      [5, 10, 25, -1],
+      [5, 10, 25, "All"]
+    ]
+  });
 
-let table2 = new DataTable('#datatable2', {
-  lengthMenu: [
-    [5, 10, 25, -1],
-    [5, 10, 25, "All"]
-  ]
-});
+  let table2 = new DataTable('#datatable2', {
+    lengthMenu: [
+      [5, 10, 25, -1],
+      [5, 10, 25, "All"]
+    ]
+  });
 </script>
 
 
