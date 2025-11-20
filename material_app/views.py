@@ -65,6 +65,7 @@ def dashboard(request):
         .distinct()
         .order_by('-date','hour')
     )
+    
     seen = set()
     for rec in date_shift_raw_qs:
         date_val, hour = rec.get('date'), rec.get('hour')
@@ -113,6 +114,7 @@ def dashboard(request):
     # ========= JOIN MD_MATERIALS KE MD_SEMI_FINISHED_CLASSES =========
     materials = MD_MATERIALS.objects.filter(MAT_SAP_CODE=OuterRef('TRC_MAT_SAP_CODE'))
 
+  
     # ======== DETAIL TABEL CONSUMED DAN PRODUCED (SUMMARY) =========
     consumed_summary = (
         WMS_TRACEABILITY.objects
@@ -120,10 +122,12 @@ def dashboard(request):
         .annotate(
             SFC_CODE=Subquery(materials.values('SFC_CODE__SFC_CODE')[:1]),
             SFC_DESC=Subquery(materials.values('SFC_CODE__SFC_DESC')[:1]),
+            MAT_CODE=Subquery(materials.values('MAT_CODE')[:1]),   # ← tambahin ini
         )
         .values(
             'TRC_PP_CODE',
             'TRC_MAT_SAP_CODE',
+            'MAT_CODE',       # ← jangan lupa masukin ke values()
             'SFC_CODE',
             'SFC_DESC',
         )
@@ -131,17 +135,20 @@ def dashboard(request):
         .order_by('-total', 'TRC_SO_CODE')
     )
 
+
     produced_summary = (
         WMS_TRACEABILITY.objects
         .filter(qs_filter, TRC_FL_PHASE='P')
         .annotate(
             SFC_CODE=Subquery(materials.values('SFC_CODE__SFC_CODE')[:1]),
             SFC_DESC=Subquery(materials.values('SFC_CODE__SFC_DESC')[:1]),
+            MAT_CODE=Subquery(materials.values('MAT_CODE')[:1]),
         )
         .values(
             'TRC_PP_CODE',
             'TRC_MAT_SAP_CODE',
             'SFC_CODE',
+            'MAT_CODE',
             'SFC_DESC',
         )
         .annotate(total=Count('*'))
@@ -155,12 +162,14 @@ def dashboard(request):
         .annotate(
             SFC_CODE=Subquery(materials.values('SFC_CODE__SFC_CODE')[:1]),
             SFC_DESC=Subquery(materials.values('SFC_CODE__SFC_DESC')[:1]),
+            MAT_CODE=Subquery(materials.values('MAT_CODE')[:1]),
         )
         .values(
             'TRC_PP_CODE',
             'TRC_MCH_CODE',
             'TRC_SO_CODE',
             'TRC_CU_EXT_PROGR',
+            'MAT_CODE',
             'TRC_MAT_SAP_CODE',
             'TRC_MAT_VARIANT',
             'SFC_CODE',
@@ -177,11 +186,13 @@ def dashboard(request):
         .annotate(
             SFC_CODE=Subquery(materials.values('SFC_CODE__SFC_CODE')[:1]),
             SFC_DESC=Subquery(materials.values('SFC_CODE__SFC_DESC')[:1]),
+            MAT_CODE=Subquery(materials.values('MAT_CODE')[:1]),
         )
         .values(
             'TRC_PP_CODE',
             'TRC_MCH_CODE',
             'TRC_SO_CODE',
+            'MAT_CODE', 
             'TRC_CU_EXT_PROGR',
             'TRC_MAT_SAP_CODE',
             'TRC_MAT_VARIANT',
@@ -192,6 +203,13 @@ def dashboard(request):
         )
         .order_by('-TRC_START_TIME')
     )
+
+
+
+
+
+
+
 
     # =========================== PRODUCTION DATA DASHBOARD ===========================
     ps_date = request.GET.get('ps_date')
@@ -233,7 +251,7 @@ def dashboard(request):
             selected_dt = None
 
     
-    # Ambil data tabel jika ps_date dan sfc_code terisi (mat_sap_code opsional)
+    # Data Tabel Produksi
     if ps_date and sfc_code:
         try:
             if not selected_dt:
@@ -281,6 +299,7 @@ def dashboard(request):
                 sfc_code_row = mat_sfc_map.get(row['MAT_SAP_CODE'])
                 tabel_data.append({
                     'ps_date': row['PS_DATE'],
+                    'mat_code': MD_MATERIALS.objects.filter(MAT_SAP_CODE=row['MAT_SAP_CODE']).values_list('MAT_CODE', flat=True).first(),
                     'mat_sap_code': row['MAT_SAP_CODE'],
                     'mch_code': row['MCH_CODE'],
                     'shf_code': row['SHF_CODE'],
@@ -289,71 +308,18 @@ def dashboard(request):
                     'ps_start_prod': start,
                     'ps_end_prod': end,
                     'durasi_hms': durasi_hms,
-                    'ps_quantity': row.get('PS_QUANTITY', 0)
+                    'ps_quantity': int(row.get('PS_QUANTITY', 0) or 0)
+
                 })
 
             # Hitung total_quantity
-            total_quantity = sum([row['PS_QUANTITY'] for row in produksi_qs if row.get('PS_QUANTITY')]) or 0
+            total_quantity = sum([int(row['PS_QUANTITY'] or 0) for row in produksi_qs]) or 0
 
         except ValueError:
             selected_dt = None
 
-
-    # Ambil data tabel jika semua filter terisi
-    if ps_date and sfc_code and mat_sap_code:
-        try:
-            if not selected_dt:
-                selected_dt = datetime.strptime(ps_date, "%Y-%m-%d").date()
-
-            produksi_qs = DC_PRODUCTION_DATA.objects.filter(
-                PS_DATE__date=selected_dt,
-                MAT_SAP_CODE=mat_sap_code
-            ).values(
-                'MAT_SAP_CODE', 'MCH_CODE', 'PS_START_PROD', 'PS_END_PROD', 'PS_DATE', 'SHF_CODE', 'PS_QUANTITY'
-            ).order_by('PS_START_PROD')
-
-            # Mapping MAT -> SFC
-            mat_sfc_map = dict(MD_MATERIALS.objects.filter(
-                MAT_SAP_CODE__in=[row['MAT_SAP_CODE'] for row in produksi_qs]
-            ).values_list('MAT_SAP_CODE', 'SFC_CODE'))
-
-            # Mapping SFC -> DESC
-            sfc_desc_map = dict(MD_SEMI_FINISHED_CLASSES.objects.filter(
-                SFC_CODE__in=set(mat_sfc_map.values())
-            ).values_list('SFC_CODE', 'SFC_DESC'))
-
-            for row in produksi_qs:
-                start, end = row['PS_START_PROD'], row['PS_END_PROD']
-
-                # Hitung durasi HH:MM:SS
-                if isinstance(start, datetime) and isinstance(end, datetime):
-                    durasi_seconds = max((end - start).total_seconds(), 0)
-                    hours = int(durasi_seconds // 3600)
-                    minutes = int((durasi_seconds % 3600) // 60)
-                    seconds = int(durasi_seconds % 60)
-                    durasi_hms = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
-                else:
-                    durasi_hms = "00:00:00"
-
-                sfc_code_row = mat_sfc_map.get(row['MAT_SAP_CODE'])
-                tabel_data.append({
-                    'ps_date': row['PS_DATE'],
-                    'mat_sap_code': row['MAT_SAP_CODE'],
-                    'mch_code': row['MCH_CODE'],
-                    'shf_code': row['SHF_CODE'],
-                    'sfc_code': sfc_code_row,
-                    'sfc_desc': sfc_desc_map.get(sfc_code_row, ''),
-                    'ps_start_prod': start,
-                    'ps_end_prod': end,
-                    'durasi_hms': durasi_hms,
-                    'ps_quantity': row.get('PS_QUANTITY', 0)
-                })
-
-            # Hitung total_quantity
-            total_quantity = sum([row['PS_QUANTITY'] for row in produksi_qs if row.get('PS_QUANTITY')]) or 0
-
-        except ValueError:
-            selected_dt = None
+# Pengatyran terkait data tampil berasarkan tanggal start dan end
+    
 
     context = {
     'title': 'Dashboard Produksi',

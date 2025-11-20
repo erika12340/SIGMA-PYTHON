@@ -88,7 +88,7 @@
           <!-- Tabel Consumed -->
           <div class="card border border-primary shadow bg-dark text-white mt-4">
             <div class="card-header bg-primary text-white">
-              <h5 class="mb-0">Tabel Consumed</h5>
+              <h5 class="mb-0"> Tabel Detail Consumed</h5>
             </div>
             <div class="card-body table-responsive" style="background-color: rgb(0, 44, 101);">
 
@@ -96,15 +96,17 @@
                 <thead class="table-primary text-dark">
                   <tr>
                     <th>No</th>
-                    <th>IP Materials</th>
+                    <th>IP Code</th>
+                    <th>SAP Code</th>
                     <th>Memproduksi</th>
-                    <th>Total Consumed</th>
+                    <th>Total Quantity</th>
                   </tr>
                 </thead>
                 </tbody>
                 {% for row in consumed_summary %}
                 <tr>
                   <td>{{ forloop.counter}}</td>
+                  <td>{{ row.MAT_CODE}}</td>
                   <td>{{ row.TRC_MAT_SAP_CODE}}</td>
                   <td>{{ row.SFC_CODE}} - {{ row.SFC_DESC}}</td>
                   <td>{{ row.total }}</td>
@@ -127,22 +129,24 @@
           <!-- Tabel Produced -->
           <div class="card border border-primary shadow bg-dark text-white mt-4">
             <div class="card-header bg-primary text-white">
-              <h5 class="mb-0">Tabel Produced</h5>
+              <h5 class="mb-0">Tabel Detail Produced</h5>
             </div>
             <div class="card-body table-responsive" style="background-color: rgb(0, 44, 101);">
               <table id="datatable2" class="table table-hover table-bordered align-middle mb-0">
                 <thead class="table-primary text-dark">
                   <tr>
                     <th>No</th>
-                    <th>IP Materials</th>
+                    <th>IP Code</th>
+                    <th>SAP Code</th>
                     <th>Memproduksi</th>
-                    <th>Total Produced</th>
+                    <th>Total Quantity</th>
                   </tr>
                 </thead>
                 <tbody>
                   {% for row in produced_summary %}
                   <tr>
                     <td>{{ forloop.counter }}</td>
+                    <td>{{ row.MAT_CODE }}</td>
                     <td>{{ row.TRC_MAT_SAP_CODE }}</td>
                     <td>{{ row.SFC_CODE }} - {{ row.SFC_DESC }}</td>
                     <td>{{ row.total }}</td>
@@ -159,17 +163,29 @@
     <!-- Pemisah Dashboard -->
     <hr class="my-5" style="border: 2px solid #fff; box-shadow: 0 0 10px #3b76f5, 0 0 20px #3b76f5, 0 0 40px #3b76f5;">
 
+
+
+
+
+
+
+
+
+
+
+
+
     <!-- ==================== PRODUCTION DASHBOARD ====================== -->
     <div class="row mt-5">
       <h3 class="mb-4 fw-semibold text-white fw-bold text-center">Production Data Dashboard</h3>
 
       <!-- Filter Form -->
-      <div class="col-lg-8 mb-4">
+      <div class="col-lg-10 mb-4">
         <div class="card border border-secondary p-3 h-100" style="background-color: rgba(0, 88, 203, 0.445);">
           <form method="get" class="row g-3 align-items-end" id="productionForm">
 
             <!-- Tanggal Produksi -->
-            <div class="col-md-4">
+            <!-- <div class="col-md-4">
               <label class="form-label fw-bold text-white mb-1">Production Date :</label>
               <select name="ps_date" id="ps_date" class="form-control bg-dark text-white border-secondary"
                 onchange="this.form.submit()">
@@ -180,13 +196,25 @@
                 </option>
                 {% endfor %}
               </select>
+            </div> -->
+
+            <!-- Start Date -->
+            <div class="col-md-3">
+              <label for="start" class="form-label fw-bold text-white">From :</label>
+                <input type="date" name="start_date" id="start_date" class="form-control" lang="id" placeholder="dd-mm-yyyy" value="{{ selected_start_date|default:'' }}">
+            </div>
+
+            <!-- End Date -->
+            <div class="col-md-3">
+              <label for="end" class="form-label fw-bold text-white">From :</label>
+                <input type="date" name="end_date" id="end_date" class="form-control" lang="id" placeholder="dd-mm-yyyy" value="{{ selected_start_date|default:'' }}">
             </div>
 
             <!-- SFC (area)-->
-            <div class="col-md-4">
+            <div class="col-md-3">
               <label for="sfc" class="form-label fw-bold text-white">Area :</label>
               <select name="sfc_code" id="sfc" class="form-select" onchange="this.form.submit()">
-                <option value="">-- Select Area --</option>
+                <option value="">-- Pilih Area --</option>
                 {% for sfc in sfc_list %}
                 <option value="{{ sfc.SFC_CODE }}" {% if sfc.SFC_CODE == selected_sfc %}selected{% endif %}>
                   {% if sfc.SFC_CODE == "AL" %}AL (Building)
@@ -197,12 +225,12 @@
               </select>
             </div>
 
-            <!-- MAT SAP Code -->
-            <div class="col-md-4">
-              <label class="form-label fw-bold text-white mb-1">IP Materials :</label>
+            <!-- MAT SAP CODE -->
+            <div class="col-md-3">
+              <label class="form-label fw-bold text-white mb-1">IP Code :</label>
               <select name="mat_sap_code" id="mat_sap_code" class="form-control bg-dark text-white border-secondary"
                 onchange="this.form.submit()">
-                <option value="">-- Pilih Material --</option>
+                <option value="">-- Pilih IP --</option>
                 {% for m in daftar_mat_sap %}
                 <option value="{{ m.MAT_SAP_CODE }}" {% if selected_mat_sap == m.MAT_SAP_CODE %}selected{% endif %}>
                   {{ m.MAT_CODE }} - {{ m.MAT_SAP_CODE }} - {{ m.CNT_CODE }} - {{ m.MAT_VARIANT }}
@@ -220,12 +248,13 @@
       </div>
 
       <!-- Card Total Quantity Produksi -->
-      <div class="col-lg-4 mb-4">
+      <div class="col-lg-2 mb-4">
         <div class="card border border-warning rounded-3 shadow h-100"
           style="background-color: rgba(255, 193, 7, 0.25);">
           <div class="card-body text-center py-4">
-            <h6 class="text-white mb-2">Total Quantity Produksi</h6>
+            <h6 class="text-white mb-2">Total Quantity</h6>
             <h3 class="mb-0 fw-bold text-white">{{ total_quantity|default:"--" }}</h3>
+            
           </div>
         </div>
       </div>
@@ -234,14 +263,15 @@
     <!-- Tabel Production Data -->
     <div class="card border border-primary shadow bg-dark text-white">
       <div class="card-header bg-primary text-white">
-        <h5 class="mb-0">Durasi Produksi</h5>
+        <h5 class="mb-0">Tabel Produksi</h5>
       </div>
       <div class="card-body table-responsive" style="background-color: rgb(0, 44, 101);">
         <table id="datatable" class="table table-hover table-bordered align-middle mb-0">
           <thead class="table-primary text-dark">
             <tr>
               <th>No</th>
-              <th>IP Materials</th>
+              <th>IP Code</th>
+              <th>SAP Code</th>
               <th>Kode Mesin</th>
               <th>SFC Desc</th>
               <th>Waktu Mulai</th>
@@ -256,6 +286,7 @@
             {% for row in tabel_data %}
             <tr>
               <td>{{ forloop.counter }}</td>
+              <td>{{ row.mat_code }}</td>
               <td>{{ row.mat_sap_code }}</td>
               <td>{{ row.mch_code }}</td>
               <td>{{ row.sfc_desc }}</td>
@@ -347,6 +378,8 @@
 
   // DASHBOARD PRODUCTION
   $('#sfc').select2();
+  $('#start').select2();
+  $('#end').select2();
   $('#mat_sap_code').select2();
   $('#ps_date').select2();
 </script>
