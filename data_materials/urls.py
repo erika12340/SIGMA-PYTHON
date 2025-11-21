@@ -12,5 +12,5 @@ urlpatterns = [
     path('traceability_by_machine', traceability_by_machine, name='traceability_by_machine'),
     path('traceability_by_cu', traceability_by_cu, name='traceability_by_cu'),
     path('traceability_by_materials', traceability_by_materials, name='traceability_by_materials'),
-    # path('tracing', tracing_barcode, name ='tracing')
+    path('tracing_barcode', tracing_barcode, name ='tracing_barcode')
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

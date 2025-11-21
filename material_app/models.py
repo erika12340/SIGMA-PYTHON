@@ -137,3 +137,15 @@ class MD_SOURCES(models.Model):
     class Meta:
         managed = False
         db_table = 'MD_SOURCES'
+
+
+# -------------- 10. Model TRC_BASIC_BARCODE --------------
+class TRC_BASIC_BARCODE(models.Model):
+    TRC_BARCODE = models.CharField (max_length=10, primary_key=True)
+    MAT_SAP_CODE = models.CharField (max_length=9)
+    PP_CODE = models.CharField (max_length=3)
+    MCH_CODE = models.CharField (max_length=8)
+
+    class Meta:
+        managed = False
+        db_table = 'TRC_BASIC_BARCODE'

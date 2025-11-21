@@ -201,13 +201,15 @@
             <!-- Start Date -->
             <div class="col-md-3">
               <label for="start" class="form-label fw-bold text-white">From :</label>
-                <input type="date" name="start_date" id="start_date" class="form-control" lang="id" placeholder="dd-mm-yyyy" value="{{ selected_start_date|default:'' }}">
+              <input type="date" name="start_date" id="start_date" class="form-control" lang="id"
+                placeholder="dd-mm-yyyy" value="{{ selected_start_date|default:'' }}">
             </div>
 
             <!-- End Date -->
             <div class="col-md-3">
               <label for="end" class="form-label fw-bold text-white">From :</label>
-                <input type="date" name="end_date" id="end_date" class="form-control" lang="id" placeholder="dd-mm-yyyy" value="{{ selected_start_date|default:'' }}">
+              <input type="date" name="end_date" id="end_date" class="form-control" lang="id" placeholder="dd-mm-yyyy"
+                value="{{ selected_start_date|default:'' }}">
             </div>
 
             <!-- SFC (area)-->
@@ -254,7 +256,7 @@
           <div class="card-body text-center py-4">
             <h6 class="text-white mb-2">Total Quantity</h6>
             <h3 class="mb-0 fw-bold text-white">{{ total_quantity|default:"--" }}</h3>
-            
+
           </div>
         </div>
       </div>

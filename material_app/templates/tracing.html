@@ -3,7 +3,7 @@
 
 <!-- contant -->
 <div class="container">
-    <h3 class="judul mb-4">Tracing Barcode</h3>
+    <h3 class="judul mb-4">Tyre Barcode</h3>
 
     <!-- FILTER -->
     <div class="container mt-4">
@@ -13,18 +13,36 @@
 
                     <!-- Production Phase -->
                     <div class="col-md-4">
-                        <label for="trc" class="form-label fw-bold">Production Phase :</label>
+                        <label for="trc" class="form-label fw-bold">Tyre Barcode :</label>
                         <select name="trc_code" id="trc" class="form-select" onchange="this.form.submit()">
-                            <option value="">-- Select Fase --</option>
+                            <option value="">-- Tyre Barcode --</option>
                             {% for trc in trc_list %}
-                            <option value="{{ trc.TRC_PP_CODE }}"
+                            <option value="{{ trc.TRC_BARCODE }}"
                                 {% if trc.TRC_PP_CODE == selected_trc %}selected{% endif %}>
-                                {{ trc.TRC_PP_CODE }} - {{ trc.PP_DESC }}
+                                {{ trc.TRC_PP_CODE }}
                             </option>
                             {% endfor %}
                         </select>
                     </div>
                 </form>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <form>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Material :</label>
+                                    <input type="text" class="form-control" value="{{ material_detail.mat_desc }}"
+                                        readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Production Machine :</label>
+                                    <input type="text" class="form-control" value="{{ material_detail.ip_code }}"
+                                        readonly>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
 
                 <!-- Tombol Reset -->
                 <div class="row mt-4">
@@ -32,40 +50,34 @@
                         <a href="traceability_by_machine" class="btn btn-primary btn-reset">Reset</a>
                     </div>
                 </div>
-                
+
             </div>
         </div>
 
-        <!-- traceability views by machine -->
+        <!-- traceability -->
         {% if traceability %}
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title mb-3">Data Tracing</h5>
-                <div id="material-tree"  class="overflow-auto border rounded p-2" style="max-height: 500px;">
+                <div id="material-tree" class="overflow-auto border rounded p-2" style="max-height: 500px;">
                     {% for row in traceability %}
                     <div class="material-item level-{{ row.level|add:1 }} mb-1">
-                        <div data-bs-spy="scroll" data-bs-target="#list-example" data-bs-offset="0" class="scrollspy-example" tabindex="0">
+                        <div data-bs-spy="scroll" data-bs-target="#list-example" data-bs-offset="0"
+                            class="scrollspy-example" tabindex="0">
                             <button class="toggle-btn" data-id="{{ forloop.counter }}">▶</button>
                             <!-- traceability views by machine -->
                             {% if row.type == "root" %}
                             <!-- Root node -->
                             {{ row.baris1.TRC_SO_CODE }}
-                            {{ row.baris1.TRC_CU_EXT_PROGR }} -
-                            {{ row.baris1.MAT_CODE }} -
-                            {{ row.baris1.TRC_MAT_SAP_CODE }} -
-                            ({{ row.baris1.TRC_START_TIME }} -
-                            {{ row.baris1.TRC_END_TIME }}) -
-                            ({{ row.baris1.TRC_WM_CODE }} -
-                            {{ row.baris1.WM_NAME }})
+                            {{ row.baris1.SFC_DESC }} -
+                            {{ row.baris1.MAT_SAP_CODE }} -
+                            {{ row.baris1.MAT_DESC }} -
                             <br>
                             {% if row.baris2 %}
                             <div class="baris2">
                                 {{ row.baris2.TRC_PP_CODE }} -
                                 {{ row.baris2.TRC_MCH_CODE }} -
-                                ({{ row.baris2.TRC_START_TIME }} -
-                                {{ row.baris2.TRC_END_TIME }})
-                                ({{ row.baris2.TRC_WM_CODE }} -
-                                {{ row.baris2.WM_NAME }})
+                                {{ row.baris2.SFC_DESC }}
                             </div>
                             {% endif %}
                             {% endif %}
@@ -132,3 +144,6 @@
 </script>
 
 {% endblock %}
+
+
+<!-- untuk html ini buatkan untuk form barcode dimana bisa di input terus button submit, terud ada form materials dan form production machine tapi tidak diinput nanti setelah klik submit datanya muncul sendiri -->

@@ -1646,7 +1646,6 @@ def traceability_by_materials(request):
                     1
                 )
 
-
     # ======================= CONTEXT =======================
     context = {
         'sfc_list': sfc_list,
@@ -1664,6 +1663,37 @@ def traceability_by_materials(request):
     return render(request, 'traceability_by_materials.html', context)
 
 
-# def tracing_barcode():
 
-#     return render ('tracing.html')
+
+
+
+def tracing_barcode():
+
+    return render ('tracing.html')
+
+
+
+
+# Ketentuan view.
+
+# FORM
+# 1. form barcode itu bisa diinput bisa juga ambil data dari MODEL TRC_BASIC_BARCODE  (TRC_BARCODE)
+# 2. Setelah submit, form materials berisi (MAT_CODE + MAT_DESC) di ambil dari model MD_MATERIALS jadi alurnya gini 
+#   a. barcode yang diinput ada di model TRC_BASIC_BARCODE ambil kolom Frimary key yaitu MAT_SAP_CODE untuk di cari di model MD_MATERIALS ambil data MAT_CODE DAN MAT_DESC NYA UNTUK TAMPIL DI KOLOM FORM MATERIALS
+# 3. Lalu, ada kolom production machine ini juga sama otomatis setelah submit barcode ada data ini, data berupa (PP_CODE + MCH_CODE) yang ada di model [TRC_BASIC_TABLE]. 
+# ----- UNTUK TAMPILAN FORM SELESAI -----
+
+
+# ALURNYA :
+# A. Setelah submit barcode yang ada di model [TRC_BASIC_TABLE] dengan kolom [TRC_BARCODE] ambil kolom MAT_SAP_CODE untuk di cari di model MD_BOM SEBAGAI MAT_sAP_CODE lalu ambil data kolom CHILD MAT_SAP_CODENYA SEMUA DATANYA 
+# B. Selanjutnya, cari data CHILD_MAT_SAP_CODE di [WMS_TRACEABILITY] sebagai TRC_MAT_SAP_CODE,  
+# C. Jadi filter data berdasarkan TRC_MAT_SAP_CODE (WMS_TRACEABILITY), MCH_CODE [TRC_BASIC_TABLE], dan cari TRC_FL_EMPTY di [WMS_TRACEABILITY] sebagai kolom DEGRADED_MODE di [[WMS_TRACEABILITY_CU]]
+
+# Nah baru setelah itu tampil data baris 1 dan baris 2 dengan ketentuan seperti di bawah ini, LINE PERTAMA INI SEBAGAI PARENT NYA NANTI PENGATURAN ANANYA ATAU TURUNANNYA ADA LAGI.
+# 1. Baris 1 berisi (TRC_SO_CODE + TRC_CU_EXT_PROGR ada di model WMS_TRACEABILITY) + SFC_DESC (Ambil dari model MD_SEMI FINISHED_CLASSES yang sebelumnya di join dulu ke MD_MATERIALS berdasarkan SFC_CODE) + TRC_MAT_SAP_CODE (WMS_TRACEABILITY) + MAT_DESC (Ambil dari model MD_MATERIALS) + (WM_CODE + WM_NAME (AMBIL DI MODEL MD_WORKERS JOIN LEWAT WMS_TRACEABILITY SEBAGAI TRC_WM_CODE))
+# 2. Baris 2 berisi TRC_PP_CODE (DARI MODEL WMS_TRACEABILITY) + TRC_MCH_CODE (DARI MODEL WMS_TRACEABILITY)+ SFC_DESC (Ambil dari model MD_SEMI FINISHED_CLASSES yang sebelumnya di join dulu ke MD_MATERIALS berdasarkan SFC_CODE) + (WM_CODE + WM_NAME (AMBIL DI MODEL MD_WORKERS JOIN LEWAT WMS_TRACEABILITY SEBAGAI TRC_WM_CODE))
+
+# SELANJUTNYA TERKAIT CHILDNYA 
+# 1. Ambil SO_CODE DAN TRC_CU_EXT_PROGR (DI LINE PERTAMA TADI SEBAGAI PADA MODEL WMS_TRACEABILITY) cari di Model WMS_TRACEABILITY_CU sebagai SO_CODE DAN CU_EXT_PROGR dan ambil CHILD_SO_CODE DAN CHILD_CU_EXT+PROGR
+# 2. TERUS CARI CHILDNYA SAMPAI SELESAI 
+# UNTUK TAMPILAN DATANYA SAMA SEPERTI BARIS 1 DAN BARIS 2 SEPERTI YANG TELAH DI JELASAKAN  
