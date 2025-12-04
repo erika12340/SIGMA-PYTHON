@@ -3,6 +3,7 @@ from django.db import models
 # -------------- 1. MD_SEMI+FINISHED_CLASSES ------------
 class MD_SEMI_FINISHED_CLASSES(models.Model):
     SFC_CODE = models.CharField(max_length=9, primary_key=True)
+    PP_CODE = models.CharField(max_length=3)
     SFC_DESC = models.CharField(max_length=3)
 
     class Meta:
@@ -51,7 +52,6 @@ class MD_BOM(models.Model):
             ('MAT_SAP_CODE', 'MAT_VARIANT', 'CNT_CODE'),
         )
 
-
 # -------------- 4. DC_PRODUCTION_DATA --------------
 class DC_PRODUCTION_DATA(models.Model):
     MAT_SAP_CODE = models.CharField(max_length=9, primary_key=True)
@@ -72,8 +72,6 @@ class DC_PRODUCTION_DATA(models.Model):
         unique_together = (
             ('MAT_SAP_CODE', 'MAT_VARIANT', 'CNT_CODE'),
         )
-
-
 
 # -------------- Model 5. MD_PRODUCTION_PHASES -------------- 
 class MD_PRODUCTION_PHASES(models.Model):
@@ -106,6 +104,7 @@ class WMS_TRACEABILITY(models.Model):
     TRC_FL_PHASE = models.CharField (max_length=1)
     TRC_CNT_CODE = models.CharField (max_length=3)
     TRC_MAT_VARIANT = models.CharField (max_length=10)
+    TRC_FL_EMPTY = models.CharField (max_length=1)
 
     class Meta:
         managed = False
@@ -121,6 +120,11 @@ class WMS_TRACEABILITY_CU(models.Model):
     CHILD_CU_CODE = models.CharField (max_length=20)
     CHILD_SO_CODE = models.CharField (max_length=4)
     CHILD_CU_EXT_PROGR = models.CharField (max_length=6)
+    PRODUCTION_DATE = models.DateTimeField (max_length=8)
+    MAT_SAP_CODE = models.CharField (max_length=9)
+    MCH_CODE = models.CharField (max_length=8)
+    PP_CODE = models.CharField (max_length=3)
+    WM_CODE = models.CharField (max_length=8)
 
     class Meta:
         managed = False
@@ -138,14 +142,27 @@ class MD_SOURCES(models.Model):
         managed = False
         db_table = 'MD_SOURCES'
 
-
 # -------------- 10. Model TRC_BASIC_BARCODE --------------
-class TRC_BASIC_BARCODE(models.Model):
+class TRC_BASIC_TABLE(models.Model):
     TRC_BARCODE = models.CharField (max_length=10, primary_key=True)
     MAT_SAP_CODE = models.CharField (max_length=9)
     PP_CODE = models.CharField (max_length=3)
     MCH_CODE = models.CharField (max_length=8)
+    TRC_DEGRADED_MODE = models.CharField (max_length=1)
+    TRC_TIMESTAMP = models.DateTimeField (max_length=8)
 
     class Meta:
         managed = False
-        db_table = 'TRC_BASIC_BARCODE'
+        db_table = 'TRC_BASIC_TABLE'
+
+
+
+# ------------- 11. MD_MACHINE_TYPE ----------------
+class MD_MACHINE_TYPES(models.Model):
+    MT_CODE = models.CharField (max_length=10, primary_key=True)
+    MT_DESC = models.CharField (max_length=9)
+    PP_CODE = models.CharField (max_length=3)
+
+    class Meta:
+        managed = False
+        db_table = 'MD_MACHINE_TYPES'

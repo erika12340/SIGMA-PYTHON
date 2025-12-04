@@ -1,0 +1,193 @@
+{% extends "templates2/index.html" %}
+{% block content %}
+
+<div class="container">
+    <h3 class="judul mb-4">TRACING BARCODE BUILDING</h3>
+    <!-- FILTER -->
+    <div class="container mt-4">
+        <div class="card mb-4 shadow-sm">
+            <div class="card-body">
+
+                <!-- === FORM BARCODE === -->
+                <form method="get" action="tracing_barcode" class="row g-3">
+                    <!-- BARCODE SELECTED -->
+                    <div class="col-md-6">
+                        <label for="barcode" class="form-label fw-bold">Tyre Barcode :</label>
+                        <select name="barcode" id="barcode" class="form-control">
+                            <option value="">-- Pilih Barcode --</option>
+                            {% for barcode in barcode_list %}
+                                <option value="{{ barcode }}" {% if barcode == selected_barcode %}selected{% endif %}>{{ barcode }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- BUTTON SUBMIT -->
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">Submit</button>
+                    </div> 
+
+                    <!-- BUTTON RESET -->
+                    <div class="col-md-3 d-flex align-items-end">
+                        <a href="tracing_barcode" class="btn btn-success btn-reset w-100">Reset</a>
+                    </div>
+                </form>
+
+                <!-- === DETAIL BARCODE TRACING === -->
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-3">Detail Barcode</h6>
+                        <form>
+                            <div class="row mb-3">
+                                <!-- MATERIAL -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Material :</label>
+                                    <input type="text" class="form-control" value="{{ material_detail.mat_code }} - {{ material_detail.mat_sap_code}} - {{ material_detail.mat_desc }} " readonly>
+                                </div>
+
+                                <!-- MACHINE -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Production Machine :</label>
+                                    <input type="text" class="form-control" value="{{ material_detail.pp_code }} - {{ material_detail.mch_code }}" readonly>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- === TRACING BARCODE === -->
+        {% if traceability %}
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Data Tracing</h5>
+                <div id="material-tree" class="overflow-auto border rounded p-2" style="max-height: 500px;">
+                    {% for row in traceability %}
+                    <div class="material-item level-{{ row.level|add:1 }} mb-1">
+                        <button class="toggle-btn" data-id="{{ forloop.counter }}">▶</button>
+                        <!-- BARIS 1 -->
+                        {% if row.baris1 %}
+                            {{ row.baris1.SO_CODE }}{{ row.baris1.CU_EXT_PROGR }} -
+                            {{ row.baris1.SFC_DESC }} -
+                            {{ row.baris1.MAT_SAP_CODE }} -
+                            {{ row.baris1.MAT_DESC }} 
+                        {% endif %}
+                        <br>
+                        <!-- BARIS 2 -->
+                         {% if row.baris2 %}
+                        <div class="baris2-wrapper ms-4 mt-1">
+                            {% for b2 in row.baris2 %}
+                            <div class="baris2 mb-1">
+                                {{ b2.PP_CODE }} -
+                                {{ b2.MCH_CODE }} -
+                                {{ b2.MT_DESC }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+<!-- end contant -->
+
+
+<!-- JS  -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/2.3.2/js/dataTables.js"></script>
+<script src="https://cdn.datatables.net/buttons/3.2.4/js/dataTables.buttons.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/3.2.4/js/buttons.html5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+
+<!-- JS Toggle (samakan persis dengan menu Materials) -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Tampilkan semua level-1 (root) awal
+    document.querySelectorAll(".material-item.level-1").forEach(item => item.style.display = "block");
+
+    document.querySelectorAll(".toggle-btn").forEach(btn => {
+        btn.addEventListener("click", function () {
+            let currentItem = this.closest(".material-item");
+            let currentLevel = parseInt(currentItem.className.match(/level-(\d+)/)[1]);
+            let next = currentItem.nextElementSibling;
+            let isExpanding = this.textContent === "▶";
+            this.textContent = isExpanding ? "▼" : "▶";
+
+            while (next && next.classList.contains("material-item")) {
+                let level = parseInt(next.className.match(/level-(\d+)/)[1]);
+                if (level <= currentLevel) break;
+                if (level === currentLevel + 1) next.style.display = isExpanding ? "block" : "none";
+                if (!isExpanding && level > currentLevel) {
+                    let toggle = next.querySelector(".toggle-btn");
+                    if (toggle) toggle.textContent = "▶";
+                    next.style.display = "none";
+                }
+                next = next.nextElementSibling;
+            }
+        });
+    });
+});
+</script>
+
+<!-- JS SELECT2-->
+<script>
+    $('#barcode').select2();
+    $('#reset').select2();
+    $('submit').select2();
+</script>
+{% endblock %}
+
+
+
+<!-- 
+BAGIAN FORM
+1. form TRC_BARCODE ambil dari TRC_BASIC_TABLE
+2. Form detail barcode: cari MAT_SAP_CODE pada TRC_BASIC_TABLE di MD_MATERIALS ambil data MAT_CODE dan MAT_DESC,
+3. Form detail barcode : bagian Production Machine ambil data PP_CODE dan MCH_CODE di TRC_BASIC_TABLE pada TRC_BARCODE terpilih
+
+BAGIAN DATA TRACING BARCODE
+1. MAT_SAP_CODE pada barcode terpilih, Cari di MD_BOM sebagai MAT_SAP_CODE dan ambil semua CHILD_MAT_SAP_CODE nya
+2. Dari semua CHILD_MAT_SAP_CODE cari semua di model [WMS_TRACEABILITY] sebagai TRC_MAT_SAP_CODE, serta berdasarkan TRC_FL_EMPTY = 'F/null'
+3. Setelah semua di cari ambil TRC_SO_CODE dan TRC_CU_EXT_PROG dan cari di model [WMS_TRACEABILITY_CU] sebagai SO_CODE DAN CU_EXT_PROG
+4. Baru tampil data baris 1 dan baris 2 
+
+BAGIAN BARIS 1 DAN BARIS 2
+1.baris 1 : SO_CODE, CU_EXT_PROGR, MAT_SAP_CODE (dari model WMS_TRACEABILITY_CU), join dengan MD_MATERIALS Untuk ambil MAT_DESC, dan join dengan MD_SEMI_FINISHED_CLASSES untuk ambil SFC_DESC menggunakan (PP_CODE), dan join model MD_WORKERS untuk ambil data WM_NAME berdasarkan WM_CODE di WMS_TRACEABILITY_CU
+2. Baris 2 : PP_CODE, MCH_CODE (dari model WMS_TRACEABILITY_CU), join model MD_WORKERS untuk ambil data WM_NAME berdasarkan WM_CODE di WMS_TRACEABILITY_CU (NAH INI BARI ROOT PERTAMA) UNTUK CHILD ATAU TURUNANNYA YAITU 
+
+BAGIAN CHILD
+1. AMBIL CHILD_SO_CODE DAN CHILD_CU_EXT_PROG DARI WMS_TRACEABILITY_CU DAN CARI SEBAGAI PARENT (SO_CODE DAN CU_EXT_PROG di WMS_TRACEABILITY_CU) ITU NANTI TAMPIL SEBAGAI TURUNANNYA DENGAN FORMAT BARIS 1 BARIS 2
+2. BEGITU SETERUSNYA SAMPAI SELESAI CHILDNYA. 
+-->
+
+
+
+
+
+
+
+
+<!-- 
+BARIS 1 :
+{{ row.baris1.SO_CODE }}{{ row.baris1.CU_EXT_PROGR }} - {{ row.baris1.SFC_DESC }} - {{ row.baris1.MAT_SAP_CODE }} - {{ row.baris1.MAT_DESC }} 
+
+yang lain berhasil tampil sudah benar kecuali SFC_DESC, Ketentuan:
+a. Ambil MAT_SAP_CODE berdasarkan SO_CODE dan CU_EXT_PROGR
+b. Cari MAT_SAP_CODE di [MD_MATERIALS] dan ambil [SFC_CODE] JOIN KE [MD_SEMI_FINISHED_CLASSES] Untuk mengambil SFC_DESC
+
+BARIS 2 :
+{{ b2.PP_CODE }} - {{ b2.MCH_CODE }} - {{ b2.MT_DESC }} 
+
+Semua benar keali MT_DESC, Ketentuan:
+a. Ambil MAT_SAP_CODE berdasarakn SO_CODE dan CU_EXT_PROGR 
+b. Cari MAT_SAP_CODE di [MD_BOM] dan ambil MT_CODE JOIN KE [MD_MACHINE_TYPES] Untuk ambil [MT_DESC]
+-->
