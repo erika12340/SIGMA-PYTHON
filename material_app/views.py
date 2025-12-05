@@ -1907,3 +1907,76 @@ def tracing_barcode(request):
         'material_detail': material_detail,
         'traceability': traceability,
     })
+
+
+
+# SELECT [TRC_BARCODE]
+#       ,[PP_CODE]
+#       ,[MCH_CODE]
+#       ,[TRC_TIMESTAMP]
+#       ,[WM_CODE]
+#       ,[TRC_SIDE]
+#       ,[MAT_SAP_CODE]
+#       ,[MAT_VARIANT]
+#       ,[CNT_CODE]
+#       ,[TRC_TYPE]
+#   FROM [PCS].[dbo].[TRC_BASIC_TABLE]
+#   WHERE TRC_BARCODE = '3920241148'
+
+#   SELECT  [MAT_SAP_CODE]
+#       ,[MAT_VARIANT]
+#       ,[CNT_CODE]
+#       ,[LMM_SEQUENCE]
+#       ,[MT_CODE]
+#       ,[BV_STATUS]
+#       ,[CHILD_MAT_SAP_CODE]
+#   FROM [PCS].[dbo].[MD_BOM]
+#   WHERE MAT_SAP_CODE = 'SAL1551A6'
+
+#   SELECT [TRC_PP_CODE]
+#       ,[TRC_MCH_CODE]
+#       ,[TRC_SO_CODE]
+#       ,[TRC_CU_EXT_PROGR]
+#       ,[TRC_START_TIME]
+#       ,[TRC_FL_PHASE]
+#       ,[TRC_END_TIME]
+#       ,[TRC_FL_EMPTY]
+#       ,[TRC_MAT_SAP_CODE]
+#   FROM [PCS].[dbo].[WMS_TRACEABILITY]
+# WHERE TRC_MAT_SAP_CODE IN ('SCP8389A2','STB6272A1','SCE2958A1','STT0907A0','SFB4121A0')
+# AND TRC_MCH_CODE = 'MRU3' AND TRC_PP_CODE = 'B02' AND TRC_FL_EMPTY = 'T'
+
+#  SELECT [TRC_PP_CODE]
+#       ,[TRC_MCH_CODE]
+#       ,[TRC_SO_CODE]
+#       ,[TRC_CU_EXT_PROGR]
+#       ,[TRC_FL_PHASE]
+#       ,[TRC_CNT_CODE]
+#       ,[TRC_FL_EMPTY]
+#       ,[TRC_MAT_SAP_CODE]
+#       ,[TRC_WM_CODE]
+#   FROM [PCS].[dbo].[WMS_TRACEABILITY]
+#   WHERE TRC_SO_CODE = '00TB' AND TRC_CU_EXT_PROGR = '01CD1I' AND TRC_FL_PHASE = 'P'
+
+#   SELECT TOP (1000) [SO_CODE]
+#       ,[CU_EXT_PROGR]
+#       ,[CHILD_CU_CODE]
+#       ,[CHILD_SO_CODE]
+#       ,[CHILD_CU_EXT_PROGR]
+#       ,[PP_CODE]
+#       ,[MCH_CODE]
+#       ,[MAT_SAP_CODE]
+#   FROM [PCS].[dbo].[WMS_TRACEABILITY_CU]
+#   WHERE SO_CODE = '00TB' AND CU_EXT_PROGR = '01CD1I'
+
+#   SELECT [TRC_PP_CODE]
+#       ,[TRC_MCH_CODE]
+#       ,[TRC_SO_CODE]
+#       ,[TRC_CU_EXT_PROGR]
+#       ,[TRC_FL_PHASE]
+#       ,[TRC_CNT_CODE]
+#       ,[TRC_FL_EMPTY]
+#       ,[TRC_MAT_SAP_CODE]
+#       ,[TRC_WM_CODE]
+#   FROM [PCS].[dbo].[WMS_TRACEABILITY]
+#   WHERE TRC_SO_CODE = '00TT' AND TRC_CU_EXT_PROGR = '0012QP' AND TRC_FL_PHASE = 'P'
