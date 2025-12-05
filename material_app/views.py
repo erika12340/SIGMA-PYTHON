@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from material_app.models import MD_MATERIALS, MD_SEMI_FINISHED_CLASSES, MD_MACHINE_TYPES, MD_BOM, DC_PRODUCTION_DATA, MD_WORKERS, WMS_TRACEABILITY, MD_PRODUCTION_PHASES, WMS_TRACEABILITY_CU, MD_SOURCES, TRC_BASIC_TABLE
+from material_app.models import MD_MATERIALS, MD_MACHINE_TYPES, MD_SEMI_FINISHED_CLASSES,TRC_BASIC_TABLE,  MD_BOM, DC_PRODUCTION_DATA, MD_WORKERS, WMS_TRACEABILITY, MD_PRODUCTION_PHASES, WMS_TRACEABILITY_CU, MD_SOURCES
 from datetime import datetime, timedelta, time, date
 from django.db.models import OuterRef, Subquery
 from django.db.models.functions import TruncDate, ExtractHour
@@ -319,6 +319,8 @@ def dashboard(request):
             selected_dt = None
 
 # Pengatyran terkait data tampil berasarkan tanggal start dan end
+    
+
     context = {
     'title': 'Dashboard Produksi',
 
@@ -562,6 +564,9 @@ def daftar_produksi(request):
     # variabel untuk dikirim balik ke form
     selected_start_date = start_dt.strftime("%Y-%m-%d") if start_dt else ""
     selected_end_date = end_dt.strftime("%Y-%m-%d") if end_dt else ""
+
+
+
 
     # ======== FILTER MATERIAL BERDASARKAN SFC =========
     if sfc_code:
@@ -1087,6 +1092,7 @@ def traceability_by_cu(request):
         })
 
     # ======================= TRACEABILITY DATA =======================
+        # ======================= TRACEABILITY DATA =======================
     traceability_cu = []
     data_cu = None
     materials = None
@@ -1256,6 +1262,8 @@ def traceability_by_cu(request):
 
             # rekursif child CU
             traceability_cu += get_child_cu_tree(baris1['TRC_SO_CODE'], baris1['TRC_CU_EXT_PROGR'], level=1)
+
+
 
     # ======================= CONTEXT =======================
     context = {
@@ -1691,217 +1699,211 @@ def traceability_by_materials(request):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # ================= TRACING BARCODE ===================
-def tracing_barcode(request):
-    barcode = request.GET.get("barcode", "")
-    material_detail = {}
-    traceability_tree = []
-    DEBUG = False  # set True untuk melihat debug prints di console
 
-    # ==== 1. DROPDOWN BARCODE ====
-    barcode_list = (
-        TRC_BASIC_TABLE.objects
-        .exclude(TRC_BARCODE__isnull=True)
-        .exclude(TRC_BARCODE__exact="")
-        .values_list("TRC_BARCODE", flat=True)
-        .order_by("TRC_BARCODE")
-    )
+# ========================================================
+# 🔁 FUNCTION RECURSIVE UNTUK MENCARI CHILD TREE
+# ========================================================
+def get_child_trace(so_code, cu_ext, level=1):
+    tree_rows = []
 
-    # ==== HELPERS ====
-    def get_sfc_desc_from_mat_sap(mat_sap):
-        if not mat_sap:
-            return ""
-        mat = MD_MATERIALS.objects.filter(
-            MAT_SAP_CODE=mat_sap
-        ).select_related("SFC_CODE").first()
-        if mat and mat.SFC_CODE:
-            return mat.SFC_CODE.SFC_DESC or ""
-        return ""
+    # 1. Cari child SO dan CU di WMS_TRACEABILITY_CU
+    children = WMS_TRACEABILITY_CU.objects.filter(
+        SO_CODE=so_code,
+        CU_EXT_PROGR=cu_ext
+    ).values('CHILD_SO_CODE', 'CHILD_CU_EXT_PROGR')
 
-    def get_mat_desc_from_mat_sap(mat_sap):
-        if not mat_sap:
-            return ""
-        return MD_MATERIALS.objects.filter(
-            MAT_SAP_CODE=mat_sap
-        ).values_list("MAT_DESC", flat=True).first() or ""
+    for c in children:
+        child_so = c['CHILD_SO_CODE']
+        child_cu = c['CHILD_CU_EXT_PROGR']
 
-    def get_mt_desc_from_mat_sap(mat_sap):
-        if not mat_sap:
-            return ""
-        mt_code = MD_BOM.objects.filter(
-            CHILD_MAT_SAP_CODE=mat_sap
-        ).values_list("MT_CODE", flat=True).first()
-        if not mt_code:
-            return ""
-        return MD_MACHINE_TYPES.objects.filter(
-            MT_CODE=mt_code
-        ).values_list("MT_DESC", flat=True).first() or ""
+        # 2. Cari child detail di WMS_TRACEABILITY phase 'P'
+        wms = WMS_TRACEABILITY.objects.filter(
+            TRC_SO_CODE=child_so,
+            TRC_CU_EXT_PROGR=child_cu,
+            TRC_FL_PHASE='P'
+        ).first()
 
-    # ==== RECURSIVE BOM FINDER ====
-    def get_all_bom_children(mat_sap, collected=None):
-        if collected is None:
-            collected = set()
-        childs = MD_BOM.objects.filter(MAT_SAP_CODE=mat_sap)
-        for row in childs:
-            if row.CHILD_MAT_SAP_CODE not in collected:
-                collected.add(row.CHILD_MAT_SAP_CODE)
-                get_all_bom_children(row.CHILD_MAT_SAP_CODE, collected)
-        return collected
-
-    # ==== MAIN ====
-    if barcode:
-        barcode_obj = TRC_BASIC_TABLE.objects.filter(TRC_BARCODE=barcode).first()
-        if barcode_obj:
-            # DETAIL MATERIAL
+        if wms:
+            # --- Baris 1 ---
             mat = MD_MATERIALS.objects.filter(
-                MAT_SAP_CODE=barcode_obj.MAT_SAP_CODE
-            ).select_related("SFC_CODE").first()
+                    MAT_SAP_CODE=wms.TRC_MAT_SAP_CODE
+                ).first()
+                
+            sfc_code = mat.SFC_CODE if mat else None
 
-            material_detail = {
-                "mat_sap_code": barcode_obj.MAT_SAP_CODE,
-                "mat_code": mat.MAT_CODE if mat else "",
-                "mat_desc": mat.MAT_DESC if mat else "",
-                "pp_code": barcode_obj.PP_CODE,
-                "mch_code": barcode_obj.MCH_CODE,
+            baris1 = {
+                'TRC_SO_CODE': wms.TRC_SO_CODE,
+                'TRC_CU_EXT_PROGR': wms.TRC_CU_EXT_PROGR,
+                'TRC_MAT_SAP_CODE': wms.TRC_MAT_SAP_CODE,
+                'MAT_DESC': mat.MAT_DESC if mat else '',
+                'SFC_DESC': sfc_code,
             }
 
-            # ambil semua child bom multi-level
-            child_saps = get_all_bom_children(barcode_obj.MAT_SAP_CODE)
+            # --- Baris 2 ---
+            mt_desc = ''
+            bom = MD_BOM.objects.filter(MAT_SAP_CODE=wms.TRC_MAT_SAP_CODE).first()
+            if bom:
+                mt = MD_MACHINE_TYPES.objects.filter(MT_CODE=bom.MT_CODE).first()
+                mt_desc = mt.MT_DESC if mt else ''
 
-            # root traceability berdasarkan child_saps
-            roots_raw = WMS_TRACEABILITY.objects.filter(
-                TRC_MAT_SAP_CODE__in=list(child_saps),
-                TRC_MCH_CODE=barcode_obj.MCH_CODE
-            ).filter(
-                Q(TRC_FL_EMPTY='F') | Q(TRC_FL_EMPTY__isnull=True)
-            ).order_by("TRC_SO_CODE", "TRC_CU_EXT_PROGR")
+            baris2 = [{
+                'TRC_PP_CODE': wms.TRC_PP_CODE,
+                'TRC_MCH_CODE': wms.TRC_MCH_CODE,
+                'MT_DESC': mt_desc
+            }]
 
-            # unique roots
-            roots = []
-            seen = set()
-            for r in roots_raw:
-                key = (r.TRC_SO_CODE, r.TRC_CU_EXT_PROGR)
-                if key not in seen:
-                    seen.add(key)
-                    roots.append(r)
+            tree_rows.append({
+                'baris1': baris1,
+                'baris2': baris2,
+                'level': level
+            })
 
-            # recursive child walker
-            def get_child_nodes(parent_so, parent_cu, level, visited=None):
-                if visited is None:
-                    visited = set()
-                key = (parent_so, parent_cu)
-                if key in visited:
-                    return []
-                visited.add(key)
+            # 3. Recursive untuk mencari child berikutnya
+            tree_rows.extend(get_child_trace(child_so, child_cu, level=level+1))
 
-                nodes = []
-                childs = WMS_TRACEABILITY_CU.objects.filter(
-                    SO_CODE=parent_so,
-                    CU_EXT_PROGR=parent_cu
-                ).order_by("CHILD_SO_CODE", "CHILD_CU_EXT_PROGR")
+    return tree_rows
 
-                for cu in childs:
-                    child_so = cu.CHILD_SO_CODE
-                    child_cu = cu.CHILD_CU_EXT_PROGR
+# ========================================================
+# MAIN VIEW
+# ========================================================
 
-                    # Cari baris WMS_TRACEABILITY_CU untuk pasangan (child_so, child_cu)
-                    next_cu = WMS_TRACEABILITY_CU.objects.filter(
-                        SO_CODE=child_so,
-                        CU_EXT_PROGR=child_cu
-                    ).first()
+def tracing_barcode(request):
+    barcode_list = TRC_BASIC_TABLE.objects.values_list('TRC_BARCODE', flat=True).distinct()
+    selected_barcode = request.GET.get('barcode')
+    material_detail = None
+    traceability = []
 
-                    # MAT_SAP_CODE yang benar: ambil dari next_cu jika ada, else fallback cu.MAT_SAP_CODE
-                    if next_cu and getattr(next_cu, "MAT_SAP_CODE", None):
-                        mat_sap_for_row = next_cu.MAT_SAP_CODE
-                    else:
-                        mat_sap_for_row = cu.MAT_SAP_CODE
+    if selected_barcode:
+        trc_entry = TRC_BASIC_TABLE.objects.filter(TRC_BARCODE=selected_barcode).first()
 
-                    # debug
-                    if DEBUG:
-                        print("DEBUG CHILD NODE:", child_so, child_cu, "=> mat_sap_for_row:", mat_sap_for_row)
+        if trc_entry:
+            # Step 1 Material detail
+            material = MD_MATERIALS.objects.filter(MAT_SAP_CODE=trc_entry.MAT_SAP_CODE).first()
+            material_detail = {
+                'MAT_CODE': material.MAT_CODE if material else '',
+                'MAT_SAP_CODE': trc_entry.MAT_SAP_CODE,
+                'MAT_DESC': material.MAT_DESC if material else '',
+                'pp_code': trc_entry.PP_CODE,
+                'mch_code': trc_entry.MCH_CODE,
+            }
 
-                    # BARIS 1: ambil MAT_DESC dan SFC_DESC berdasarkan mat_sap_for_row
-                    mat_desc = get_mat_desc_from_mat_sap(mat_sap_for_row)
-                    sfc_desc = get_sfc_desc_from_mat_sap(mat_sap_for_row)
+            # Step 2 BOM
+            child_mats = MD_BOM.objects.filter(
+                MAT_SAP_CODE=trc_entry.MAT_SAP_CODE
+            ).values_list('CHILD_MAT_SAP_CODE', flat=True)
 
-                    # BARIS 2: ambil MT_DESC berdasarkan mat_sap_for_row
-                    mt_desc = get_mt_desc_from_mat_sap(mat_sap_for_row)
+            # Step 3 Ambil semua WMS berdasarkan child SAP + MCH + PP
+            wms_all = WMS_TRACEABILITY.objects.filter(
+                TRC_MAT_SAP_CODE__in=child_mats,
+                TRC_MCH_CODE=trc_entry.MCH_CODE,
+                TRC_PP_CODE=trc_entry.PP_CODE,
+                TRC_FL_EMPTY='T'  # ------------------>>>>>PENGATURAN FL EMPTY<<<<<<<<<<<<<-------------
+            ).values(
+                'TRC_SO_CODE',
+                'TRC_CU_EXT_PROGR'
+            ).distinct()
 
-                    node = {
-                        "type": "child",
-                        "level": level,
-                        "baris1": {
-                            "SO_CODE": child_so,
-                            "CU_EXT_PROGR": child_cu,
-                            "MAT_SAP_CODE": mat_sap_for_row,
-                            "MAT_DESC": mat_desc,
-                            "SFC_DESC": sfc_desc,
-                        },
-                        "baris2": [{
-                            "PP_CODE": cu.PP_CODE,
-                            "MCH_CODE": cu.MCH_CODE,
-                            "MT_DESC": mt_desc,
-                        }],
-                    }
+            # Step 4 Ambil root dengan FL_PHASE = 'P'
+            for root in wms_all:
+                so = root['TRC_SO_CODE']
+                cu = root['TRC_CU_EXT_PROGR']
 
-                    nodes.append(node)
-
-                    nodes.extend(
-                        get_child_nodes(child_so, child_cu, level + 1, visited=visited.copy())
-                    )
-
-                return nodes
-
-            # build root nodes
-            for r in roots:
-                root_cu = WMS_TRACEABILITY_CU.objects.filter(
-                    SO_CODE=r.TRC_SO_CODE,
-                    CU_EXT_PROGR=r.TRC_CU_EXT_PROGR
+                # Ambil root WMS
+                wms_root = WMS_TRACEABILITY.objects.filter(
+                    TRC_SO_CODE=so,
+                    TRC_CU_EXT_PROGR=cu,
+                    TRC_FL_PHASE='P'
                 ).first()
-                if not root_cu:
+
+                if not wms_root:
                     continue
 
-                # mat_sap untuk root adalah mat sap di root_cu
-                mat_sap_root = root_cu.MAT_SAP_CODE
+                # ===== ROOT BARIS 1 =====
+                # =============== BARIS 1 ===============
+                # 1. AMBIL MATERIAL BERDASARKAN TRC_MAT_SAP_CODE DI WMS_TRACEABILITY
+                mat = MD_MATERIALS.objects.filter(
+                    MAT_SAP_CODE=wms_root.TRC_MAT_SAP_CODE
+                ).first()
 
-                # debug
-                if DEBUG:
-                    print("DEBUG ROOT NODE:", root_cu.SO_CODE, root_cu.CU_EXT_PROGR, "=>", mat_sap_root)
+                # 2. AMBIL SFC_CODE DARI MD_MATERIALS
+                sfc_code = mat.SFC_CODE if mat else None
 
-                mat_desc_root = get_mat_desc_from_mat_sap(mat_sap_root)
-                sfc_desc_root = get_sfc_desc_from_mat_sap(mat_sap_root)
-                mt_desc_root = get_mt_desc_from_mat_sap(mat_sap_root)
-
-                root_node = {
-                    "type": "root",
-                    "level": 0,
-                    "baris1": {
-                        "SO_CODE": root_cu.SO_CODE,
-                        "CU_EXT_PROGR": root_cu.CU_EXT_PROGR,
-                        "MAT_SAP_CODE": mat_sap_root,
-                        "MAT_DESC": mat_desc_root,
-                        "SFC_DESC": sfc_desc_root,
-                    },
-                    "baris2": [{
-                        "PP_CODE": root_cu.PP_CODE,
-                        "MCH_CODE": root_cu.MCH_CODE,
-                        "MT_DESC": mt_desc_root,
-                    }],
+                # 4. SUSUN BARIS 1
+                baris1 = {
+                    'TRC_SO_CODE': wms_root.TRC_SO_CODE,
+                    'TRC_CU_EXT_PROGR': wms_root.TRC_CU_EXT_PROGR,
+                    'TRC_MAT_SAP_CODE': wms_root.TRC_MAT_SAP_CODE,
+                    'MAT_DESC': mat.MAT_DESC if mat else '',
+                    'SFC_DESC': sfc_code,
                 }
 
-                traceability_tree.append(root_node)
+                # ===== ROOT BARIS 2 =====
+                mt_desc = ''
+                bom = MD_BOM.objects.filter(MAT_SAP_CODE=wms_root.TRC_MAT_SAP_CODE).first()
+                if bom:
+                    mt = MD_MACHINE_TYPES.objects.filter(MT_CODE=bom.MT_CODE).first()
+                    mt_desc = mt.MT_DESC if mt else ''
 
-                traceability_tree.extend(
-                    get_child_nodes(root_cu.SO_CODE, root_cu.CU_EXT_PROGR, 1)
-                )
+                baris2 = [{
+                    'TRC_PP_CODE': wms_root.TRC_PP_CODE,
+                    'TRC_MCH_CODE': wms_root.TRC_MCH_CODE,
+                    'MT_DESC': mt_desc
+                }]
 
-    return render(
-        request,
-        "tracing_barcode.html",
-        {
-            "barcode_list": barcode_list,
-            "selected_barcode": barcode,
-            "material_detail": material_detail,
-            "traceability": traceability_tree,
-        }
-    )
+                # Tambahkan root
+                root_node = {
+                    'baris1': baris1,
+                    'baris2': baris2,
+                    'level': 0
+                }
+
+                # ADD TO TRACEABILITY TREE
+                traceability.append(root_node)
+
+                # ===== CHILD RECURSIVE =====
+                child_rows = get_child_trace(so, cu, level=1)
+                traceability.extend(child_rows)
+
+    return render(request, "tracing_barcode.html", {
+        'barcode_list': barcode_list,
+        'selected_barcode': selected_barcode,
+        'material_detail': material_detail,
+        'traceability': traceability,
+    })
