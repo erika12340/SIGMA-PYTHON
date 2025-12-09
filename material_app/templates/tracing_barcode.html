@@ -3,6 +3,7 @@
 
 <div class="container">
     <h3 class="judul mb-4">TRACING BARCODE BUILDING</h3>
+
     <!-- FILTER -->
     <div class="container mt-4">
         <div class="card mb-4 shadow-sm">
@@ -10,9 +11,9 @@
 
                 <!-- === FORM BARCODE === -->
                 <form method="get" action="tracing_barcode" class="row g-3">
-                    <!-- BARCODE SELECTED -->
+
                     <div class="col-md-6">
-                        <label for="barcode" class="form-label fw-bold">Tyre Barcode :</label>
+                        <label class="form-label fw-bold">Tyre Barcode :</label>
                         <select name="barcode" id="barcode" class="form-control">
                             <option value="">-- Pilih Barcode --</option>
                             {% for barcode in barcode_list %}
@@ -23,177 +24,224 @@
                         </select>
                     </div>
 
-                    <!-- BUTTON SUBMIT -->
                     <div class="col-md-3 d-flex align-items-end">
                         <button type="submit" class="btn btn-primary w-100">Submit</button>
                     </div>
 
-                    <!-- BUTTON RESET -->
                     <div class="col-md-3 d-flex align-items-end">
-                        <a href="tracing_barcode" class="btn btn-success btn-reset w-100">Reset</a>
+                        <a href="tracing_barcode" class="btn btn-success w-100">Reset</a>
                     </div>
                 </form>
 
-                <!-- === DETAIL BARCODE === -->
+                {% if material_detail %}
                 <div class="card mt-4">
                     <div class="card-body">
                         <h6 class="fw-bold mb-3">Detail Barcode</h6>
-                        <form>
-                            <div class="row mb-3">
 
-                                <!-- MATERIAL -->
-                                <div class="col-md-6">
-                                    <label class="form-label">Material :</label>
-                                    <input type="text" class="form-control"
-                                        value="{{ material_detail.MAT_CODE }} - {{ material_detail.MAT_SAP_CODE }} - {{ material_detail.MAT_DESC }}"
-                                        readonly>
-                                </div>
-
-                                <!-- MACHINE -->
-                                <div class="col-md-6">
-                                    <label class="form-label">Production Machine :</label>
-                                    <input type="text" class="form-control"
-                                        value="{{ material_detail.pp_code }} - {{ material_detail.mch_code }}" readonly>
-                                </div>
-
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Material :</label>
+                                <input type="text" class="form-control"
+                                    value="{{ material_detail.MAT_CODE }} - {{ material_detail.MAT_SAP_CODE }} - {{ material_detail.MAT_DESC }}"
+                                    readonly>
                             </div>
-                        </form>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Production Machine :</label>
+                                <input type="text" class="form-control"
+                                    value="{{ material_detail.pp_code }} - {{ material_detail.mch_code }}" readonly>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
+                {% endif %}
             </div>
         </div>
 
-        <!-- === TRACING BARCODE === -->
-        {% for row in traceability %}
-        <div class="material-item level-{{ row.level|add:1 }} mb-1">
 
-            <button class="toggle-btn" data-id="{{ forloop.counter }}">▶</button>
+        <!-- TREE -->
+        <div class="card">
+            <div class="card-body">
 
-            {% if row.baris1 %}
-            {{ row.baris1.TRC_SO_CODE }} -
-            ({{ row.baris1.SFC_DESC }}) -
-            {{ row.baris1.TRC_MAT_SAP_CODE }} -
-            {{ row.baris1.MAT_DESC }}
-            {% endif %}
+                {% for row in traceability %}
+                <div class="material-item level-{{ row.level|add:1 }} mb-1">
 
-            <!-- Tombol Detail -->
-            <button type="button" 
-                class="btn btn-sm btn-info ms-2 show-detail"
-                data-pp="{{ row.TRC_PP_CODE }}"
-                data-ppdesc="{{ row.PP_DESC }}"
-                data-mch="{{ row.TRC_MCH_CODE }}"
-                data-sfc="{{ row.SFC_DESC }}"
-                data-mat="{{ row.MAT_CODE }}"
-                data-matsap="{{ row.MAT_SAP_CODE }}"
-                data-start="{{ row.TRC_START_TIME }}"
-                data-end="{{ row.TRC_END_TIME }}"
-                data-wm="{{ row.WM_NAME }}">
-                Detail
-            </button>
+                    <button class="toggle-btn">▶</button>
 
-            <br>
+                    <!-- ===== BARIS 1 ===== -->
+                    {% if row.baris1 %}
+                    <div class="baris1 clickable-detail"
+                        data-so="{{ row.baris1.TRC_SO_CODE }} {{ row.baris1.TRC_CU_EXT_PROGR }}"
+                        data-phase="{{ row.baris1.TRC_FL_PHASE }}"
+                        data-pp="{{ row.baris1.TRC_PP_CODE }} - {{ row.baris1.PP_DESC }}"
+                        data-machine="{{ row.baris1.TRC_MCH_CODE }}" data-sfc="{{ row.baris1.SFC_DESC }}"
+                        data-matcode="{{ row.baris1.MAT_CODE }}" data-matsap="{{ row.baris1.TRC_MAT_SAP_CODE }}"
+                        data-start="{{ row.baris1.TRC_START_TIME }}" data-end="{{ row.baris1.TRC_END_TIME }}"
+                        data-worker="{{ row.baris1.WM_NAME }}">
 
-            {% if row.baris2 %}
-            <div class="baris2-wrapper ms-4 mt-1">
-                {% for b2 in row.baris2 %}
-                <div class="baris2 mb-1">
-                    {{ b2.TRC_PP_CODE }} -
-                    {{ b2.TRC_MCH_CODE }} -
-                    {{ b2.MT_DESC }}
+
+                        ({{ row.baris1.TRC_SO_CODE }} - {{ row.baris1.TRC_CU_EXT_PROGR }})
+                        ({{ row.baris1.SFC_DESC }}) -
+                        {{ row.baris1.TRC_MAT_SAP_CODE }} -
+                        {{ row.baris1.MAT_DESC }}
+                    </div>
+                    {% endif %}
+
+                    <!-- ===== BARIS 2 ===== -->
+                    {% if row.baris2 %}
+                    <div class="baris2-wrapper ms-4 mt-1">
+
+                        {% for b2 in row.baris2 %}
+                        <div class="baris2 clickable-detail" data-so="{{ b2.TRC_SO_CODE }} {{ b2.TRC_CU_EXT_PROGR }}"
+                            data-phase="{{ b2.TRC_FL_PHASE }}" data-pp="{{ b2.TRC_PP_CODE }} - {{ b2.PP_DESC }}"
+                            data-machine="{{ b2.TRC_MCH_CODE }}" data-sfc="{{ b2.SFC_DESC }}"
+                            data-matcode="{{ b2.MAT_CODE }}" data-matsap="{{ b2.TRC_MAT_SAP_CODE }}"
+                            data-start="{{ b2.TRC_START_TIME }}" data-end="{{ b2.TRC_END_TIME }}"
+                            data-worker="{{ b2.WM_NAME }}">
+                            {{ b2.TRC_PP_CODE }} - {{ b2.TRC_MCH_CODE }} - {{ b2.MT_DESC }}
+                        </div>
+                        {% endfor %}
+
+                    </div>
+                    {% endif %}
+
                 </div>
                 {% endfor %}
+
             </div>
-            {% endif %}
         </div>
-        {% endfor %}
 
     </div>
 </div>
 
-<!-- ===== MODAL DETAIL ===== -->
+
+
+<!-- ================= MODAL ================= -->
 <div class="modal fade" id="detailModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Detail Tracing</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <div id="modalContent"></div>
-      </div>
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Detail</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <table class="table table-bordered">
+                    <tbody>
+                        <tr>
+                            <td><b>SO Code</b></td>
+                            <td id="d_so"></td>
+                        </tr>
+                        <tr>
+                            <td><b>FL Phase</b></td>
+                            <td id="d_phase"></td>
+                        </tr>
+                        <tr>
+                            <td><b>Production Phase</b></td>
+                            <td id="d_pp"></td>
+                        </tr>
+                        <tr>
+                            <td><b>Machine</b></td>
+                            <td id="d_machine"></td>
+                        </tr>
+                        <tr>
+                            <td><b>Area </b></td>
+                            <td id="d_sfc"></td>
+                        </tr>
+                        <tr>
+                            <td><b>Material Code</b></td>
+                            <td id="d_matcode"></td>
+                        </tr>
+                        <tr>
+                            <td><b>Material SAP</b></td>
+                            <td id="d_matsap"></td>
+                        </tr>
+                        <tr>
+                            <td><b>Start Time</b></td>
+                            <td id="d_start"></td>
+                        </tr>
+                        <tr>
+                            <td><b>End Time</b></td>
+                            <td id="d_end"></td>
+                        </tr>
+                        <tr>
+                            <td><b>Worker</b></td>
+                            <td id="d_worker"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
-<!-- JS  -->
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
+<!-- ================= POPUP DETAIL JS ================= -->
 <script>
-    // ======= SCRIPT MODAL DETAIL =======
-    document.addEventListener("DOMContentLoaded", () => {
-        document.querySelectorAll(".show-detail").forEach(btn => {
-            btn.addEventListener("click", () => {
+    document.querySelectorAll(".clickable-detail").forEach(el => {
+        el.addEventListener("click", () => {
 
-                let detail = JSON.parse(document.getElementById(btn.dataset.detail).textContent);
+            document.getElementById("d_so").textContent = el.dataset.so || "";
+            document.getElementById("d_phase").textContent = el.dataset.phase || "";
+            document.getElementById("d_pp").textContent = el.dataset.pp || "";
+            document.getElementById("d_machine").textContent = el.dataset.machine || "";
+            document.getElementById("d_sfc").textContent = el.dataset.sfc || "";
+            document.getElementById("d_matcode").textContent = el.dataset.matcode || "";
+            document.getElementById("d_matsap").textContent = el.dataset.matsap || "";
+            document.getElementById("d_start").textContent = el.dataset.start || "";
+            document.getElementById("d_end").textContent = el.dataset.end || "";
+            document.getElementById("d_worker").textContent = el.dataset.worker || "";
 
-                let html = `
-                    <b>Material:</b> ${detail.baris1.TRC_MAT_SAP_CODE} - ${detail.baris1.MAT_DESC}<br>
-                    <b>SO Code:</b> ${detail.baris1.TRC_SO_CODE}<br>
-                    <b>SFC:</b> ${detail.baris1.SFC_DESC}<br><br>
-                `;
-
-                if (detail.baris2 && detail.baris2.length > 0) {
-                    html += `<b>Machine Detail:</b><br>`;
-                    detail.baris2.forEach(b2 => {
-                        html += `${b2.TRC_PP_CODE} - ${b2.TRC_MCH_CODE} - ${b2.MT_DESC}<br>`;
-                    });
-                }
-
-                document.getElementById("modalContent").innerHTML = html;
-
-                new bootstrap.Modal(document.getElementById("detailModal")).show();
-            });
-        });
-    });
-</script>
-
-<!-- JS Toggle (samakan persis dengan menu Materials) -->
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        document.querySelectorAll(".material-item.level-1").forEach(item => item.style.display = "block");
-
-        document.querySelectorAll(".toggle-btn").forEach(btn => {
-            btn.addEventListener("click", function () {
-                let currentItem = this.closest(".material-item");
-                let currentLevel = parseInt(currentItem.className.match(/level-(\d+)/)[1]);
-                let next = currentItem.nextElementSibling;
-                let isExpanding = this.textContent === "▶";
-                this.textContent = isExpanding ? "▼" : "▶";
-
-                while (next && next.classList.contains("material-item")) {
-                    let level = parseInt(next.className.match(/level-(\d+)/)[1]);
-                    if (level <= currentLevel) break;
-                    if (level === currentLevel + 1) next.style.display = isExpanding ? "block" : "none";
-                    if (!isExpanding && level > currentLevel) {
-                        let toggle = next.querySelector(".toggle-btn");
-                        if (toggle) toggle.textContent = "▶";
-                        next.style.display = "none";
-                    }
-                    next = next.nextElementSibling;
-                }
-            });
+            new bootstrap.Modal(document.getElementById("detailModal")).show();
         });
     });
 </script>
 
 
 
-<!-- JS SELECT2-->
+
+<!-- ================= TREE TOGGLE JS ================= -->
+<script>
+    document.querySelectorAll(".material-item.level-1").forEach(i => i.style.display = "block");
+
+    document.querySelectorAll(".toggle-btn").forEach(btn => {
+        btn.addEventListener("click", function () {
+
+            let currentItem = this.closest(".material-item");
+            let currentLevel = parseInt(currentItem.className.match(/level-(\d+)/)[1]);
+            let expand = this.textContent === "▶";
+
+            this.textContent = expand ? "▼" : "▶";
+
+            let next = currentItem.nextElementSibling;
+
+            while (next && next.classList.contains("material-item")) {
+                let nl = parseInt(next.className.match(/level-(\d+)/)[1]);
+                if (nl <= currentLevel) break;
+
+                if (nl === currentLevel + 1)
+                    next.style.display = expand ? "block" : "none";
+
+                if (!expand && nl > currentLevel) {
+                    let t = next.querySelector(".toggle-btn");
+                    if (t) t.textContent = "▶";
+                    next.style.display = "none";
+                }
+
+                next = next.nextElementSibling;
+            }
+
+        });
+    });
+</script>
+
+
 <script>
     $('#barcode').select2();
-    $('#reset').select2();
-    $('submit').select2();
 </script>
+
 {% endblock %}
 
 
