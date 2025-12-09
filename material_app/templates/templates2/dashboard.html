@@ -183,21 +183,6 @@
       <div class="col-lg-10 mb-4">
         <div class="card border border-secondary p-3 h-100" style="background-color: rgba(0, 88, 203, 0.445);">
           <form method="get" class="row g-3 align-items-end" id="productionForm">
-
-            <!-- Tanggal Produksi -->
-            <!-- <div class="col-md-4">
-              <label class="form-label fw-bold text-white mb-1">Production Date :</label>
-              <select name="ps_date" id="ps_date" class="form-control bg-dark text-white border-secondary"
-                onchange="this.form.submit()">
-                <option value="">-- Pilih Tanggal --</option>
-                {% for tgl in daftar_tanggal %}
-                <option value="{{ tgl|date:'Y-m-d' }}" {% if selected_ps_date == tgl|date:'Y-m-d' %}selected{% endif %}>
-                  {{ tgl|date:"Y-m-d" }}
-                </option>
-                {% endfor %}
-              </select>
-            </div> -->
-
             <!-- Start Date -->
             <div class="col-md-3">
               <label for="start" class="form-label fw-bold text-white">From :</label>
@@ -207,9 +192,9 @@
 
             <!-- End Date -->
             <div class="col-md-3">
-              <label for="end" class="form-label fw-bold text-white">From :</label>
-              <input type="date" name="end_date" id="end_date" class="form-control" lang="id" placeholder="dd-mm-yyyy"
-                value="{{ selected_start_date|default:'' }}">
+              <label for="end" class="form-label fw-bold text-white">To :</label>
+              <input type="date" name="end_date" id="end_date" class="form-control" lang="id"
+                placeholder="dd-mm-yyyy" value="{{ selected_end_date|default:'' }}">
             </div>
 
             <!-- SFC (area)-->
@@ -219,8 +204,8 @@
                 <option value="">-- Pilih Area --</option>
                 {% for sfc in sfc_list %}
                 <option value="{{ sfc.SFC_CODE }}" {% if sfc.SFC_CODE == selected_sfc %}selected{% endif %}>
-                  {% if sfc.SFC_CODE == "AL" %}AL (Building)
-                  {% elif sfc.SFC_CODE == "AX" %}AX (Curing)
+                  {% if sfc.SFC_CODE == "AL" %} AL (Building)
+                  {% elif sfc.SFC_CODE == "AX" %} AX (Curing)
                   {% else %}{{ sfc.SFC_CODE }}{% endif %}
                 </option>
                 {% endfor %}
@@ -305,10 +290,8 @@
         </table>
       </div>
     </div>
-
   </div>
 </div>
-
 
 <!-- JS  -->
 <script src="https://code.jquery.com/jquery-3.7.1.js"></script>

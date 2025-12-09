@@ -211,144 +211,194 @@ def dashboard(request):
 
 
 
-    # =========================== PRODUCTION DATA DASHBOARD ===========================
-    ps_date = request.GET.get('ps_date')
-    sfc_code = request.GET.get('sfc_code')  
-    mat_sap_code = request.GET.get('mat_sap_code')
 
-    # Filter Tanggal
-    daftar_tanggal = DC_PRODUCTION_DATA.objects.values_list('PS_DATE', flat=True).distinct().order_by('-PS_DATE')
 
-    # sfc_list = MD_SEMI_FINISHED_CLASSES.objects.all().order_by('SFC_CODE')
-    sfc_list = MD_SEMI_FINISHED_CLASSES.objects.filter(SFC_CODE__in=['AL','AX']).order_by('SFC_CODE')
 
-    # List MAT SAP
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ================= PRODUCTION DATA DASHBOARD =================
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    sfc_code = request.GET.get('sfc_code') or None
+    mat_sap_code = request.GET.get('mat_sap_code') or None
+
+    sfc_list = MD_SEMI_FINISHED_CLASSES.objects.filter(
+        SFC_CODE__in=['AL', 'AX']
+    ).order_by('SFC_CODE')
+
     daftar_mat_sap = []
-
-    # Inisialisasi variabel
     tabel_data = []
     total_quantity = 0
-    selected_dt = None
 
-    # Ambil daftar MAT SAP Code jika ps_date dan sfc_code dipilih
-    if ps_date and sfc_code:
+    start_dt = end_dt = None
+    if start_date and end_date:
         try:
-            selected_dt = datetime.strptime(ps_date, "%Y-%m-%d").date()
-
-            # Ambil semua MAT_SAP_CODE terkait SFC yang ada produksi pada tanggal itu
-            mat_sap_codes = DC_PRODUCTION_DATA.objects.filter(
-                PS_DATE__date=selected_dt,
-                MAT_SAP_CODE__in=MD_MATERIALS.objects.filter(SFC_CODE=sfc_code).values_list('MAT_SAP_CODE', flat=True)
-            ).values_list('MAT_SAP_CODE', flat=True)
-
-            # Hapus duplikat di Python
-            mat_sap_codes = list(set(mat_sap_codes))
-
-            # Ambil data lengkap dari MD_MATERIALS
-            daftar_mat_sap = MD_MATERIALS.objects.filter(MAT_SAP_CODE__in=mat_sap_codes).order_by('MAT_SAP_CODE')
-
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+            end_dt = datetime.strptime(end_date, "%Y-%m-%d")
         except ValueError:
-            selected_dt = None
+            pass
 
-    
-    # Data Tabel Produksi
-    if ps_date and sfc_code:
-        try:
-            if not selected_dt:
-                selected_dt = datetime.strptime(ps_date, "%Y-%m-%d").date()
+    if start_dt and end_dt:
 
-            # Filter data sesuai kondisi
-            filter_kwargs = {
-                'PS_DATE__date': selected_dt,
-            }
+        produksi_qs_base = DC_PRODUCTION_DATA.objects.filter(
+            PS_DATE__date__range=(start_dt.date(), end_dt.date())
+        )
 
-            # Kalau mat_sap_code dipilih → filter spesifik, kalau tidak → ambil semua dari SFC
-            if mat_sap_code:
-                filter_kwargs['MAT_SAP_CODE'] = mat_sap_code
+        # =======================
+        # FILTER SFC CODE
+        # =======================
+        if sfc_code and sfc_code.strip() != "":
+            mat_codes_area = list(
+                MD_MATERIALS.objects.filter(SFC_CODE=sfc_code)
+                .values_list("MAT_SAP_CODE", flat=True)
+            )
+
+            if mat_codes_area:
+                produksi_qs_base = produksi_qs_base.extra(
+                    where=[
+                        "MAT_SAP_CODE COLLATE SQL_Latin1_General_CP1_CI_AS IN (%s)" %
+                        ",".join(["'%s'" % c for c in mat_codes_area])
+                    ]
+                )
+
+        # =======================
+        # DROPDOWN MAT_SAP_CODE
+        # =======================
+        prod_codes = list(
+            produksi_qs_base.values_list("MAT_SAP_CODE", flat=True).distinct()
+        )
+
+        if prod_codes:
+            daftar_mat_sap_qs = MD_MATERIALS.objects.extra(
+                where=[
+                    "MAT_SAP_CODE COLLATE SQL_Latin1_General_CP1_CI_AS IN (%s)" %
+                    ",".join(["'%s'" % c for c in prod_codes])
+                ]
+            ).order_by("MAT_SAP_CODE")
+
+            daftar_mat_sap = list(daftar_mat_sap_qs)
+
+        # =======================
+        # FILTER MAT_SAP_CODE
+        # =======================
+        if mat_sap_code and mat_sap_code.strip() != "":
+            produksi_qs_base = produksi_qs_base.extra(
+                where=[
+                    "MAT_SAP_CODE COLLATE SQL_Latin1_General_CP1_CI_AS = %s"
+                ],
+                params=[mat_sap_code]
+            )
+
+        # =======================
+        # DATA PRODUKSI
+        # =======================
+        produksi_qs = produksi_qs_base.values(
+            "MAT_SAP_CODE", "MCH_CODE", "PS_START_PROD", "PS_END_PROD",
+            "PS_DATE", "SHF_CODE", "PS_QUANTITY"
+        ).order_by("PS_START_PROD")
+
+        mat_codes = [row["MAT_SAP_CODE"] for row in produksi_qs]
+
+        # =======================
+        # MAP MATERIAL
+        # =======================
+        if mat_codes:
+            mat_map = dict(
+                MD_MATERIALS.objects.extra(
+                    where=[
+                        "MAT_SAP_CODE COLLATE SQL_Latin1_General_CP1_CI_AS IN (%s)" %
+                        ",".join(["'%s'" % c for c in mat_codes])
+                    ]
+                ).values_list("MAT_SAP_CODE", "MAT_CODE")
+            )
+
+            sfc_map = dict(
+                MD_MATERIALS.objects.extra(
+                    where=[
+                        "MAT_SAP_CODE COLLATE SQL_Latin1_General_CP1_CI_AS IN (%s)" %
+                        ",".join(["'%s'" % c for c in mat_codes])
+                    ]
+                ).values_list("MAT_SAP_CODE", "SFC_CODE")
+            )
+        else:
+            mat_map = {}
+            sfc_map = {}
+
+        sfc_desc_map = dict(
+            MD_SEMI_FINISHED_CLASSES.objects.values_list("SFC_CODE", "SFC_DESC")
+        )
+
+        # =======================
+        # GENERATE TABEL
+        # =======================
+        for row in produksi_qs:
+            start = row["PS_START_PROD"]
+            end = row["PS_END_PROD"]
+
+            if isinstance(start, datetime) and isinstance(end, datetime):
+                duration_sec = max((end - start).total_seconds(), 0)
+                h = int(duration_sec // 3600)
+                m = int((duration_sec % 3600) // 60)
+                s = int(duration_sec % 60)
+                durasi_hms = f"{h:02d}:{m:02d}:{s:02d}"
             else:
-                mat_codes = MD_MATERIALS.objects.filter(SFC_CODE=sfc_code).values_list('MAT_SAP_CODE', flat=True)
-                filter_kwargs['MAT_SAP_CODE__in'] = mat_codes
+                durasi_hms = "00:00:00"
 
-            produksi_qs = DC_PRODUCTION_DATA.objects.filter(**filter_kwargs).values(
-                'MAT_SAP_CODE', 'MCH_CODE', 'PS_START_PROD', 'PS_END_PROD', 'PS_DATE', 'SHF_CODE', 'PS_QUANTITY'
-            ).order_by('PS_START_PROD')
+            tabel_data.append({
+                "mat_code": mat_map.get(row["MAT_SAP_CODE"]),
+                "mat_sap_code": row["MAT_SAP_CODE"],
+                "mch_code": row["MCH_CODE"],
+                "sfc_code": sfc_map.get(row["MAT_SAP_CODE"]),
+                "sfc_desc": sfc_desc_map.get(sfc_map.get(row["MAT_SAP_CODE"]), ""),
+                "ps_start_prod": start,
+                "ps_end_prod": end,
+                "ps_date": row["PS_DATE"],
+                "durasi_hms": durasi_hms,
+                "ps_quantity": int(row["PS_QUANTITY"] or 0),
+                "shf_code": row["SHF_CODE"],
+            })
 
-            # Mapping MAT -> SFC
-            mat_sfc_map = dict(MD_MATERIALS.objects.filter(
-                MAT_SAP_CODE__in=[row['MAT_SAP_CODE'] for row in produksi_qs]
-            ).values_list('MAT_SAP_CODE', 'SFC_CODE'))
+        total_quantity = sum(int(r["ps_quantity"] or 0) for r in tabel_data)
 
-            # Mapping SFC -> DESC
-            sfc_desc_map = dict(MD_SEMI_FINISHED_CLASSES.objects.filter(
-                SFC_CODE__in=set(mat_sfc_map.values())
-            ).values_list('SFC_CODE', 'SFC_DESC'))
-
-            for row in produksi_qs:
-                start, end = row['PS_START_PROD'], row['PS_END_PROD']
-
-                # Hitung durasi HH:MM:SS
-                if isinstance(start, datetime) and isinstance(end, datetime):
-                    durasi_seconds = max((end - start).total_seconds(), 0)
-                    hours = int(durasi_seconds // 3600)
-                    minutes = int((durasi_seconds % 3600) // 60)
-                    seconds = int(durasi_seconds % 60)
-                    durasi_hms = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
-                else:
-                    durasi_hms = "00:00:00"
-
-                sfc_code_row = mat_sfc_map.get(row['MAT_SAP_CODE'])
-                tabel_data.append({
-                    'ps_date': row['PS_DATE'],
-                    'mat_code': MD_MATERIALS.objects.filter(MAT_SAP_CODE=row['MAT_SAP_CODE']).values_list('MAT_CODE', flat=True).first(),
-                    'mat_sap_code': row['MAT_SAP_CODE'],
-                    'mch_code': row['MCH_CODE'],
-                    'shf_code': row['SHF_CODE'],
-                    'sfc_code': sfc_code_row,
-                    'sfc_desc': sfc_desc_map.get(sfc_code_row, ''),
-                    'ps_start_prod': start,
-                    'ps_end_prod': end,
-                    'durasi_hms': durasi_hms,
-                    'ps_quantity': int(row.get('PS_QUANTITY', 0) or 0)
-
-                })
-
-            # Hitung total_quantity
-            total_quantity = sum([int(row['PS_QUANTITY'] or 0) for row in produksi_qs]) or 0
-
-        except ValueError:
-            selected_dt = None
-
-# Pengatyran terkait data tampil berasarkan tanggal start dan end
-    
 
     context = {
-    'title': 'Dashboard Produksi',
+        'title': 'Dashboard Produksi',
+        'sfc_list': sfc_list,
+        'selected_sfc': sfc_code,
+        'daftar_mat_sap': daftar_mat_sap,
+        'selected_mat_sap': mat_sap_code,
+        'selected_start_date': start_date,
+        'selected_end_date': end_date,
+        'tabel_data': tabel_data,
+        'total_quantity': total_quantity,
 
-    # Production Data
-    'daftar_tanggal': daftar_tanggal,
-    'selected_ps_date': ps_date,
-    'sfc_list': sfc_list, 
-    'selected_sfc': sfc_code,
-    'daftar_mat_sap': daftar_mat_sap,
-    'selected_mat_sap': mat_sap_code,
-    'tabel_data': tabel_data,
-    'total_quantity': total_quantity,
-
-    # Traceability tetap seperti sebelumnya
-    'date_shift_choices': date_shift_choices,
-    'selected_start_date': start_date_raw,
-    'selected_end_date': end_date_raw,
-    'trc_list': trc_list,
-    'selected_pp': selected_pp,
-    'machines': machines,
-    'selected_mch_info': selected_mch_info,
-    'total_consumed': total_consumed,
-    'total_produced': total_produced,
-    'consumed_details': consumed_details,
-    'produced_details': produced_details,
-    'consumed_summary': consumed_summary,
-    'produced_summary': produced_summary,
+        # Traceability tetap seperti sebelumnya
+        'date_shift_choices': date_shift_choices,
+        'selected_start_date': start_date_raw,
+        'selected_end_date': end_date_raw,
+        'trc_list': trc_list,
+        'selected_pp': selected_pp,
+        'machines': machines,
+        'selected_mch_info': selected_mch_info,
+        'total_consumed': total_consumed,
+        'total_produced': total_produced,
+        'consumed_details': consumed_details,
+        'produced_details': produced_details,
+        'consumed_summary': consumed_summary,
+        'produced_summary': produced_summary,
     }
+
     return render(request,'templates2/dashboard.html',context)
 
 
@@ -468,9 +518,6 @@ def get_all_related_material_data(mat_sap_code, visited=None, level=0):
             data += get_all_related_material_data(child_code, visited, level + 1)
     return data
 
-
-
-
 # ================== MENU DAFTAR MATERIALS ==================
 def daftar_materials(request):
     sfc_code = request.GET.get('sfc_code')
@@ -503,137 +550,6 @@ def daftar_materials(request):
         'material_detail': material_detail,
         'material_data': material_data
     })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# ================= MENU PRODUCTIONS ==================
-def daftar_produksi(request):
-    from datetime import datetime
-
-    # ======== DATA DASAR =========
-    sfc_list = MD_SEMI_FINISHED_CLASSES.objects.filter(SFC_CODE__in=['AL', 'AX'])
-    materials = MD_MATERIALS.objects.all()
-
-    # ======== AMBIL FILTER DARI REQUEST =========
-    sfc_code = request.GET.get('sfc_code')
-    mat_info = request.GET.get('mat_info')
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
-    error_message = None
-
-    # ======== VALIDASI DAN KONVERSI FORMAT TANGGAL =========
-    start_dt = None
-    end_dt = None
-
-    if start_date:
-        # format dari <input type="date"> = YYYY-MM-DD
-        try:
-            start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
-        except ValueError:
-            start_dt = None
-
-    if end_date:
-        try:
-            end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
-        except ValueError:
-            end_dt = None
-
-    # Jika dua-duanya valid → cek selisih maksimal 30 hari
-    if start_dt and end_dt:
-        delta_days = (end_dt - start_dt).days
-        if delta_days > 30:
-            error_message = "Rentang tanggal tidak boleh lebih dari 30 hari!"
-            start_dt = None
-            end_dt = None
-
-    # variabel final untuk filter ORM
-    start_date = start_dt
-    end_date = end_dt
-
-    # variabel untuk dikirim balik ke form
-    selected_start_date = start_dt.strftime("%Y-%m-%d") if start_dt else ""
-    selected_end_date = end_dt.strftime("%Y-%m-%d") if end_dt else ""
-
-
-
-
-    # ======== FILTER MATERIAL BERDASARKAN SFC =========
-    if sfc_code:
-        materials = materials.filter(SFC_CODE=sfc_code)
-
-    # ======== TAMBAHKAN FILTER MATERIAL BERDASARKAN TANGGAL & SFC =========
-    if sfc_code and start_date and end_date:
-        sfc_mat_sap_codes = MD_MATERIALS.objects.filter(SFC_CODE=sfc_code).values_list('MAT_SAP_CODE', flat=True)
-
-        produced_mat_sap_codes = DC_PRODUCTION_DATA.objects.filter(
-            PS_DATE__date__gte=start_date,
-            PS_DATE__date__lte=end_date,
-            MAT_SAP_CODE__in=sfc_mat_sap_codes
-        ).values_list('MAT_SAP_CODE', flat=True).distinct()
-
-        materials = materials.filter(MAT_SAP_CODE__in=produced_mat_sap_codes)
-
-    # ======== AMBIL DATA PRODUKSI =========
-    production_list = DC_PRODUCTION_DATA.objects.all().values(
-        'MAT_SAP_CODE',
-        'PP_CODE',
-        'MCH_CODE',
-        'SHF_CODE',
-        'PS_QUANTITY',
-        'PS_START_PROD',
-        'PS_END_PROD',
-        'PS_DATE'
-    )
-
-    # ======== FILTER MATERIAL DI PRODUKSI =========
-    if mat_info:
-        production_list = production_list.filter(MAT_SAP_CODE=mat_info)
-
-
-    # ======== FILTER TANGGAL DI PRODUKSI =========
-    if start_date:
-        production_list = production_list.filter(PS_DATE__date__gte=start_date)
-    if end_date:
-        production_list = production_list.filter(PS_DATE__date__lte=end_date)
-
-    # ======== TAMBAHKAN MAT_CODE =========
-    mat_map = dict(MD_MATERIALS.objects.values_list("MAT_SAP_CODE", "MAT_CODE"))
-    production_list = list(production_list)
-    for p in production_list:
-        p['MAT_CODE'] = mat_map.get(p['MAT_SAP_CODE'], "")
-
-    # ======== CONTEXT KE TEMPLATE =========
-    context = {
-        'sfc_list': sfc_list,
-        'materials': materials,
-        'production_list': production_list,
-        'selected_sfc': sfc_code,
-        'selected_mat_info': mat_info,
-        'selected_start_date': request.GET.get('start_date', ''), 
-        'selected_end_date': request.GET.get('end_date', ''),
-        'error_message': error_message,
-    }
-
-    return render(request, 'daftar_produksi.html', context)
-
-
-
-
-
-
-
-
 
 
 
@@ -1736,79 +1652,83 @@ def traceability_by_materials(request):
 
 
 # ================= TRACING BARCODE ===================
+from django.shortcuts import render
+from .models import (
+    TRC_BASIC_TABLE,
+    MD_MATERIALS,
+    MD_BOM,
+    MD_MACHINE_TYPES,
+    WMS_TRACEABILITY,
+    WMS_TRACEABILITY_CU
+)
 
-# ========================================================
-# 🔁 FUNCTION RECURSIVE UNTUK MENCARI CHILD TREE
-# ========================================================
-def get_child_trace(so_code, cu_ext, level=1):
-    tree_rows = []
-
-    # 1. Cari child SO dan CU di WMS_TRACEABILITY_CU
-    children = WMS_TRACEABILITY_CU.objects.filter(
-        SO_CODE=so_code,
-        CU_EXT_PROGR=cu_ext
-    ).values('CHILD_SO_CODE', 'CHILD_CU_EXT_PROGR')
-
-    for c in children:
-        child_so = c['CHILD_SO_CODE']
-        child_cu = c['CHILD_CU_EXT_PROGR']
-
-        # 2. Cari child detail di WMS_TRACEABILITY phase 'P'
-        wms = WMS_TRACEABILITY.objects.filter(
-            TRC_SO_CODE=child_so,
-            TRC_CU_EXT_PROGR=child_cu,
-            TRC_FL_PHASE='P'
-        ).first()
-
-        if wms:
-            # --- Baris 1 ---
-            mat = MD_MATERIALS.objects.filter(
-                    MAT_SAP_CODE=wms.TRC_MAT_SAP_CODE
-                ).first()
-                
-            sfc_code = mat.SFC_CODE if mat else None
-
-            baris1 = {
-                'TRC_SO_CODE': wms.TRC_SO_CODE,
-                'TRC_CU_EXT_PROGR': wms.TRC_CU_EXT_PROGR,
-                'TRC_MAT_SAP_CODE': wms.TRC_MAT_SAP_CODE,
-                'MAT_DESC': mat.MAT_DESC if mat else '',
-                'SFC_DESC': sfc_code,
-            }
-
-            # --- Baris 2 ---
-            mt_desc = ''
-            bom = MD_BOM.objects.filter(MAT_SAP_CODE=wms.TRC_MAT_SAP_CODE).first()
-            if bom:
-                mt = MD_MACHINE_TYPES.objects.filter(MT_CODE=bom.MT_CODE).first()
-                mt_desc = mt.MT_DESC if mt else ''
-
-            baris2 = [{
-                'TRC_PP_CODE': wms.TRC_PP_CODE,
-                'TRC_MCH_CODE': wms.TRC_MCH_CODE,
-                'MT_DESC': mt_desc
-            }]
-
-            tree_rows.append({
-                'baris1': baris1,
-                'baris2': baris2,
-                'level': level
-            })
-
-            # 3. Recursive untuk mencari child berikutnya
-            tree_rows.extend(get_child_trace(child_so, child_cu, level=level+1))
-
-    return tree_rows
-
-# ========================================================
-# MAIN VIEW
-# ========================================================
-
+# ================= VIEW TRACING BARCODE DENGAN NESTED FUNCTION ===================
 def tracing_barcode(request):
     barcode_list = TRC_BASIC_TABLE.objects.values_list('TRC_BARCODE', flat=True).distinct()
     selected_barcode = request.GET.get('barcode')
     material_detail = None
     traceability = []
+
+    # ================= FUNCTION RECURSIVE ===================
+    def get_child_trace(so_code, cu_ext, level=1):
+        tree_rows = []
+
+        # 1. Cari child SO dan CU di WMS_TRACEABILITY_CU
+        children = WMS_TRACEABILITY_CU.objects.filter(
+            SO_CODE=so_code,
+            CU_EXT_PROGR=cu_ext
+        ).values('CHILD_SO_CODE', 'CHILD_CU_EXT_PROGR')
+
+        for c in children:
+            child_so = c['CHILD_SO_CODE']
+            child_cu = c['CHILD_CU_EXT_PROGR']
+
+            # 2. Cari child detail di WMS_TRACEABILITY phase 'P'
+            wms = WMS_TRACEABILITY.objects.filter(
+                TRC_SO_CODE=child_so,
+                TRC_CU_EXT_PROGR=child_cu,
+                TRC_FL_PHASE='P'
+            ).first()
+
+            if wms:
+                # --- Baris 1 ---
+                mat = MD_MATERIALS.objects.filter(
+                    MAT_SAP_CODE=wms.TRC_MAT_SAP_CODE
+                ).first()
+                sfc_code = mat.SFC_CODE if mat else None
+
+                baris1 = {
+                    'TRC_SO_CODE': wms.TRC_SO_CODE,
+                    'TRC_CU_EXT_PROGR': wms.TRC_CU_EXT_PROGR,
+                    'TRC_MAT_SAP_CODE': wms.TRC_MAT_SAP_CODE,
+                    'MAT_DESC': mat.MAT_DESC if mat else '',
+                    'SFC_DESC': sfc_code,
+                }
+
+                # --- Baris 2 ---
+                mt_desc = ''
+                bom = MD_BOM.objects.filter(MAT_SAP_CODE=wms.TRC_MAT_SAP_CODE).first()
+                if bom:
+                    mt = MD_MACHINE_TYPES.objects.filter(MT_CODE=bom.MT_CODE).first()
+                    mt_desc = mt.MT_DESC if mt else ''
+
+                baris2 = [{
+                    'TRC_PP_CODE': wms.TRC_PP_CODE,
+                    'TRC_MCH_CODE': wms.TRC_MCH_CODE,
+                    'MT_DESC': mt_desc
+                }]
+
+                tree_rows.append({
+                    'baris1': baris1,
+                    'baris2': baris2,
+                    'level': level
+                })
+
+                # 3. Recursive untuk mencari child berikutnya
+                tree_rows.extend(get_child_trace(child_so, child_cu, level=level+1))
+
+        return tree_rows
+    # ================= END OF NESTED FUNCTION ===================
 
     if selected_barcode:
         trc_entry = TRC_BASIC_TABLE.objects.filter(TRC_BARCODE=selected_barcode).first()
@@ -1856,16 +1776,11 @@ def tracing_barcode(request):
                     continue
 
                 # ===== ROOT BARIS 1 =====
-                # =============== BARIS 1 ===============
-                # 1. AMBIL MATERIAL BERDASARKAN TRC_MAT_SAP_CODE DI WMS_TRACEABILITY
                 mat = MD_MATERIALS.objects.filter(
                     MAT_SAP_CODE=wms_root.TRC_MAT_SAP_CODE
                 ).first()
-
-                # 2. AMBIL SFC_CODE DARI MD_MATERIALS
                 sfc_code = mat.SFC_CODE if mat else None
 
-                # 4. SUSUN BARIS 1
                 baris1 = {
                     'TRC_SO_CODE': wms_root.TRC_SO_CODE,
                     'TRC_CU_EXT_PROGR': wms_root.TRC_CU_EXT_PROGR,
@@ -1907,76 +1822,3 @@ def tracing_barcode(request):
         'material_detail': material_detail,
         'traceability': traceability,
     })
-
-
-
-# SELECT [TRC_BARCODE]
-#       ,[PP_CODE]
-#       ,[MCH_CODE]
-#       ,[TRC_TIMESTAMP]
-#       ,[WM_CODE]
-#       ,[TRC_SIDE]
-#       ,[MAT_SAP_CODE]
-#       ,[MAT_VARIANT]
-#       ,[CNT_CODE]
-#       ,[TRC_TYPE]
-#   FROM [PCS].[dbo].[TRC_BASIC_TABLE]
-#   WHERE TRC_BARCODE = '3920241148'
-
-#   SELECT  [MAT_SAP_CODE]
-#       ,[MAT_VARIANT]
-#       ,[CNT_CODE]
-#       ,[LMM_SEQUENCE]
-#       ,[MT_CODE]
-#       ,[BV_STATUS]
-#       ,[CHILD_MAT_SAP_CODE]
-#   FROM [PCS].[dbo].[MD_BOM]
-#   WHERE MAT_SAP_CODE = 'SAL1551A6'
-
-#   SELECT [TRC_PP_CODE]
-#       ,[TRC_MCH_CODE]
-#       ,[TRC_SO_CODE]
-#       ,[TRC_CU_EXT_PROGR]
-#       ,[TRC_START_TIME]
-#       ,[TRC_FL_PHASE]
-#       ,[TRC_END_TIME]
-#       ,[TRC_FL_EMPTY]
-#       ,[TRC_MAT_SAP_CODE]
-#   FROM [PCS].[dbo].[WMS_TRACEABILITY]
-# WHERE TRC_MAT_SAP_CODE IN ('SCP8389A2','STB6272A1','SCE2958A1','STT0907A0','SFB4121A0')
-# AND TRC_MCH_CODE = 'MRU3' AND TRC_PP_CODE = 'B02' AND TRC_FL_EMPTY = 'T'
-
-#  SELECT [TRC_PP_CODE]
-#       ,[TRC_MCH_CODE]
-#       ,[TRC_SO_CODE]
-#       ,[TRC_CU_EXT_PROGR]
-#       ,[TRC_FL_PHASE]
-#       ,[TRC_CNT_CODE]
-#       ,[TRC_FL_EMPTY]
-#       ,[TRC_MAT_SAP_CODE]
-#       ,[TRC_WM_CODE]
-#   FROM [PCS].[dbo].[WMS_TRACEABILITY]
-#   WHERE TRC_SO_CODE = '00TB' AND TRC_CU_EXT_PROGR = '01CD1I' AND TRC_FL_PHASE = 'P'
-
-#   SELECT TOP (1000) [SO_CODE]
-#       ,[CU_EXT_PROGR]
-#       ,[CHILD_CU_CODE]
-#       ,[CHILD_SO_CODE]
-#       ,[CHILD_CU_EXT_PROGR]
-#       ,[PP_CODE]
-#       ,[MCH_CODE]
-#       ,[MAT_SAP_CODE]
-#   FROM [PCS].[dbo].[WMS_TRACEABILITY_CU]
-#   WHERE SO_CODE = '00TB' AND CU_EXT_PROGR = '01CD1I'
-
-#   SELECT [TRC_PP_CODE]
-#       ,[TRC_MCH_CODE]
-#       ,[TRC_SO_CODE]
-#       ,[TRC_CU_EXT_PROGR]
-#       ,[TRC_FL_PHASE]
-#       ,[TRC_CNT_CODE]
-#       ,[TRC_FL_EMPTY]
-#       ,[TRC_MAT_SAP_CODE]
-#       ,[TRC_WM_CODE]
-#   FROM [PCS].[dbo].[WMS_TRACEABILITY]
-#   WHERE TRC_SO_CODE = '00TT' AND TRC_CU_EXT_PROGR = '0012QP' AND TRC_FL_PHASE = 'P'

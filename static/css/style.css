@@ -86,11 +86,6 @@ footer {
 }
 
 
-
-
-
-
-
 /* ---------- CSS Form Label ---------- */
 .form-label{
     color: #000;
@@ -136,16 +131,13 @@ footer {
         margin-left: 20em;
     }
 
-    
     .level-7 {
         margin-left: 24em;
     }
+    
     .level-8 {
         margin-left: 28em;
     }
-
-
-
 
   .baris2 {
     display: block;

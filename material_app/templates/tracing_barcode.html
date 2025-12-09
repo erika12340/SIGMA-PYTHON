@@ -3,7 +3,6 @@
 
 <div class="container">
     <h3 class="judul mb-4">TRACING BARCODE BUILDING</h3>
-
     <!-- FILTER -->
     <div class="container mt-4">
         <div class="card mb-4 shadow-sm">
@@ -65,60 +64,102 @@
         </div>
 
         <!-- === TRACING BARCODE === -->
-        {% if traceability %}
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title mb-3">Data Tracing</h5>
-                <div id="material-tree" class="overflow-auto border rounded p-2" style="max-height: 500px;">
-                    {% for row in traceability %}
-                    <div class="material-item level-{{ row.level|add:1 }} mb-1">
-                        <button class="toggle-btn" data-id="{{ forloop.counter }}">▶</button>
+        {% for row in traceability %}
+        <div class="material-item level-{{ row.level|add:1 }} mb-1">
 
-                        <!-- ===== BARIS 1 ===== -->
-                        {% if row.baris1 %}
-                        {{ row.baris1.TRC_SO_CODE }}{{ row.baris1.TRC_CU_EXT_PROGR }} -
-                        ({{ row.baris1.SFC_DESC }}) -
-                        {{ row.baris1.TRC_MAT_SAP_CODE }} -
-                        {{ row.baris1.MAT_DESC }}
-                        {% endif %}
-                        <br>
+            <button class="toggle-btn" data-id="{{ forloop.counter }}">▶</button>
 
-                        <!-- ===== BARIS 2 ===== -->
-                        {% if row.baris2 %}
-                        <div class="baris2-wrapper ms-4 mt-1">
-                            {% for b2 in row.baris2 %}
-                            <div class="baris2 mb-1">
-                                {{ b2.TRC_PP_CODE }} -
-                                {{ b2.TRC_MCH_CODE }} -
-                                {{ b2.MT_DESC }}
-                            </div>
-                            {% endfor %}
-                        </div>
+            {% if row.baris1 %}
+            {{ row.baris1.TRC_SO_CODE }} -
+            ({{ row.baris1.SFC_DESC }}) -
+            {{ row.baris1.TRC_MAT_SAP_CODE }} -
+            {{ row.baris1.MAT_DESC }}
+            {% endif %}
 
-                        {% endif %}
-                    </div>
-                    {% endfor %}
+            <!-- Tombol Detail -->
+            <button type="button" 
+                class="btn btn-sm btn-info ms-2 show-detail"
+                data-pp="{{ row.TRC_PP_CODE }}"
+                data-ppdesc="{{ row.PP_DESC }}"
+                data-mch="{{ row.TRC_MCH_CODE }}"
+                data-sfc="{{ row.SFC_DESC }}"
+                data-mat="{{ row.MAT_CODE }}"
+                data-matsap="{{ row.MAT_SAP_CODE }}"
+                data-start="{{ row.TRC_START_TIME }}"
+                data-end="{{ row.TRC_END_TIME }}"
+                data-wm="{{ row.WM_NAME }}">
+                Detail
+            </button>
+
+            <br>
+
+            {% if row.baris2 %}
+            <div class="baris2-wrapper ms-4 mt-1">
+                {% for b2 in row.baris2 %}
+                <div class="baris2 mb-1">
+                    {{ b2.TRC_PP_CODE }} -
+                    {{ b2.TRC_MCH_CODE }} -
+                    {{ b2.MT_DESC }}
                 </div>
+                {% endfor %}
             </div>
+            {% endif %}
         </div>
-        {% endif %}
+        {% endfor %}
+
     </div>
+</div>
+
+<!-- ===== MODAL DETAIL ===== -->
+<div class="modal fade" id="detailModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Detail Tracing</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="modalContent"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- JS  -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.datatables.net/2.3.2/js/dataTables.js"></script>
-<script src="https://cdn.datatables.net/buttons/3.2.4/js/dataTables.buttons.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
-<script src="https://cdn.datatables.net/buttons/3.2.4/js/buttons.html5.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+    // ======= SCRIPT MODAL DETAIL =======
+    document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll(".show-detail").forEach(btn => {
+            btn.addEventListener("click", () => {
+
+                let detail = JSON.parse(document.getElementById(btn.dataset.detail).textContent);
+
+                let html = `
+                    <b>Material:</b> ${detail.baris1.TRC_MAT_SAP_CODE} - ${detail.baris1.MAT_DESC}<br>
+                    <b>SO Code:</b> ${detail.baris1.TRC_SO_CODE}<br>
+                    <b>SFC:</b> ${detail.baris1.SFC_DESC}<br><br>
+                `;
+
+                if (detail.baris2 && detail.baris2.length > 0) {
+                    html += `<b>Machine Detail:</b><br>`;
+                    detail.baris2.forEach(b2 => {
+                        html += `${b2.TRC_PP_CODE} - ${b2.TRC_MCH_CODE} - ${b2.MT_DESC}<br>`;
+                    });
+                }
+
+                document.getElementById("modalContent").innerHTML = html;
+
+                new bootstrap.Modal(document.getElementById("detailModal")).show();
+            });
+        });
+    });
+</script>
 
 <!-- JS Toggle (samakan persis dengan menu Materials) -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        // Tampilkan semua level-1 (root) awal
         document.querySelectorAll(".material-item.level-1").forEach(item => item.style.display = "block");
 
         document.querySelectorAll(".toggle-btn").forEach(btn => {
@@ -132,8 +173,7 @@
                 while (next && next.classList.contains("material-item")) {
                     let level = parseInt(next.className.match(/level-(\d+)/)[1]);
                     if (level <= currentLevel) break;
-                    if (level === currentLevel + 1) next.style.display = isExpanding ? "block" :
-                        "none";
+                    if (level === currentLevel + 1) next.style.display = isExpanding ? "block" : "none";
                     if (!isExpanding && level > currentLevel) {
                         let toggle = next.querySelector(".toggle-btn");
                         if (toggle) toggle.textContent = "▶";
@@ -146,6 +186,8 @@
     });
 </script>
 
+
+
 <!-- JS SELECT2-->
 <script>
     $('#barcode').select2();
@@ -153,6 +195,24 @@
     $('submit').select2();
 </script>
 {% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
