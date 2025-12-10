@@ -131,7 +131,6 @@
                 <div class="material-item level-{{ row.level|add:1 }} mb-2">
                     <div class="d-flex align-items-start">
                         <button class="toggle-btn me-2" data-id="{{ forloop.counter }}">▶</button>
-                        
                         <div class="baris1">
                             {% if row.baris1 %}
                             <strong>{{ row.baris1.TRC_SO_CODE }}</strong>
@@ -142,7 +141,6 @@
                             ({{ row.baris1.TRC_WM_CODE }} - {{ row.baris1.WM_NAME }})
                             {% endif %}
                         </div>
-                        
                     </div>
 
                     {% if row.baris2 %}
