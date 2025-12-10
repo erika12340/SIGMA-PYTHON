@@ -8,6 +8,7 @@
     <div class="container mt-4">
         <div class="card mb-4 shadow-sm">
             <div class="card-body">
+
                 <!-- === FORM BARCODE === -->
                 <form method="get" action="tracing_barcode" class="row g-3">
 
@@ -58,16 +59,15 @@
             </div>
         </div>
 
+
         <!-- TREE -->
         <div class="card">
             <div class="card-body">
-            <div id="material-tree" class="overflow-auto border rounded p-2 " style="max-height: 500px;">
 
                 {% for row in traceability %}
-                <div class="material-item level-{{ row.level|add:1 }} mb-2">
-                    <div class="d-flex align-items-start">
-                    <button class="toggle-btn me-2" data-id="{{ forloop.counter }}">▶</button>
-                    <div class="d-flex align-items-start">
+                <div class="material-item level-{{ row.level|add:1 }} mb-1">
+
+                    <button class="toggle-btn">▶</button>
 
                     <!-- ===== BARIS 1 ===== -->
                     {% if row.baris1 %}
@@ -79,7 +79,8 @@
                         data-matcode="{{ row.baris1.MAT_CODE }}" data-matsap="{{ row.baris1.TRC_MAT_SAP_CODE }}"
                         data-start="{{ row.baris1.TRC_START_TIME }}" data-end="{{ row.baris1.TRC_END_TIME }}"
                         data-worker="{{ row.baris1.WM_NAME }}">
-                        
+
+
                         ({{ row.baris1.TRC_SO_CODE }} - {{ row.baris1.TRC_CU_EXT_PROGR }})
                         ({{ row.baris1.SFC_DESC }}) -
                         {{ row.baris1.TRC_MAT_SAP_CODE }} -
@@ -90,31 +91,27 @@
                     <!-- ===== BARIS 2 ===== -->
                     {% if row.baris2 %}
                     <div class="baris2-wrapper ms-4 mt-1">
+
                         {% for b2 in row.baris2 %}
-                        <div class="baris2 mb-1 clickable-detail" 
-
-                            data-so="{{ b2.TRC_SO_CODE }} {{ b2.TRC_CU_EXT_PROGR }}"
-                            data-phase="{{ b2.TRC_FL_PHASE }}" 
-                            data-pp="{{ b2.TRC_PP_CODE }} - {{ b2.PP_DESC }}"
-                            data-machine="{{ b2.TRC_MCH_CODE }}" 
-                            data-sfc="{{ b2.SFC_DESC }}"
-                            data-matcode="{{ b2.MAT_CODE }}" 
-                            data-matsap="{{ b2.TRC_MAT_SAP_CODE }}"
-                            data-start="{{ b2.TRC_START_TIME }}" 
-                            data-end="{{ b2.TRC_END_TIME }}"
+                        <div class="baris2 clickable-detail" data-so="{{ b2.TRC_SO_CODE }} {{ b2.TRC_CU_EXT_PROGR }}"
+                            data-phase="{{ b2.TRC_FL_PHASE }}" data-pp="{{ b2.TRC_PP_CODE }} - {{ b2.PP_DESC }}"
+                            data-machine="{{ b2.TRC_MCH_CODE }}" data-sfc="{{ b2.SFC_DESC }}"
+                            data-matcode="{{ b2.MAT_CODE }}" data-matsap="{{ b2.TRC_MAT_SAP_CODE }}"
+                            data-start="{{ b2.TRC_START_TIME }}" data-end="{{ b2.TRC_END_TIME }}"
                             data-worker="{{ b2.WM_NAME }}">
-
                             {{ b2.TRC_PP_CODE }} - {{ b2.TRC_MCH_CODE }} - {{ b2.MT_DESC }}
                         </div>
                         {% endfor %}
+
                     </div>
                     {% endif %}
-                    </div>
+
                 </div>
                 {% endfor %}
-            </div>
+
             </div>
         </div>
+
     </div>
 </div>
 
@@ -207,31 +204,35 @@
 
 <!-- ================= TREE TOGGLE JS ================= -->
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        // Tampilkan semua level-1 (root) awal
-        document.querySelectorAll(".material-item.level-1").forEach(item => item.style.display = "block");
+    document.querySelectorAll(".material-item.level-1").forEach(i => i.style.display = "block");
 
-        document.querySelectorAll(".toggle-btn").forEach(btn => {
-            btn.addEventListener("click", function () {
-                let currentItem = this.closest(".material-item");
-                let currentLevel = parseInt(currentItem.className.match(/level-(\d+)/)[1]);
-                let next = currentItem.nextElementSibling;
-                let isExpanding = this.textContent === "▶";
-                this.textContent = isExpanding ? "▼" : "▶";
+    document.querySelectorAll(".toggle-btn").forEach(btn => {
+        btn.addEventListener("click", function () {
 
-                while (next && next.classList.contains("material-item")) {
-                    let level = parseInt(next.className.match(/level-(\d+)/)[1]);
-                    if (level <= currentLevel) break;
-                    if (level === currentLevel + 1) next.style.display = isExpanding ? "block" :
-                        "none";
-                    if (!isExpanding && level > currentLevel) {
-                        let toggle = next.querySelector(".toggle-btn");
-                        if (toggle) toggle.textContent = "▶";
-                        next.style.display = "none";
-                    }
-                    next = next.nextElementSibling;
+            let currentItem = this.closest(".material-item");
+            let currentLevel = parseInt(currentItem.className.match(/level-(\d+)/)[1]);
+            let expand = this.textContent === "▶";
+
+            this.textContent = expand ? "▼" : "▶";
+
+            let next = currentItem.nextElementSibling;
+
+            while (next && next.classList.contains("material-item")) {
+                let nl = parseInt(next.className.match(/level-(\d+)/)[1]);
+                if (nl <= currentLevel) break;
+
+                if (nl === currentLevel + 1)
+                    next.style.display = expand ? "block" : "none";
+
+                if (!expand && nl > currentLevel) {
+                    let t = next.querySelector(".toggle-btn");
+                    if (t) t.textContent = "▶";
+                    next.style.display = "none";
                 }
-            });
+
+                next = next.nextElementSibling;
+            }
+
         });
     });
 </script>
@@ -240,4 +241,51 @@
 <script>
     $('#barcode').select2();
 </script>
+
 {% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!--
+
+BUATKAN VIEW.PY - BAGIAN FORM
+1. form TRC_BARCODE ambil dari TRC_BASIC_TABLE
+2. Form detail barcode bagian Materials: cari MAT_SAP_CODE pada TRC_BASIC_TABLE di MD_MATERIALS ambil data MAT_CODE dan MAT_DESC,
+3. Form detail barcode bagian Production machine : ambil data PP_CODE dan MCH_CODE di TRC_BASIC_TABLE berdasarkan TRC_BARCODE terpilih.
+
+BAGIAN DATA TRACING
+1. MAT_SAP_CODE pada barcode terpilih di tabel TRC_BASIC_TABLE, Cari di MD_BOM sebagai MAT_SAP_CODE dan ambil SEMUA CHILD_MAT_SAP_CODE NYA
+2. KEMUDIAN di WMS_TRACEABILITY CARI CHILD_MAT_SAP_CODE SEBAGAI KOLOM TRC_MAT_SAP_CODE, serta cari berdasarkan MCH_CODE DAN PP_CODE berdasarkan TRC_BARCODE yang terpilih DI TABEL TRC_BASIC_TABLE kalo di TABEL WMS_TRACEABILITY (namanya : TRC_MCH_CODE dan TRC_PP_CODE) dan ambil data TRC_SO_CODE dan TRC_CU_EXT_PROGR (semua) Tampa pengaturan apapun entah itu FL_PHASE NYA P ATAU C karna ketentuannya hanya berdasarkan TRC_MAT_SAP_CODE TRC_MCH_CODE DAN TRC_PP_CODE. 
+3. tahap selanjutnya ada pengaturan khsusu Cari TRC_SO_CODE dan TRC_CU_EXT_PROGR di WMS_TRACEABILITY dan ambil yang TRC_FL_PHASE nya = 'P' Untuk tampil di baris 1 dan baris 2
+
+BARIS 1 DAN BARIS 2
+1. Baris 1 : TRC_SO_CODE, TRC_CU_EXT_PROGR, TRC_MAT_SAP_CODE (dari WMS_TRACEABILITY), MAT_DESC (JOIN DARI MD_MATERIALS), SFC_DESC (JOIN WMS_TRACEABILITY AMBIL TRC_MAT_SAP_CODE DAN JOIN DENGAN MD_MATERIALS UNTUK MENCARI SEBAGAI MAT_SAP_CODE DAN MENGAMBIL SFC_CODE LALU CARI SFC_CODE NYA DI MD_SEMI_FINISHED_CLASSES DAN AMBIL SFC_DESC NYA)
+2. Baris 2 : TRC_PP_CODE, TRC_MCH_CODE (dari WMS_TRACEABILITY) Berdasarkan TRC_SO_CODE dan TRC_CU_EXT_PROGR, MT_DESC (Join MD_BOM UNTUK AMBIL DATA MT_CODE DAN JOIN KE [MD_MACHINE_TYPES] UNTUK AMBIL MT_DESC)
+
+
+CHILD
+1. Cari TRC_SO_CODE dan TRC_CU_EXT_PROGR root pertama di WMS_TRACEABILITY_CU sebagai SO_CODE dan CU_EXT_PROGR dan ambil [CHILD_SO_CODE] dan [CHILD_CU_EXT_PROGR]
+2. Kemudia cari lagi [CHILD_SO_CODE] dan [CHILD_CU_EXT_PROGR] di [WMS_TRACEABILITY] sebagai TRC_SO_CODE dan TRC_CU_EXT_PROGR (AMBIL YANG TRC_FL_PHASE = 'P')
+3. itu lah childnya yang tampil sepaket baris1 dan baris2
+4. Begitu seterusnya sampai child habis tidak ada child lagi
+
+
+-->
