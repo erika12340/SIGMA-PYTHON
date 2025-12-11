@@ -52,42 +52,42 @@
                                     value="{{ material_detail.pp_code }} - {{ material_detail.mch_code }}" readonly>
                             </div>
                         </div>
-
                     </div>
                 </div>
                 {% endif %}
             </div>
         </div>
 
-
         <!-- TREE -->
         <div class="card">
             <div class="card-body">
-
                 {% for row in traceability %}
                 <div class="material-item level-{{ row.level|add:1 }} mb-1">
-
-                    <button class="toggle-btn">▶</button>
-
+                    
                     <!-- ===== BARIS 1 ===== -->
                     {% if row.baris1 %}
-                    <div class="baris1 clickable-detail"
-                        data-so="{{ row.baris1.TRC_SO_CODE }} {{ row.baris1.TRC_CU_EXT_PROGR }}"
-                        data-phase="{{ row.baris1.TRC_FL_PHASE }}"
-                        data-pp="{{ row.baris1.TRC_PP_CODE }} - {{ row.baris1.PP_DESC }}"
-                        data-machine="{{ row.baris1.TRC_MCH_CODE }}" data-sfc="{{ row.baris1.SFC_DESC }}"
-                        data-matcode="{{ row.baris1.MAT_CODE }}" data-matsap="{{ row.baris1.TRC_MAT_SAP_CODE }}"
-                        data-start="{{ row.baris1.TRC_START_TIME }}" data-end="{{ row.baris1.TRC_END_TIME }}"
-                        data-worker="{{ row.baris1.WM_NAME }}">
+                    <div class="baris1-wrapper ms-4 mt-1">
+                        <button class="toggle-btn  mt-3" data-id="{{ forloop.counter }}">▶</button>
+                        <span class="clickable-detail baris1-text"
+                                data-so="{{ row.baris1.TRC_SO_CODE }} {{ row.baris1.TRC_CU_EXT_PROGR }}"
+                                data-phase="{{ row.baris1.TRC_FL_PHASE }}"
+                                data-pp="{{ row.baris1.TRC_PP_CODE }} - {{ row.baris1.PP_DESC }}"
+                                data-machine="{{ row.baris1.TRC_MCH_CODE }}" 
+                                data-sfc="{{ row.baris1.SFC_DESC }}"
+                                data-matcode="{{ row.baris1.MAT_CODE }}" 
+                                data-matsap="{{ row.baris1.TRC_MAT_SAP_CODE }}"
+                                data-start="{{ row.baris1.TRC_START_TIME }}" 
+                                data-end="{{ row.baris1.TRC_END_TIME }}"
+                                data-worker="{{ row.baris1.WM_NAME }}">
 
+                                ({{ row.baris1.TRC_SO_CODE }} - {{ row.baris1.TRC_CU_EXT_PROGR }})
+                                ({{ row.baris1.SFC_DESC }}) -
+                                {{ row.baris1.TRC_MAT_SAP_CODE }} -
+                                {{ row.baris1.MAT_DESC }}
 
-                        ({{ row.baris1.TRC_SO_CODE }} - {{ row.baris1.TRC_CU_EXT_PROGR }})
-                        ({{ row.baris1.SFC_DESC }}) -
-                        {{ row.baris1.TRC_MAT_SAP_CODE }} -
-                        {{ row.baris1.MAT_DESC }}
-                    </div>
+                        </span>
                     {% endif %}
-
+                    </div>
                     <!-- ===== BARIS 2 ===== -->
                     {% if row.baris2 %}
                     <div class="baris2-wrapper ms-4 mt-1">
@@ -108,7 +108,6 @@
 
                 </div>
                 {% endfor %}
-
             </div>
         </div>
 

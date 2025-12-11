@@ -122,12 +122,12 @@ def dashboard(request):
         .annotate(
             SFC_CODE=Subquery(materials.values('SFC_CODE__SFC_CODE')[:1]),
             SFC_DESC=Subquery(materials.values('SFC_CODE__SFC_DESC')[:1]),
-            MAT_CODE=Subquery(materials.values('MAT_CODE')[:1]),   # ← tambahin ini
+            MAT_CODE=Subquery(materials.values('MAT_CODE')[:1]),   
         )
         .values(
             'TRC_PP_CODE',
             'TRC_MAT_SAP_CODE',
-            'MAT_CODE',       # ← jangan lupa masukin ke values()
+            'MAT_CODE',      
             'SFC_CODE',
             'SFC_DESC',
         )
@@ -1729,8 +1729,6 @@ def tracing_barcode(request):
         return tree_rows
     # ================= END RECURSIVE ===================
 
-
-
     if selected_barcode:
         trc_entry = TRC_BASIC_TABLE.objects.filter(TRC_BARCODE=selected_barcode).first()
 
@@ -1752,7 +1750,7 @@ def tracing_barcode(request):
                 TRC_MAT_SAP_CODE__in=child_mats,
                 TRC_MCH_CODE=trc_entry.MCH_CODE,
                 TRC_PP_CODE=trc_entry.PP_CODE,
-                TRC_FL_EMPTY='T' # ----------------SEMUA DATA TAMPIL ATAU HANYA FL_EMPTYNYA T-------------------
+                TRC_FL_EMPTY='T'
             ).values(
                 'TRC_SO_CODE',
                 'TRC_CU_EXT_PROGR'
