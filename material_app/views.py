@@ -1645,20 +1645,26 @@ def traceability_by_materials(request):
 
 
 
-
-
-
-
 # ================= TRACING BARCODE ===================
 def tracing_barcode(request):
-    barcode_list = TRC_BASIC_TABLE.objects.values_list('TRC_BARCODE', flat=True).distinct()
+    barcode_list = TRC_BASIC_TABLE.objects.values_list(
+        'TRC_BARCODE', flat=True
+    ).distinct()
+
     selected_barcode = request.GET.get('barcode')
     material_detail = None
     traceability = []
 
     # ================= FUNCTION RECURSIVE ===================
-    def get_child_trace(so_code, cu_ext, level=1):
+    def get_child_trace(so_code, cu_ext, parent_mat_sap, level=1):
         tree_rows = []
+
+        # BOM sesuai parent material
+        valid_child_mats = set(
+            MD_BOM.objects.filter(
+                MAT_SAP_CODE=parent_mat_sap
+            ).values_list('CHILD_MAT_SAP_CODE', flat=True)
+        )
 
         children = WMS_TRACEABILITY_CU.objects.filter(
             SO_CODE=so_code,
@@ -1666,74 +1672,95 @@ def tracing_barcode(request):
         ).values('CHILD_SO_CODE', 'CHILD_CU_EXT_PROGR')
 
         for c in children:
-            child_so = c['CHILD_SO_CODE']
-            child_cu = c['CHILD_CU_EXT_PROGR']
-
             wms = WMS_TRACEABILITY.objects.filter(
-                TRC_SO_CODE=child_so,
-                TRC_CU_EXT_PROGR=child_cu,
+                TRC_SO_CODE=c['CHILD_SO_CODE'],
+                TRC_CU_EXT_PROGR=c['CHILD_CU_EXT_PROGR'],
                 TRC_FL_PHASE='P'
             ).first()
 
-            if wms:
-                mat = MD_MATERIALS.objects.filter(
-                    MAT_SAP_CODE=wms.TRC_MAT_SAP_CODE
+            if not wms:
+                continue
+
+            mat = MD_MATERIALS.objects.filter(
+                MAT_SAP_CODE=wms.TRC_MAT_SAP_CODE
+            ).first()
+
+            sfc_code = mat.SFC_CODE if mat else ""
+
+            # 🔴 VALIDASI CHILD
+            is_invalid_material = wms.TRC_MAT_SAP_CODE not in valid_child_mats
+
+            baris1 = {
+                'TRC_SO_CODE': wms.TRC_SO_CODE,
+                'TRC_CU_EXT_PROGR': wms.TRC_CU_EXT_PROGR,
+                'TRC_FL_PHASE': wms.TRC_FL_PHASE,
+                'TRC_PP_CODE': wms.TRC_PP_CODE,
+                'MAT_CODE': mat.MAT_CODE if mat else '',
+                'TRC_START_TIME': wms.TRC_START_TIME,
+                'TRC_END_TIME': wms.TRC_END_TIME,
+                'TRC_MAT_SAP_CODE': wms.TRC_MAT_SAP_CODE,
+                'MAT_DESC': mat.MAT_DESC if mat else '',
+                'SFC_DESC': sfc_code,
+                'TRC_MCH_CODE': wms.TRC_MCH_CODE,
+                'PP_DESC': production.PP_DESC if production else '',
+                'WM_NAME': worker.WM_NAME if worker else '',
+                'is_invalid_material': is_invalid_material
+            }
+
+            mt_desc = ''
+            bom = MD_BOM.objects.filter(
+                MAT_SAP_CODE=wms.TRC_MAT_SAP_CODE
+            ).first()
+            if bom:
+                mt = MD_MACHINE_TYPES.objects.filter(
+                    MT_CODE=bom.MT_CODE
                 ).first()
-                sfc_code = mat.SFC_CODE if mat else ""
+                mt_desc = mt.MT_DESC if mt else ''
 
-                baris1 = {
-                    'TRC_SO_CODE': wms.TRC_SO_CODE,
-                    'TRC_CU_EXT_PROGR': wms.TRC_CU_EXT_PROGR,
-                    'TRC_FL_PHASE' : wms.TRC_FL_PHASE,
-                    'TRC_PP_CODE' : wms.TRC_PP_CODE,
-                    'MAT_CODE' : mat.MAT_CODE if mat else '',
-                    'TRC_START_TIME' : wms.TRC_START_TIME,
-                    'TRC_END_TIME' : wms.TRC_END_TIME,
-                    'TRC_MAT_SAP_CODE': wms.TRC_MAT_SAP_CODE,
-                    'MAT_DESC': mat.MAT_DESC if mat else '',
-                    'SFC_DESC': sfc_code,
-                    'TRC_MCH_CODE' : wms.TRC_MCH_CODE,
-                    'PP_DESC' : production.PP_DESC if production else '',
-                    'WM_NAME' : worker.WM_NAME if worker else '',
-                }
+            baris2 = [{
+                'TRC_SO_CODE': wms_root.TRC_SO_CODE,
+                'TRC_CU_EXT_PROGR': wms_root.TRC_CU_EXT_PROGR,
+                'TRC_FL_PHASE': wms_root.TRC_FL_PHASE,
+                'TRC_PP_CODE': wms_root.TRC_PP_CODE,
+                'TRC_START_TIME': wms_root.TRC_START_TIME,
+                'TRC_END_TIME': wms_root.TRC_END_TIME,
+                'TRC_MCH_CODE': wms_root.TRC_MCH_CODE,
+                'MT_DESC': mt_desc,
+                'TRC_MAT_SAP_CODE': wms_root.TRC_MAT_SAP_CODE,
+                'SFC_DESC': sfc_code,
+                'WM_NAME': worker.WM_NAME if worker else '',
+                'MAT_CODE': mat.MAT_CODE if mat else '',
+                'is_invalid_material': is_invalid_material
+            }]
 
-                mt_desc = ''
-                bom = MD_BOM.objects.filter(MAT_SAP_CODE=wms.TRC_MAT_SAP_CODE).first()
-                if bom:
-                    mt = MD_MACHINE_TYPES.objects.filter(MT_CODE=bom.MT_CODE).first()
-                    mt_desc = mt.MT_DESC if mt else ''
+            tree_rows.append({
+                'baris1': baris1,
+                'baris2': baris2,
+                'level': level
+            })
 
-                baris2 = [{
-                    'TRC_SO_CODE': wms_root.TRC_SO_CODE,
-                    'TRC_CU_EXT_PROGR': wms_root.TRC_CU_EXT_PROGR,
-                    'TRC_FL_PHASE' : wms_root.TRC_FL_PHASE,
-                    'TRC_PP_CODE' : wms_root.TRC_PP_CODE,
-                    'TRC_START_TIME' : wms_root.TRC_START_TIME,
-                    'TRC_END_TIME' : wms_root.TRC_END_TIME,
-                    'TRC_MCH_CODE': wms_root.TRC_MCH_CODE,
-                    'MT_DESC': mt_desc,
-                    'TRC_MAT_SAP_CODE': wms_root.TRC_MAT_SAP_CODE,
-                    'SFC_DESC': sfc_code,
-                    'WM_NAME' : worker.WM_NAME if worker else '',
-                    'MAT_CODE' : mat.MAT_CODE if mat else '',
-                }]
-
-                tree_rows.append({
-                    'baris1': baris1,
-                    'baris2': baris2,
-                    'level': level
-                })
-
-                tree_rows.extend(get_child_trace(child_so, child_cu, level + 1))
+            tree_rows.extend(
+                get_child_trace(
+                    wms.TRC_SO_CODE,
+                    wms.TRC_CU_EXT_PROGR,
+                    wms.TRC_MAT_SAP_CODE,
+                    level + 1
+                )
+            )
 
         return tree_rows
     # ================= END RECURSIVE ===================
 
     if selected_barcode:
-        trc_entry = TRC_BASIC_TABLE.objects.filter(TRC_BARCODE=selected_barcode).first()
+        trc_entry = TRC_BASIC_TABLE.objects.filter(
+            TRC_BARCODE=selected_barcode
+        ).first()
 
         if trc_entry:
-            material = MD_MATERIALS.objects.filter(MAT_SAP_CODE=trc_entry.MAT_SAP_CODE).first()
+            material = MD_MATERIALS.objects.filter(
+                MAT_SAP_CODE=trc_entry.MAT_SAP_CODE
+            ).first()
+
             material_detail = {
                 'MAT_CODE': material.MAT_CODE if material else '',
                 'MAT_SAP_CODE': trc_entry.MAT_SAP_CODE,
@@ -1742,12 +1769,15 @@ def tracing_barcode(request):
                 'mch_code': trc_entry.MCH_CODE,
             }
 
-            child_mats = MD_BOM.objects.filter(
-                MAT_SAP_CODE=trc_entry.MAT_SAP_CODE
-            ).values_list('CHILD_MAT_SAP_CODE', flat=True)
+            # BOM ROOT
+            valid_child_mats = set(
+                MD_BOM.objects.filter(
+                    MAT_SAP_CODE=trc_entry.MAT_SAP_CODE
+                ).values_list('CHILD_MAT_SAP_CODE', flat=True)
+            )
 
+            # ❗ JANGAN FILTER BOM
             wms_all = WMS_TRACEABILITY.objects.filter(
-                TRC_MAT_SAP_CODE__in=child_mats,
                 TRC_MCH_CODE=trc_entry.MCH_CODE,
                 TRC_PP_CODE=trc_entry.PP_CODE,
                 TRC_FL_EMPTY='T'
@@ -1765,60 +1795,75 @@ def tracing_barcode(request):
                     TRC_CU_EXT_PROGR=cu,
                     TRC_FL_PHASE='P'
                 ).first()
+
                 if not wms_root:
                     continue
 
                 mat = MD_MATERIALS.objects.filter(
                     MAT_SAP_CODE=wms_root.TRC_MAT_SAP_CODE
                 ).first()
+
                 sfc_code = mat.SFC_CODE if mat else ''
 
-                # Ambil PP_DESC dari MD_PRODUCTION_PHASES berdasarkan PP_CODE
                 production = None
                 if wms_root.TRC_PP_CODE:
-                    production = MD_PRODUCTION_PHASES.objects.filter(PP_CODE=wms_root.TRC_PP_CODE).first()
+                    production = MD_PRODUCTION_PHASES.objects.filter(
+                        PP_CODE=wms_root.TRC_PP_CODE
+                    ).first()
 
                 worker = None
-
                 worker_code = getattr(wms_root, 'TRC_WM_CODE', None)
                 if worker_code:
-                    worker = MD_WORKERS.objects.filter(WM_CODE=worker_code).first()
+                    worker = MD_WORKERS.objects.filter(
+                        WM_CODE=worker_code
+                    ).first()
+
+                # 🔴 VALIDASI ROOT
+                is_invalid_material = (
+                    wms_root.TRC_MAT_SAP_CODE not in valid_child_mats
+                )
 
                 baris1 = {
                     'TRC_SO_CODE': wms_root.TRC_SO_CODE,
                     'TRC_CU_EXT_PROGR': wms_root.TRC_CU_EXT_PROGR,
-                    'TRC_FL_PHASE' : wms_root.TRC_FL_PHASE,
-                    'TRC_PP_CODE' : wms_root.TRC_PP_CODE,
-                    'MAT_CODE' : mat.MAT_CODE if mat else '',
-                    'TRC_START_TIME' : wms_root.TRC_START_TIME,
-                    'TRC_END_TIME' : wms_root.TRC_END_TIME,
+                    'TRC_FL_PHASE': wms_root.TRC_FL_PHASE,
+                    'TRC_PP_CODE': wms_root.TRC_PP_CODE,
+                    'MAT_CODE': mat.MAT_CODE if mat else '',
+                    'TRC_START_TIME': wms_root.TRC_START_TIME,
+                    'TRC_END_TIME': wms_root.TRC_END_TIME,
                     'TRC_MAT_SAP_CODE': wms_root.TRC_MAT_SAP_CODE,
                     'MAT_DESC': mat.MAT_DESC if mat else '',
                     'SFC_DESC': sfc_code,
-                    'TRC_MCH_CODE' : wms_root.TRC_MCH_CODE,
-                    'PP_DESC' : production.PP_DESC if production else '',
-                    'WM_NAME' : worker.WM_NAME if worker else '',
+                    'TRC_MCH_CODE': wms_root.TRC_MCH_CODE,
+                    'PP_DESC': production.PP_DESC if production else '',
+                    'WM_NAME': worker.WM_NAME if worker else '',
+                    'is_invalid_material': is_invalid_material
                 }
 
                 mt_desc = ''
-                bom = MD_BOM.objects.filter(MAT_SAP_CODE=wms_root.TRC_MAT_SAP_CODE).first()
+                bom = MD_BOM.objects.filter(
+                    MAT_SAP_CODE=wms_root.TRC_MAT_SAP_CODE
+                ).first()
                 if bom:
-                    mt = MD_MACHINE_TYPES.objects.filter(MT_CODE=bom.MT_CODE).first()
+                    mt = MD_MACHINE_TYPES.objects.filter(
+                        MT_CODE=bom.MT_CODE
+                    ).first()
                     mt_desc = mt.MT_DESC if mt else ''
 
                 baris2 = [{
                     'TRC_SO_CODE': wms_root.TRC_SO_CODE,
                     'TRC_CU_EXT_PROGR': wms_root.TRC_CU_EXT_PROGR,
-                    'TRC_FL_PHASE' : wms_root.TRC_FL_PHASE,
-                    'TRC_PP_CODE' : wms_root.TRC_PP_CODE,
-                    'TRC_START_TIME' : wms_root.TRC_START_TIME,
-                    'TRC_END_TIME' : wms_root.TRC_END_TIME,
+                    'TRC_FL_PHASE': wms_root.TRC_FL_PHASE,
+                    'TRC_PP_CODE': wms_root.TRC_PP_CODE,
+                    'TRC_START_TIME': wms_root.TRC_START_TIME,
+                    'TRC_END_TIME': wms_root.TRC_END_TIME,
                     'TRC_MCH_CODE': wms_root.TRC_MCH_CODE,
                     'MT_DESC': mt_desc,
                     'TRC_MAT_SAP_CODE': wms_root.TRC_MAT_SAP_CODE,
                     'SFC_DESC': sfc_code,
-                    'WM_NAME' : worker.WM_NAME if worker else '',
-                    'MAT_CODE' : mat.MAT_CODE if mat else '',
+                    'WM_NAME': worker.WM_NAME if worker else '',
+                    'MAT_CODE': mat.MAT_CODE if mat else '',
+                    'is_invalid_material': is_invalid_material
                 }]
 
                 traceability.append({
@@ -1827,7 +1872,14 @@ def tracing_barcode(request):
                     'level': 0
                 })
 
-                traceability.extend(get_child_trace(so, cu, 1))
+                traceability.extend(
+                    get_child_trace(
+                        so,
+                        cu,
+                        wms_root.TRC_MAT_SAP_CODE,
+                        1
+                    )
+                )
 
     return render(request, "tracing_barcode.html", {
         'barcode_list': barcode_list,
