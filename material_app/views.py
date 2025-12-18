@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from material_app.models import MD_MATERIALS, MD_MACHINE_TYPES, MD_SEMI_FINISHED_CLASSES,TRC_BASIC_TABLE,  MD_BOM, DC_PRODUCTION_DATA, MD_WORKERS, WMS_TRACEABILITY, MD_PRODUCTION_PHASES, WMS_TRACEABILITY_CU, MD_SOURCES
+from material_app.models import MD_MATERIALS, MD_MACHINE_TYPES, MD_SEMI_FINISHED_CLASSES, TRC_BASIC_TABLE, MD_BOM, DC_PRODUCTION_DATA, MD_WORKERS, WMS_TRACEABILITY, MD_PRODUCTION_PHASES, WMS_TRACEABILITY_CU, MD_SOURCES
 from datetime import datetime, timedelta, time, date
 from django.db.models import OuterRef, Subquery
 from django.db.models.functions import TruncDate, ExtractHour
@@ -859,32 +859,6 @@ def traceability_by_machine(request):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # ======================= TRACEABILITY BY CONTAINMENT UNIT (CU) ==========================
 def traceability_by_cu(request):
     # ------------ Parameter Pemanggilan ------------
@@ -1198,35 +1172,6 @@ def traceability_by_cu(request):
     }
 
     return render(request, 'traceability_by_cu.html', context)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1596,55 +1541,6 @@ def traceability_by_materials(request):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # ================= TRACING BARCODE ===================
 def tracing_barcode(request):
     barcode_list = TRC_BASIC_TABLE.objects.values_list(
@@ -1687,7 +1583,7 @@ def tracing_barcode(request):
 
             sfc_code = mat.SFC_CODE if mat else ""
 
-            # 🔴 VALIDASI CHILD
+            # VALIDASI CHILD
             is_invalid_material = wms.TRC_MAT_SAP_CODE not in valid_child_mats
 
             baris1 = {
@@ -1776,7 +1672,7 @@ def tracing_barcode(request):
                 ).values_list('CHILD_MAT_SAP_CODE', flat=True)
             )
 
-            # ❗ JANGAN FILTER BOM
+            # JANGAN FILTER BOM
             wms_all = WMS_TRACEABILITY.objects.filter(
                 TRC_MCH_CODE=trc_entry.MCH_CODE,
                 TRC_PP_CODE=trc_entry.PP_CODE,
@@ -1818,7 +1714,7 @@ def tracing_barcode(request):
                         WM_CODE=worker_code
                     ).first()
 
-                # 🔴 VALIDASI ROOT
+                # VALIDASI ROOT
                 is_invalid_material = (
                     wms_root.TRC_MAT_SAP_CODE not in valid_child_mats
                 )
