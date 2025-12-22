@@ -1599,6 +1599,7 @@ def tracing_barcode(request):
                 'SFC_DESC': sfc_code,
                 'TRC_MCH_CODE': wms.TRC_MCH_CODE,
                 'PP_DESC': production.PP_DESC if production else '',
+                'WM_CODE': worker.WM_CODE if worker else '',
                 'WM_NAME': worker.WM_NAME if worker else '',
                 'is_invalid_material': is_invalid_material
             }
@@ -1624,6 +1625,7 @@ def tracing_barcode(request):
                 'MT_DESC': mt_desc,
                 'TRC_MAT_SAP_CODE': wms_root.TRC_MAT_SAP_CODE,
                 'SFC_DESC': sfc_code,
+                'WM_CODE': worker.WM_CODE if worker else '',
                 'WM_NAME': worker.WM_NAME if worker else '',
                 'MAT_CODE': mat.MAT_CODE if mat else '',
                 'is_invalid_material': is_invalid_material
@@ -1732,6 +1734,7 @@ def tracing_barcode(request):
                     'SFC_DESC': sfc_code,
                     'TRC_MCH_CODE': wms_root.TRC_MCH_CODE,
                     'PP_DESC': production.PP_DESC if production else '',
+                    'WM_CODE': worker.WM_CODE if worker else '',
                     'WM_NAME': worker.WM_NAME if worker else '',
                     'is_invalid_material': is_invalid_material
                 }
@@ -1757,6 +1760,7 @@ def tracing_barcode(request):
                     'MT_DESC': mt_desc,
                     'TRC_MAT_SAP_CODE': wms_root.TRC_MAT_SAP_CODE,
                     'SFC_DESC': sfc_code,
+                    'WM_CODE': worker.WM_CODE if worker else '',
                     'WM_NAME': worker.WM_NAME if worker else '',
                     'MAT_CODE': mat.MAT_CODE if mat else '',
                     'is_invalid_material': is_invalid_material
