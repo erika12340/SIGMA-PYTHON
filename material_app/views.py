@@ -1678,7 +1678,7 @@ def tracing_barcode(request):
             wms_all = WMS_TRACEABILITY.objects.filter(
                 TRC_MCH_CODE=trc_entry.MCH_CODE,
                 TRC_PP_CODE=trc_entry.PP_CODE,
-                TRC_FL_EMPTY='T'
+                TRC_FL_EMPTY='F'
             ).values(
                 'TRC_SO_CODE',
                 'TRC_CU_EXT_PROGR'
