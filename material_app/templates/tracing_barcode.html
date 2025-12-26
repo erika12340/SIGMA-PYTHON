@@ -9,6 +9,15 @@
         border-radius: 4px;
         padding: 3px 6px;
     }
+
+    .baris1-text {
+        cursor: pointer;
+    }
+
+    .baris2 {
+        cursor: default;
+        opacity: 0.85;
+    }
 </style>
 
 <div class="container">
@@ -19,9 +28,8 @@
         <div class="card mb-4 shadow-sm">
             <div class="card-body">
 
-                <!-- === FORM BARCODE === -->
+                <!-- FORM -->
                 <form method="get" action="tracing_barcode" class="row g-3">
-
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Tyre Barcode :</label>
                         <select name="barcode" id="barcode" class="form-control">
@@ -47,19 +55,18 @@
                 <div class="card mt-4">
                     <div class="card-body">
                         <h6 class="fw-bold mb-3">Detail Barcode</h6>
-
-                        <div class="row mb-3">
+                        <div class="row">
                             <div class="col-md-6">
                                 <label class="form-label">Material :</label>
                                 <input type="text" class="form-control"
                                     value="{{ material_detail.MAT_CODE }} - {{ material_detail.MAT_SAP_CODE }} - {{ material_detail.MAT_DESC }}"
                                     readonly>
                             </div>
-
                             <div class="col-md-6">
                                 <label class="form-label">Production Machine :</label>
                                 <input type="text" class="form-control"
-                                    value="{{ material_detail.pp_code }} - {{ material_detail.mch_code }}" readonly>
+                                    value="{{ material_detail.pp_code }} - {{ material_detail.mch_code }}"
+                                    readonly>
                             </div>
                         </div>
                     </div>
@@ -75,22 +82,23 @@
                 {% for row in traceability %}
                 <div class="material-item level-{{ row.level|add:1 }} mb-1">
 
-                    <!-- ===== BARIS 1 ===== -->
+                    <!-- BARIS 1 -->
                     {% if row.baris1 %}
                     <div class="baris1-wrapper ms-4 mt-1">
+                        <button class="toggle-btn mt-3">▶</button>
 
-                        <button class="toggle-btn mt-3" data-id="{{ forloop.counter }}">▶</button>
                         <span class="clickable-detail baris1-text
                             {% if row.baris1.is_invalid_material %}material-error{% endif %}"
                             title="{% if row.baris1.is_invalid_material %}Material tidak sesuai BOM{% endif %}"
-                            data-so="{{ row.baris1.TRC_SO_CODE }} {{ row.baris1.TRC_CU_EXT_PROGR }}"
+
+                            data-so="{{ row.baris1.TRC_SO_CODE }} - {{ row.baris1.TRC_CU_EXT_PROGR }}"
                             data-phase="{{ row.baris1.TRC_FL_PHASE }}"
                             data-pp="{{ row.baris1.TRC_PP_CODE }} - {{ row.baris1.PP_DESC }}"
-                            data-machine="{{ row.baris1.TRC_MCH_CODE }}" 
+                            data-machine="{{ row.baris1.TRC_MCH_CODE }}"
                             data-sfc="{{ row.baris1.SFC_DESC }}"
-                            data-matcode="{{ row.baris1.MAT_CODE }}" 
+                            data-matcode="{{ row.baris1.MAT_CODE }}"
                             data-matsap="{{ row.baris1.TRC_MAT_SAP_CODE }}"
-                            data-start="{{ row.baris1.TRC_START_TIME }}" 
+                            data-start="{{ row.baris1.TRC_START_TIME }}"
                             data-end="{{ row.baris1.TRC_END_TIME }}"
                             data-worker="{{ row.baris1.WM_CODE }} - {{ row.baris1.WM_NAME }}">
 
@@ -99,28 +107,15 @@
                             {{ row.baris1.TRC_MAT_SAP_CODE }} -
                             {{ row.baris1.MAT_DESC }}
                         </span>
-
                     </div>
                     {% endif %}
 
-                    <!-- ===== BARIS 2 ===== -->
+                    <!-- BARIS 2 (TIDAK BISA KLIK) -->
                     {% if row.baris2 %}
                     <div class="baris2-wrapper ms-4 mt-1">
                         {% for b2 in row.baris2 %}
-                        <div class="baris2 clickable-detail
-                            {% if b2.is_invalid_material %}material-error{% endif %}"
-                            title="{% if b2.is_invalid_material %}Material tidak sesuai BOM{% endif %}"
-                            data-so="{{ b2.TRC_SO_CODE }} {{ b2.TRC_CU_EXT_PROGR }}"
-                            data-phase="{{ b2.TRC_FL_PHASE }}"
-                            data-pp="{{ b2.TRC_PP_CODE }} - {{ b2.PP_DESC }}"
-                            data-machine="{{ b2.TRC_MCH_CODE }}"
-                            data-sfc="{{ b2.SFC_DESC }}"
-                            data-matcode="{{ b2.MAT_CODE }}"
-                            data-matsap="{{ b2.TRC_MAT_SAP_CODE }}"
-                            data-start="{{ b2.TRC_START_TIME }}"
-                            data-end="{{ b2.TRC_END_TIME }}"
-                            data-worker="{{ b2.WM_CODE }} - {{ b2.WM_NAME }}">
-
+                        <div class="baris2
+                            {% if b2.is_invalid_material %}material-error{% endif %}">
                             {{ b2.TRC_PP_CODE }} - {{ b2.TRC_MCH_CODE }} - {{ b2.MT_DESC }}
                         </div>
                         {% endfor %}
@@ -140,7 +135,7 @@
         <div class="modal-content">
 
             <div class="modal-header">
-                <h5 class="modal-title">Detail</h5>
+                <h5 class="modal-title">Detail Proses</h5>
                 <button class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
@@ -164,7 +159,7 @@
     </div>
 </div>
 
-<!-- ================= JS ================= -->
+<!-- ================= JS DETAIL ================= -->
 <script>
     document.querySelectorAll(".clickable-detail").forEach(el => {
         el.addEventListener("click", () => {
@@ -183,9 +178,11 @@
     });
 </script>
 
-<!-- =============================== JS BUTTON ▶ ============================== -->
+<!-- ================= JS TREE TOGGLE ================= -->
 <script>
-    document.querySelectorAll(".material-item.level-1").forEach(i => i.style.display = "block");
+    document.querySelectorAll(".material-item.level-1")
+        .forEach(i => i.style.display = "block");
+
     document.querySelectorAll(".toggle-btn").forEach(btn => {
         btn.addEventListener("click", function () {
             let currentItem = this.closest(".material-item");
@@ -197,19 +194,15 @@
             while (next && next.classList.contains("material-item")) {
                 let nl = parseInt(next.className.match(/level-(\d+)/)[1]);
                 if (nl <= currentLevel) break;
-                if (nl === currentLevel + 1) next.style.display = expand ? "block" : "none";
-                if (!expand && nl > currentLevel) next.style.display = "none";
+                next.style.display = expand && nl === currentLevel + 1 ? "block" : "none";
                 next = next.nextElementSibling;
             }
         });
     });
 </script>
 
-<!-- ====================== JS TABEL BARCODE ========================== -->
 <script>
     $('#barcode').select2();
 </script>
+
 {% endblock %}
-<!-- detail materials belum sesuai
-detail materials tampil berdasarkan TRC_SO_CODE, TRC_CU_EXT_PROGR, DAN TRC_MAT_SAP_CODE yang saat ini itu ada beberapa 
-data yang tidak sesuai seperti WM_NAME dan WM_CODE belum sesuai datanya -->

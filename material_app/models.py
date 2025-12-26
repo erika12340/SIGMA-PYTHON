@@ -161,7 +161,7 @@ class TRC_BASIC_TABLE(models.Model):
 class MD_MACHINE_TYPES(models.Model):
     MT_CODE = models.CharField (max_length=10, primary_key=True)
     MT_DESC = models.CharField (max_length=9)
-    PP_CODE = models.CharField (max_length=3)
+ 
 
     class Meta:
         managed = False

@@ -416,125 +416,133 @@ def dashboard(request):
 
 
 
-
-
-# ============ INFORMASI DETAIL IP MATERIALS  =============
-def get_material_detail(mat_code):
-    try:
-        mat = MD_MATERIALS.objects.filter(MAT_CODE=mat_code).first()
-
-        if not mat:
-            return {}
-
-        # MAT_OUT_MNG: jika 'F' atau None berarti ACTIVE, kalau 'T' berarti INACTIVE
-        if mat.MAT_OUT_MNG in ['F', None]:
-            status = 'ACTIVE'
-        else:
-            status = 'INACTIVE'
-
-        return {
-            'ip_code': mat.MAT_CODE,
-            'spec': mat.MAT_SPEC_CODE,
-            'mat_desc': mat.MAT_DESC,
-            'status': status,
-        }
-
-    except Exception as e:
-        print("[ERROR] Gagal mengambil detail material:", e)
-        return {}
-
-# =================== LINE MATERIALS ===================
-def get_all_related_material_data(mat_sap_code, visited=None, level=0):
-    if visited is None:
-        visited = set()
-
-    if mat_sap_code in visited:
-        return []
-
-    visited.add(mat_sap_code)
-    data = []
-
-    # MENCARI MAT_SAP_CODE
-    child_boms = MD_BOM.objects.filter(MAT_SAP_CODE=mat_sap_code)
-
-    if not child_boms.exists():
-        
-        mat = MD_MATERIALS.objects.filter(MAT_SAP_CODE=mat_sap_code).first()
-        if mat:
-
-            try:
-                sfc_desc = mat.SFC_CODE.SFC_DESC
-                sfc_code = mat.SFC_CODE.SFC_CODE
-
-            except:
-                sfc_desc = '-'
-                sfc_code = '-'
-            data.append({
-                'level': level,
-                'SFC_CODE': sfc_code,
-                'SFC_DESC': sfc_desc,
-                'BV_STATUS': '-',
-                'MAT_CODE': mat.MAT_CODE,
-                'MAT_SAP_CODE': mat.MAT_SAP_CODE,
-                'CHILD_MAT_SAP_CODE': '-',
-                'CNT_CODE': mat.CNT_CODE,
-                'MAT_VARIANT': mat.MAT_VARIANT,
-                'MAT_DESC': mat.MAT_DESC,
-                'MAT_SPEC_CODE': mat.MAT_SPEC_CODE,
-                'MT_CODE': '-',
-                'MAT_MEASURE_UNIT': mat.MAT_MEASURE_UNIT,
-                'BOM_QUANTITY': '-',
-            })
-
-    else:
-
-        for bom in child_boms:
-            child_code = bom.CHILD_MAT_SAP_CODE
-            child_mat = MD_MATERIALS.objects.filter(MAT_SAP_CODE=child_code).first()
-            if not child_mat:
-                continue
-            try:
-                sfc_desc = child_mat.SFC_CODE.SFC_DESC
-                sfc_code = child_mat.SFC_CODE.SFC_CODE
-            except:
-                sfc_desc = '-'
-                sfc_code = '-'
-            data.append({
-                'level': level,
-                'SFC_CODE': sfc_code,
-                'SFC_DESC': sfc_desc,
-                'BV_STATUS': bom.BV_STATUS,
-                'MAT_CODE': child_mat.MAT_CODE,
-                'MAT_SAP_CODE': mat_sap_code,
-                'CHILD_MAT_SAP_CODE': child_code,
-                'CNT_CODE': bom.CNT_CODE,
-                'MAT_VARIANT': child_mat.MAT_VARIANT,
-                'MAT_DESC': child_mat.MAT_DESC,
-                'MT_CODE': bom.MT_CODE,
-                'CHILD_CNT_CODE':bom.CHILD_CNT_CODE,
-                'MAT_MEASURE_UNIT': child_mat.MAT_MEASURE_UNIT,
-                'BOM_QUANTITY': bom.BOM_QUANTITY,
-            })
-            data += get_all_related_material_data(child_code, visited, level + 1)
-    return data
-
 # ================== MENU DAFTAR MATERIALS ==================
 def daftar_materials(request):
+
+    # ============ INFORMASI DETAIL IP MATERIALS ============
+    def get_material_detail(mat_code):
+        try:
+            mat = MD_MATERIALS.objects.filter(MAT_CODE=mat_code).first()
+            if not mat:
+                return {}
+
+            # MAT_OUT_MNG: F / None = ACTIVE, T = INACTIVE
+            status = 'ACTIVE' if mat.MAT_OUT_MNG in ['F', None] else 'INACTIVE'
+
+            return {
+                'ip_code': mat.MAT_CODE,
+                'spec': mat.MAT_SPEC_CODE,
+                'mat_desc': mat.MAT_DESC,
+                'status': status,
+            }
+
+        except Exception as e:
+            print("[ERROR] Gagal mengambil detail material:", e)
+            return {}
+
+    # =================== LINE MATERIALS (RECURSIVE) ===================
+    def get_all_related_material_data(mat_sap_code, visited=None, level=0):
+        if visited is None:
+            visited = set()
+
+        if mat_sap_code in visited:
+            return []
+
+        visited.add(mat_sap_code)
+        data = []
+
+        child_boms = MD_BOM.objects.filter(MAT_SAP_CODE=mat_sap_code)
+
+        # ===== LEAF MATERIAL =====
+        if not child_boms.exists():
+            mat = MD_MATERIALS.objects.filter(MAT_SAP_CODE=mat_sap_code).first()
+            if mat:
+                try:
+                    sfc_desc = mat.SFC_CODE.SFC_DESC
+                    sfc_code = mat.SFC_CODE.SFC_CODE
+                except:
+                    sfc_desc = '-'
+                    sfc_code = '-'
+
+                data.append({
+                    'level': level,
+                    'SFC_CODE': sfc_code,
+                    'SFC_DESC': sfc_desc,
+                    'BV_STATUS': '-',
+                    'MAT_CODE': mat.MAT_CODE,
+                    'MAT_SAP_CODE': mat.MAT_SAP_CODE,
+                    'CHILD_MAT_SAP_CODE': '-',
+                    'CNT_CODE': mat.CNT_CODE,
+                    'MAT_VARIANT': mat.MAT_VARIANT,
+                    'MAT_DESC': mat.MAT_DESC,
+                    'MAT_SPEC_CODE': mat.MAT_SPEC_CODE,
+                    'MT_CODE': '-',
+                    'MAT_MEASURE_UNIT': mat.MAT_MEASURE_UNIT,
+                    'BOM_QUANTITY': '-',
+                })
+
+        # ===== PARENT MATERIAL =====
+        else:
+            for bom in child_boms:
+                child_code = bom.CHILD_MAT_SAP_CODE
+                child_mat = MD_MATERIALS.objects.filter(
+                    MAT_SAP_CODE=child_code
+                ).first()
+
+                if not child_mat:
+                    continue
+
+                try:
+                    sfc_desc = child_mat.SFC_CODE.SFC_DESC
+                    sfc_code = child_mat.SFC_CODE.SFC_CODE
+                except:
+                    sfc_desc = '-'
+                    sfc_code = '-'
+
+                data.append({
+                    'level': level,
+                    'SFC_CODE': sfc_code,
+                    'SFC_DESC': sfc_desc,
+                    'BV_STATUS': bom.BV_STATUS,
+                    'MAT_CODE': child_mat.MAT_CODE,
+                    'MAT_SAP_CODE': mat_sap_code,
+                    'CHILD_MAT_SAP_CODE': child_code,
+                    'CNT_CODE': bom.CNT_CODE,
+                    'CHILD_CNT_CODE': bom.CHILD_CNT_CODE,
+                    'MAT_VARIANT': child_mat.MAT_VARIANT,
+                    'MAT_DESC': child_mat.MAT_DESC,
+                    'MT_CODE': bom.MT_CODE,
+                    'MAT_MEASURE_UNIT': child_mat.MAT_MEASURE_UNIT,
+                    'BOM_QUANTITY': bom.BOM_QUANTITY,
+                })
+
+                # 🔁 RECURSIVE
+                data += get_all_related_material_data(
+                    child_code, visited, level + 1
+                )
+
+        return data
+
+    # =================== MAIN CONTROLLER ===================
     sfc_code = request.GET.get('sfc_code')
     mat_info = request.GET.get('mat_info')
+
     sfc_list = MD_SEMI_FINISHED_CLASSES.objects.all()
-    materials = MD_MATERIALS.objects.filter(SFC_CODE=sfc_code) if sfc_code else []
+    materials = MD_MATERIALS.objects.filter(
+        SFC_CODE=sfc_code
+    ) if sfc_code else []
+
     selected_mat_code = None
     selected_mat_info = mat_info
     material_detail = {}
     material_data = []
 
     if mat_info:
-
         try:
             mat_parts = mat_info.split('|')
             selected_mat_code = mat_parts[0]
             selected_mat_sap = mat_parts[1]
+
             material_detail = get_material_detail(selected_mat_code)
             material_data = get_all_related_material_data(selected_mat_sap)
 
@@ -550,6 +558,7 @@ def daftar_materials(request):
         'material_detail': material_detail,
         'material_data': material_data
     })
+
 
 
 
@@ -1541,6 +1550,22 @@ def traceability_by_materials(request):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # ================= TRACING BARCODE ===================
 def tracing_barcode(request):
     barcode_list = TRC_BASIC_TABLE.objects.values_list(
@@ -1555,7 +1580,7 @@ def tracing_barcode(request):
     def get_child_trace(so_code, cu_ext, parent_mat_sap, level=1):
         tree_rows = []
 
-        # BOM sesuai parent material
+        # BOM parent
         valid_child_mats = set(
             MD_BOM.objects.filter(
                 MAT_SAP_CODE=parent_mat_sap
@@ -1577,15 +1602,31 @@ def tracing_barcode(request):
             if not wms:
                 continue
 
+            # ================= INVALID BOM FLAG =================
+            is_invalid = (
+                bool(valid_child_mats) and
+                wms.TRC_MAT_SAP_CODE not in valid_child_mats
+            )
+
             mat = MD_MATERIALS.objects.filter(
                 MAT_SAP_CODE=wms.TRC_MAT_SAP_CODE
             ).first()
 
-            sfc_code = mat.SFC_CODE if mat else ""
+            sfc_code = mat.SFC_CODE if mat else ''
 
-            # VALIDASI CHILD
-            is_invalid_material = wms.TRC_MAT_SAP_CODE not in valid_child_mats
+            production = None
+            if wms.TRC_PP_CODE:
+                production = MD_PRODUCTION_PHASES.objects.filter(
+                    PP_CODE=wms.TRC_PP_CODE
+                ).first()
 
+            worker = None
+            if getattr(wms, 'TRC_WM_CODE', None):
+                worker = MD_WORKERS.objects.filter(
+                    WM_CODE=wms.TRC_WM_CODE
+                ).first()
+
+            # ================= BARIS 1 =================
             baris1 = {
                 'TRC_SO_CODE': wms.TRC_SO_CODE,
                 'TRC_CU_EXT_PROGR': wms.TRC_CU_EXT_PROGR,
@@ -1601,9 +1642,10 @@ def tracing_barcode(request):
                 'PP_DESC': production.PP_DESC if production else '',
                 'WM_CODE': worker.WM_CODE if worker else '',
                 'WM_NAME': worker.WM_NAME if worker else '',
-                'is_invalid_material': is_invalid_material
+                'is_invalid_material': is_invalid
             }
 
+            # ================= BARIS 2 =================
             mt_desc = ''
             bom = MD_BOM.objects.filter(
                 MAT_SAP_CODE=wms.TRC_MAT_SAP_CODE
@@ -1615,20 +1657,20 @@ def tracing_barcode(request):
                 mt_desc = mt.MT_DESC if mt else ''
 
             baris2 = [{
-                'TRC_SO_CODE': wms_root.TRC_SO_CODE,
-                'TRC_CU_EXT_PROGR': wms_root.TRC_CU_EXT_PROGR,
-                'TRC_FL_PHASE': wms_root.TRC_FL_PHASE,
-                'TRC_PP_CODE': wms_root.TRC_PP_CODE,
-                'TRC_START_TIME': wms_root.TRC_START_TIME,
-                'TRC_END_TIME': wms_root.TRC_END_TIME,
-                'TRC_MCH_CODE': wms_root.TRC_MCH_CODE,
+                'TRC_SO_CODE': wms.TRC_SO_CODE,
+                'TRC_CU_EXT_PROGR': wms.TRC_CU_EXT_PROGR,
+                'TRC_FL_PHASE': wms.TRC_FL_PHASE,
+                'TRC_PP_CODE': wms.TRC_PP_CODE,
+                'TRC_START_TIME': wms.TRC_START_TIME,
+                'TRC_END_TIME': wms.TRC_END_TIME,
+                'TRC_MCH_CODE': wms.TRC_MCH_CODE,
                 'MT_DESC': mt_desc,
-                'TRC_MAT_SAP_CODE': wms_root.TRC_MAT_SAP_CODE,
+                'TRC_MAT_SAP_CODE': wms.TRC_MAT_SAP_CODE,
                 'SFC_DESC': sfc_code,
                 'WM_CODE': worker.WM_CODE if worker else '',
                 'WM_NAME': worker.WM_NAME if worker else '',
                 'MAT_CODE': mat.MAT_CODE if mat else '',
-                'is_invalid_material': is_invalid_material
+                'is_invalid_material': is_invalid
             }]
 
             tree_rows.append({
@@ -1637,6 +1679,7 @@ def tracing_barcode(request):
                 'level': level
             })
 
+            # ================= RECURSIVE LANJUT =================
             tree_rows.extend(
                 get_child_trace(
                     wms.TRC_SO_CODE,
@@ -1667,14 +1710,12 @@ def tracing_barcode(request):
                 'mch_code': trc_entry.MCH_CODE,
             }
 
-            # BOM ROOT
             valid_child_mats = set(
                 MD_BOM.objects.filter(
                     MAT_SAP_CODE=trc_entry.MAT_SAP_CODE
                 ).values_list('CHILD_MAT_SAP_CODE', flat=True)
             )
 
-            # JANGAN FILTER BOM
             wms_all = WMS_TRACEABILITY.objects.filter(
                 TRC_MCH_CODE=trc_entry.MCH_CODE,
                 TRC_PP_CODE=trc_entry.PP_CODE,
@@ -1697,6 +1738,11 @@ def tracing_barcode(request):
                 if not wms_root:
                     continue
 
+                is_invalid = (
+                    bool(valid_child_mats) and
+                    wms_root.TRC_MAT_SAP_CODE not in valid_child_mats
+                )
+
                 mat = MD_MATERIALS.objects.filter(
                     MAT_SAP_CODE=wms_root.TRC_MAT_SAP_CODE
                 ).first()
@@ -1710,16 +1756,10 @@ def tracing_barcode(request):
                     ).first()
 
                 worker = None
-                worker_code = getattr(wms_root, 'TRC_WM_CODE', None)
-                if worker_code:
+                if getattr(wms_root, 'TRC_WM_CODE', None):
                     worker = MD_WORKERS.objects.filter(
-                        WM_CODE=worker_code
+                        WM_CODE=wms_root.TRC_WM_CODE
                     ).first()
-
-                # VALIDASI ROOT
-                is_invalid_material = (
-                    wms_root.TRC_MAT_SAP_CODE not in valid_child_mats
-                )
 
                 baris1 = {
                     'TRC_SO_CODE': wms_root.TRC_SO_CODE,
@@ -1736,7 +1776,7 @@ def tracing_barcode(request):
                     'PP_DESC': production.PP_DESC if production else '',
                     'WM_CODE': worker.WM_CODE if worker else '',
                     'WM_NAME': worker.WM_NAME if worker else '',
-                    'is_invalid_material': is_invalid_material
+                    'is_invalid_material': is_invalid
                 }
 
                 mt_desc = ''
@@ -1763,7 +1803,7 @@ def tracing_barcode(request):
                     'WM_CODE': worker.WM_CODE if worker else '',
                     'WM_NAME': worker.WM_NAME if worker else '',
                     'MAT_CODE': mat.MAT_CODE if mat else '',
-                    'is_invalid_material': is_invalid_material
+                    'is_invalid_material': is_invalid
                 }]
 
                 traceability.append({
