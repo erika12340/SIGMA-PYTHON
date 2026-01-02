@@ -2,207 +2,248 @@
 {% block content %}
 
 <style>
-    .material-error {
-        background-color: #d70000;
-        color: #ffffff;
-        font-weight: 600;
-        border-radius: 4px;
-        padding: 3px 6px;
+/* ================= ERROR ================= */
+.material-error {
+    background-color: #d70000;
+    color: #ffffff;
+    font-weight: 600;
+    border-radius: 4px;
+    padding: 3px 4px;
+}
+
+.baris1-text { cursor: pointer; }
+.baris2 { cursor: default; opacity: 0.85; }
+
+/* ================= TREE BASE ================= */
+.material-item {
+    position: relative;
+    padding-left: 1px; /* ruang garis */
+}
+
+/* ================= SCREEN ================= */
+.material-item::before,
+.material-item::after,
+.print-separator {
+    display: none !important;
+}
+
+/* ================= PRINT ONLY ================= */
+@media print {
+
+    /* === TREE LINE === */
+    .material-item::before {
+        content: "";
+        position: absolute;
+        left: 12px;
+        top: 0;
+        bottom: 0;
+        border-left: 1px dashed #000;
+        display: block;
     }
 
-    .baris1-text {
-        cursor: pointer;
+    .material-item::after {
+        content: "";
+        position: absolute;
+        left: 12px;
+        top: 18px;
+        width: 16px;
+        border-top: 1px dashed #000;
+        display: block;
     }
 
-    .baris2 {
-        cursor: default;
-        opacity: 0.85;
+    .material-item.level-1::before {
+        display: none;
     }
+
+    /* === HILANGKAN PANAH === */
+    .toggle-btn {
+        display: none !important;
+    }
+
+    /* === HILANGKAN SEMUA BORDER === */
+    *,
+    .card,
+    .card-body,
+    input,
+    table,
+    tr,
+    td,
+    hr {
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+
+    body {
+        font-size: 11px;
+    }
+
+    .btn,
+    form,
+    select {
+        display: none !important;
+    }
+
+    /* === GARIS PEMISAH TEXT === */
+    .print-separator {
+        display: inline-block;
+        width: 40px;
+        border-top: 1px solid #000;
+        margin: 0 6px;
+        vertical-align: middle;
+    }
+}
 </style>
 
 <div class="container">
     <h3 class="judul mb-4">TRACING BARCODE BUILDING</h3>
 
     <!-- FILTER -->
-    <div class="container mt-4">
-        <div class="card mb-4 shadow-sm">
-            <div class="card-body">
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
 
-                <!-- FORM -->
-                <form method="get" action="tracing_barcode" class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Tyre Barcode :</label>
-                        <select name="barcode" id="barcode" class="form-control">
-                            <option value="">-- Pilih Barcode --</option>
-                            {% for barcode in barcode_list %}
-                            <option value="{{ barcode }}" {% if barcode == selected_barcode %}selected{% endif %}>
-                                {{ barcode }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
+            <form method="get" action="tracing_barcode" class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Tyre Barcode :</label>
+                    <select name="barcode" id="barcode" class="form-control">
+                        <option value="">-- Pilih Barcode --</option>
+                        {% for barcode in barcode_list %}
+                        <option value="{{ barcode }}" {% if barcode == selected_barcode %}selected{% endif %}>
+                            {{ barcode }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-                    <div class="col-md-3 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary w-100">Submit</button>
-                    </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Submit</button>
+                </div>
 
-                    <div class="col-md-3 d-flex align-items-end">
-                        <a href="tracing_barcode" class="btn btn-success w-100">Reset</a>
-                    </div>
-                </form>
+                <div class="col-md-3 d-flex align-items-end">
+                    <a href="tracing_barcode" class="btn btn-success w-100">Reset</a>
+                </div>
+            </form>
 
-                {% if material_detail %}
-                <div class="card mt-4">
-                    <div class="card-body">
-                        <h6 class="fw-bold mb-3">Detail Barcode</h6>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <label class="form-label">Material :</label>
-                                <input type="text" class="form-control"
-                                    value="{{ material_detail.MAT_CODE }} - {{ material_detail.MAT_SAP_CODE }} - {{ material_detail.MAT_DESC }}"
-                                    readonly>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Production Machine :</label>
-                                <input type="text" class="form-control"
-                                    value="{{ material_detail.pp_code }} - {{ material_detail.mch_code }}"
-                                    readonly>
-                            </div>
+            {% if material_detail %}
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3">Detail Barcode</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Material :</label>
+                            <input type="text" class="form-control"
+                                   value="{{ material_detail.MAT_CODE }} - {{ material_detail.MAT_SAP_CODE }} - {{ material_detail.MAT_DESC }}"
+                                   readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Production Machine :</label>
+                            <input type="text" class="form-control"
+                                   value="{{ material_detail.pp_code }} - {{ material_detail.mch_code }}"
+                                   readonly>
                         </div>
                     </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="d-flex justify-content-end m-3">
+            <button onclick="cetakTraceabilityPDF()" class="btn btn-danger">
+                Save PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- TREE -->
+    <div class="card">
+        <div class="card-body">
+
+            {% for row in traceability %}
+            <div class="material-item level-{{ row.level|add:1 }} mb-1">
+
+                {% if row.baris1 %}
+                <div class="baris1-wrapper mt-1">
+                    <button class="toggle-btn mt-1">▶</button>
+
+                    <span class="baris1-text {% if row.baris1.is_invalid_material %}material-error{% endif %}">
+                        ({{ row.baris1.TRC_SO_CODE }} - {{ row.baris1.TRC_CU_EXT_PROGR }})
+                        ({{ row.baris1.SFC_DESC }})
+
+                        <span class="print-separator"></span>
+
+                        {{ row.baris1.TRC_MAT_SAP_CODE }} - {{ row.baris1.MAT_DESC }}
+                    </span>
+                </div>
+                {% endif %}
+
+                {% if row.baris2 %}
+                <div class="baris2-wrapper mt-1">
+                    {% for b2 in row.baris2 %}
+                    <div class="baris2">
+                        {{ b2.TRC_PP_CODE }} - {{ b2.TRC_MCH_CODE }} - {{ b2.MT_DESC }}
+                    </div>
+                    {% endfor %}
                 </div>
                 {% endif %}
             </div>
-        </div>
+            {% endfor %}
 
-        <!-- TREE -->
-        <div class="card">
-            <div class="card-body">
-
-                {% for row in traceability %}
-                <div class="material-item level-{{ row.level|add:1 }} mb-1">
-
-                    <!-- BARIS 1 -->
-                    {% if row.baris1 %}
-                    <div class="baris1-wrapper ms-4 mt-1">
-                        <button class="toggle-btn mt-3">▶</button>
-
-                        <span class="clickable-detail baris1-text
-                            {% if row.baris1.is_invalid_material %}material-error{% endif %}"
-                            title="{% if row.baris1.is_invalid_material %}Material tidak sesuai BOM{% endif %}"
-
-                            data-so="{{ row.baris1.TRC_SO_CODE }} - {{ row.baris1.TRC_CU_EXT_PROGR }}"
-                            data-phase="{{ row.baris1.TRC_FL_PHASE }}"
-                            data-pp="{{ row.baris1.TRC_PP_CODE }} - {{ row.baris1.PP_DESC }}"
-                            data-machine="{{ row.baris1.TRC_MCH_CODE }}"
-                            data-sfc="{{ row.baris1.SFC_DESC }}"
-                            data-matcode="{{ row.baris1.MAT_CODE }}"
-                            data-matsap="{{ row.baris1.TRC_MAT_SAP_CODE }}"
-                            data-start="{{ row.baris1.TRC_START_TIME }}"
-                            data-end="{{ row.baris1.TRC_END_TIME }}"
-                            data-worker="{{ row.baris1.WM_CODE }} - {{ row.baris1.WM_NAME }}">
-
-                            ({{ row.baris1.TRC_SO_CODE }} - {{ row.baris1.TRC_CU_EXT_PROGR }})
-                            ({{ row.baris1.SFC_DESC }}) -
-                            {{ row.baris1.TRC_MAT_SAP_CODE }} -
-                            {{ row.baris1.MAT_DESC }}
-                        </span>
-                    </div>
-                    {% endif %}
-
-                    <!-- BARIS 2 (TIDAK BISA KLIK) -->
-                    {% if row.baris2 %}
-                    <div class="baris2-wrapper ms-4 mt-1">
-                        {% for b2 in row.baris2 %}
-                        <div class="baris2
-                            {% if b2.is_invalid_material %}material-error{% endif %}">
-                            {{ b2.TRC_PP_CODE }} - {{ b2.TRC_MCH_CODE }} - {{ b2.MT_DESC }}
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-                {% endfor %}
-
-            </div>
         </div>
     </div>
 </div>
 
-<!-- ================= MODAL ================= -->
-<div class="modal fade" id="detailModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-
-            <div class="modal-header">
-                <h5 class="modal-title">Detail Proses</h5>
-                <button class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-
-            <div class="modal-body">
-                <table class="table table-bordered">
-                    <tbody>
-                        <tr><td><b>SO Code</b></td><td id="d_so"></td></tr>
-                        <tr><td><b>FL Phase</b></td><td id="d_phase"></td></tr>
-                        <tr><td><b>Production Phase</b></td><td id="d_pp"></td></tr>
-                        <tr><td><b>Machine</b></td><td id="d_machine"></td></tr>
-                        <tr><td><b>Area</b></td><td id="d_sfc"></td></tr>
-                        <tr><td><b>Material Code</b></td><td id="d_matcode"></td></tr>
-                        <tr><td><b>Material SAP</b></td><td id="d_matsap"></td></tr>
-                        <tr><td><b>Start Time</b></td><td id="d_start"></td></tr>
-                        <tr><td><b>End Time</b></td><td id="d_end"></td></tr>
-                        <tr><td><b>Worker</b></td><td id="d_worker"></td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ================= JS DETAIL ================= -->
+<!-- ================= TREE JS ================= -->
 <script>
-    document.querySelectorAll(".clickable-detail").forEach(el => {
-        el.addEventListener("click", () => {
-            d_so.textContent = el.dataset.so || "";
-            d_phase.textContent = el.dataset.phase || "";
-            d_pp.textContent = el.dataset.pp || "";
-            d_machine.textContent = el.dataset.machine || "";
-            d_sfc.textContent = el.dataset.sfc || "";
-            d_matcode.textContent = el.dataset.matcode || "";
-            d_matsap.textContent = el.dataset.matsap || "";
-            d_start.textContent = el.dataset.start || "";
-            d_end.textContent = el.dataset.end || "";
-            d_worker.textContent = el.dataset.worker || "";
-            new bootstrap.Modal(detailModal).show();
-        });
+document.querySelectorAll(".material-item.level-1")
+    .forEach(i => i.style.display = "block");
+
+document.querySelectorAll(".toggle-btn").forEach(btn => {
+    btn.addEventListener("click", function () {
+        let item = this.closest(".material-item");
+        let lvl = parseInt(item.className.match(/level-(\d+)/)[1]);
+        let open = this.textContent === "▶";
+        this.textContent = open ? "▼" : "▶";
+
+        let next = item.nextElementSibling;
+        while (next && next.classList.contains("material-item")) {
+            let nl = parseInt(next.className.match(/level-(\d+)/)[1]);
+            if (nl <= lvl) break;
+            next.style.display = open ? "block" : "none";
+            next = next.nextElementSibling;
+        }
     });
+});
 </script>
 
-<!-- ================= JS TREE TOGGLE ================= -->
+<!-- ================= PRINT JS ================= -->
 <script>
-    document.querySelectorAll(".material-item.level-1")
-        .forEach(i => i.style.display = "block");
+function cetakTraceabilityPDF() {
+    const items = document.querySelectorAll(".material-item");
+    const toggles = document.querySelectorAll(".toggle-btn");
 
-    document.querySelectorAll(".toggle-btn").forEach(btn => {
-        btn.addEventListener("click", function () {
-            let currentItem = this.closest(".material-item");
-            let currentLevel = parseInt(currentItem.className.match(/level-(\d+)/)[1]);
-            let expand = this.textContent === "▶";
-            this.textContent = expand ? "▼" : "▶";
+    let prevDisplay = [];
+    let prevToggle = [];
 
-            let next = currentItem.nextElementSibling;
-            while (next && next.classList.contains("material-item")) {
-                let nl = parseInt(next.className.match(/level-(\d+)/)[1]);
-                if (nl <= currentLevel) break;
-                next.style.display = expand && nl === currentLevel + 1 ? "block" : "none";
-                next = next.nextElementSibling;
-            }
-        });
+    items.forEach((el, i) => {
+        prevDisplay[i] = el.style.display;
+        el.style.display = "block";
     });
+
+    toggles.forEach((btn, i) => {
+        prevToggle[i] = btn.textContent;
+        btn.textContent = "▼";
+    });
+
+    setTimeout(() => {
+        window.print();
+        items.forEach((el, i) => el.style.display = prevDisplay[i]);
+        toggles.forEach((btn, i) => btn.textContent = prevToggle[i]);
+    }, 300);
+}
 </script>
 
 <script>
-    $('#barcode').select2();
+$('#barcode').select2();
 </script>
 
 {% endblock %}
