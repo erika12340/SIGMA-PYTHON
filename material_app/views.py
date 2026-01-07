@@ -516,7 +516,7 @@ def daftar_materials(request):
                     'BOM_QUANTITY': bom.BOM_QUANTITY,
                 })
 
-                # 🔁 RECURSIVE
+                # RECURSIVE
                 data += get_all_related_material_data(
                     child_code, visited, level + 1
                 )
@@ -1560,8 +1560,6 @@ def traceability_by_materials(request):
 
 
 
-
-
 # ================= TRACING BARCODE ===================
 def tracing_barcode(request):
     barcode_list = TRC_BASIC_TABLE.objects.values_list(
@@ -1717,7 +1715,7 @@ def tracing_barcode(request):
                 wms_all = WMS_TRACEABILITY.objects.filter(
                     TRC_MCH_CODE=trc_entry.MCH_CODE,
                     TRC_PP_CODE=trc_entry.PP_CODE,
-                    TRC_FL_EMPTY='F',
+                    TRC_FL_EMPTY='F', # ---------------ACTIVE ---------------
                     TRC_MAT_SAP_CODE__in=valid_child_mats
                 ).values(
                     'TRC_SO_CODE',
@@ -1802,7 +1800,7 @@ def tracing_barcode(request):
                     }]
 
                     traceability.append({
-                        'baris1': baris1, 
+                        'baris1': baris1,
                         'baris2': baris2,
                         'level': 0
                     })
