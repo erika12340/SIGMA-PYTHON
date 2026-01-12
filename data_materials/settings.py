@@ -60,6 +60,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'data_materials.wsgi.application'
 
+
+
+
 # Database
 DATABASES = {
     'default': {
@@ -72,8 +75,21 @@ DATABASES = {
         'OPTIONS': {
             'driver': 'ODBC Driver 17 for SQL Server',
         },
+    },
+    'pcs_year': {
+        'ENGINE': config('YEAR_DB_ENGINE'),
+        'NAME': config('YEAR_DB_NAME'),
+        'USER': config('YEAR_DB_USER'),
+        'PASSWORD': config('YEAR_DB_PASSWORD'),
+        'HOST': config('YEAR_DB_HOST'),
+        'PORT': config('YEAR_DB_PORT', cast=int),
+        'OPTIONS': {
+            'driver': 'ODBC Driver 17 for SQL Server',
+        },
     }
 }
+
+
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

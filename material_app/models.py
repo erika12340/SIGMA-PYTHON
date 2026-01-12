@@ -1,5 +1,7 @@
 from django.db import models
 
+# ======================= DARI DATABASE PCS =============================
+
 # -------------- 1. MD_SEMI+FINISHED_CLASSES ------------
 class MD_SEMI_FINISHED_CLASSES(models.Model):
     SFC_CODE = models.CharField(max_length=9, primary_key=True)
@@ -167,3 +169,76 @@ class MD_MACHINE_TYPES(models.Model):
     class Meta:
         managed = False
         db_table = 'MD_MACHINE_TYPES'
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ==================== DARI DATABASE PCS_YEAR =============================
+
+# -------------- 11. Model HIS_TRC_BASIC_BARCODE --------------
+class HIS_TRC_BASIC_TABLE(models.Model):
+    TRC_BARCODE = models.CharField (max_length=10, primary_key=True)
+    MAT_SAP_CODE = models.CharField (max_length=9)
+    PP_CODE = models.CharField (max_length=3)
+    MCH_CODE = models.CharField (max_length=8)
+    TRC_DEGRADED_MODE = models.CharField (max_length=1)
+    TRC_TIMESTAMP = models.DateTimeField (max_length=8)
+    WM_CODE = models.CharField (max_length=8)
+
+    class Meta:
+        managed = False
+        db_table = 'HIS_TRC_BASIC_TABLE'
+
+# -------------- 12. Model HIS_WMS_TRACEABILITY --------------
+class HIS_WMS_TRACEABILITY(models.Model):
+    TRC_PP_CODE = models.CharField (max_length=3, primary_key=True)
+    TRC_MCH_CODE = models.CharField (max_length=8)
+    TRC_SO_CODE = models.CharField (max_length=4)
+    TRC_CU_EXT_PROGR = models.CharField (max_length=6)
+    TRC_START_TIME = models.DateTimeField(max_length=8)
+    TRC_END_TIME = models.DateTimeField (max_length=8)
+    TRC_MAT_SAP_CODE = models.CharField (max_length=9)
+    TRC_WM_CODE = models.CharField (max_length=8)
+    TRC_FL_PHASE = models.CharField (max_length=1)
+    TRC_CNT_CODE = models.CharField (max_length=3)
+    TRC_MAT_VARIANT = models.CharField (max_length=10)
+    TRC_FL_EMPTY = models.CharField (max_length=1)
+
+    class Meta:
+        managed = False
+        db_table = 'HIS_WMS_TRACEABILITY'
+        unique_together = (
+            ('TRC_PP_CODE', 'TRC_MCH_CODE','TRC_SO_CODE','TRC_CU_EXT_PROGR', 'TRC_START_TIME'),
+        )
+
+# ------------- 13. Model HIS_WMS_TRACEABILITY_CU --------------
+class HIS_WMS_TRACEABILITY_CU(models.Model):
+    SO_CODE = models.CharField (max_length=4, primary_key=True)
+    CU_EXT_PROGR = models.CharField (max_length=6)
+    CHILD_CU_CODE = models.CharField (max_length=20)
+    CHILD_SO_CODE = models.CharField (max_length=4)
+    CHILD_CU_EXT_PROGR = models.CharField (max_length=6)
+    PRODUCTION_DATE = models.DateTimeField (max_length=8)
+    MAT_SAP_CODE = models.CharField (max_length=9)
+    MCH_CODE = models.CharField (max_length=8)
+    PP_CODE = models.CharField (max_length=3)
+    WM_CODE = models.CharField (max_length=8)
+
+    class Meta:
+        managed = False
+        db_table = 'HIS_WMS_TRACEABILITY_CU'
+        unique_together = (
+            ('SO_CODE', 'CHILD_CU_CODE', 'CU_EXT_PROGR')
+        )
