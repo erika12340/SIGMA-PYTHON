@@ -150,6 +150,7 @@ class TRC_BASIC_TABLE(models.Model):
     MCH_CODE = models.CharField (max_length=8)
     TRC_DEGRADED_MODE = models.CharField (max_length=1)
     TRC_TIMESTAMP = models.DateTimeField (max_length=8)
+    WM_CODE = models.CharField (max_length=8)
 
     class Meta:
         managed = False

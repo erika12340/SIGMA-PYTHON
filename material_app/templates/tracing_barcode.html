@@ -66,10 +66,34 @@
             <div class="card-body">
 
                 <!-- FORM -->
-                <form method="get" action="tracing_barcode" class="row g-3">
-                    <div class="col-md-6">
+                <!-- FORM -->
+                <form method="get" action="{% url 'tracing_barcode' %}" class="row g-3">
+
+                    <!-- Tanggal Awal -->
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Tanggal Awal :</label>
+                        <input type="date"
+                            name="start_date"
+                            class="form-control"
+                            value="{{ request.GET.start_date }}"
+                            onchange="this.form.submit()">
+                    </div>
+
+                    <!-- Tanggal Akhir -->
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Tanggal Akhir :</label>
+                        <input type="date"
+                            name="end_date"
+                            class="form-control"
+                            value="{{ request.GET.end_date }}"
+                            onchange="this.form.submit()">
+                    </div>
+
+                    <!-- Tyre Barcode -->
+                    <div class="col-md-4">
                         <label class="form-label fw-bold">Tyre Barcode :</label>
-                        <select name="barcode" id="barcode" class="form-control">
+                        <select name="barcode" id="barcode" class="form-control"
+                            {% if not request.GET.start_date or not request.GET.end_date %}disabled{% endif %}>
                             <option value="">-- Pilih Barcode --</option>
                             {% for barcode in barcode_list %}
                                 <option value="{{ barcode }}"
@@ -80,45 +104,69 @@
                         </select>
                     </div>
 
-                    <div class="col-md-3 d-flex align-items-end">
+                    <!-- Button -->
+                    <div class="col-md-2 d-flex align-items-end">
                         <button type="submit" class="btn btn-primary w-100">Submit</button>
                     </div>
 
-                    <div class="col-md-3 d-flex align-items-end">
-                        <a href="tracing_barcode" class="btn btn-success w-100">Reset</a>
-                    </div>
-
-                    <div class="col-md-3 d-flex align-items-end">
-                        <button type="button" class="btn btn-danger w-100" onclick="window.print()">
-                            Export PDF
-                        </button>
-                    </div>
                 </form>
 
+            
+
                 {% if material_detail %}
-                <div class="card mt-4">
-                    <div class="card-body">
-                        <h6 class="fw-bold mb-3">Detail Barcode</h6>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <label class="form-label">Material :</label>
-                                <input type="text"
-                                       class="form-control"
-                                       value="{{ material_detail.MAT_CODE }} - {{ material_detail.MAT_SAP_CODE }} - {{ material_detail.MAT_DESC }}"
-                                       readonly>
+                    <div class="card mt-4">
+                        <div class="card-body">
+
+                            <h6 class="fw-bold mb-3">Detail Barcode</h6>
+
+                            <!-- ROW 1 -->
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Material :</label>
+                                    <input type="text"
+                                        class="form-control"
+                                        value="{{ material_detail.MAT_CODE }} - {{ material_detail.MAT_SAP_CODE }} - {{ material_detail.MAT_DESC }}"
+                                        readonly>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Production Machine :</label>
+                                    <input type="text"
+                                        class="form-control"
+                                        value="{{ material_detail.pp_code }} - {{ material_detail.mch_code }}"
+                                        readonly>
+                                </div>
                             </div>
 
-                            <div class="col-md-6">
-                                <label class="form-label">Production Machine :</label>
-                                <input type="text"
-                                       class="form-control"
-                                       value="{{ material_detail.pp_code }} - {{ material_detail.mch_code }}"
-                                       readonly>
+                            <!-- ROW 2 -->
+                            <div class="row g-3 mt-2 align-items-end">
+                                <div class="col-md-6">
+                                    <label class="form-label">Worker :</label>
+                                    <input type="text"
+                                        class="form-control"
+                                        value="{{ material_detail.WM_CODE }} - {{ material_detail.WM_NAME }}"
+                                        readonly>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <button type="button"
+                                            class="btn btn-danger w-100"
+                                            onclick="window.print()">
+                                        Export PDF
+                                    </button>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <a href="tracing_barcode"
+                                    class="btn btn-success w-100">
+                                        Reset
+                                    </a>
+                                </div>
                             </div>
+
                         </div>
                     </div>
-                </div>
-                {% endif %}
+                    {% endif %}
 
             </div>
         </div>
@@ -126,6 +174,7 @@
         <!-- TREE -->
         <div class="card">
             <div class="card-body">
+                <h5 class="judul mb-4" style="color: rgba(0, 0, 0, 0.888);" >Data Tracing</h5>
                 {% for row in traceability %}
                 <div class="material-item level-{{ row.level|add:1 }} mb-1">
 
@@ -204,6 +253,20 @@
     </div>
 </div>
 
+
+<!-- end contant -->
+
+<!-- JS  -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/2.3.2/js/dataTables.js"></script>
+<script src="https://cdn.datatables.net/buttons/3.2.4/js/dataTables.buttons.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/3.2.4/js/buttons.html5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+
 <!-- ================= JS DETAIL ================= -->
 <script>
     document.querySelectorAll(".clickable-detail").forEach(el => {
@@ -259,3 +322,5 @@
 </script>
 
 {% endblock %}
+
+
