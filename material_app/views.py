@@ -1824,6 +1824,10 @@ def tracing_barcode(request):
 
 
 
+
+
+
+
 # ================= TRACING BARCODE YEAR ===================
 def tracing_barcode_year(request):
     start_date = request.GET.get('start_date')
@@ -1891,8 +1895,6 @@ def tracing_barcode_year(request):
                 'TRC_PP_CODE': wms.TRC_PP_CODE,
                 'MAT_CODE': mat.MAT_CODE if mat else '',
                 'TRC_TIMESTAMP': getattr(wms, 'TRC_TIMESTAMP', ''),
-                'TRC_START_TIME': wms.TRC_START_TIME,
-                'TRC_END_TIME': wms.TRC_END_TIME,
                 'TRC_MAT_SAP_CODE': wms.TRC_MAT_SAP_CODE,
                 'MAT_DESC': mat.MAT_DESC if mat else '',
                 'SFC_DESC': sfc_code,
@@ -1916,8 +1918,6 @@ def tracing_barcode_year(request):
                 'TRC_FL_PHASE': wms.TRC_FL_PHASE,
                 'TRC_PP_CODE': wms.TRC_PP_CODE,
                 'TRC_MCH_CODE': wms.TRC_MCH_CODE,
-                'TRC_START_TIME': wms.TRC_START_TIME,
-                'TRC_END_TIME': wms.TRC_END_TIME,
                 'MT_DESC': mt_desc,
                 'TRC_MAT_SAP_CODE': wms.TRC_MAT_SAP_CODE,
                 'SFC_DESC': sfc_code,
@@ -2001,9 +2001,6 @@ def tracing_barcode_year(request):
                     'TRC_TIMESTAMP': getattr(wms_root, 'TRC_TIMESTAMP', ''),
                     'TRC_MAT_SAP_CODE': wms_root.TRC_MAT_SAP_CODE,
                     'MAT_DESC': mat.MAT_DESC if mat else '',
-                    'TRC_START_TIME': wms_root.TRC_START_TIME,
-                    'TRC_END_TIME': wms_root.TRC_END_TIME,
-
                     'SFC_DESC': sfc_code,
                     'TRC_MCH_CODE': wms_root.TRC_MCH_CODE,
                     'PP_DESC': production.PP_DESC if production else '',
@@ -2025,8 +2022,6 @@ def tracing_barcode_year(request):
                     'TRC_PP_CODE': wms_root.TRC_PP_CODE,
                     'TRC_MCH_CODE': wms_root.TRC_MCH_CODE,
                     'MT_DESC': mt_desc,
-                    'TRC_START_TIME': wms_root.TRC_START_TIME,
-                    'TRC_END_TIME': wms_root.TRC_END_TIME,
                     'TRC_MAT_SAP_CODE': wms_root.TRC_MAT_SAP_CODE,
                     'SFC_DESC': sfc_code,
                     'WM_CODE': worker.WM_CODE if worker else '',
@@ -2038,6 +2033,13 @@ def tracing_barcode_year(request):
                 traceability.append({'baris1': baris1, 'baris2': baris2, 'level': 0})
                 traceability.extend(get_child_trace(so, cu, wms_root.TRC_MAT_SAP_CODE, 1))
 
+    import pprint
+    print("BARCODE LIST:", barcode_list)
+    print("SELECTED BARCODE:", selected_barcode)
+    print("MATERIAL DETAIL:")
+    pprint.pprint(material_detail)
+    print("TRACEABILITY:")
+    pprint.pprint(traceability)
 
     return render(request, "tracing_barcode_year.html", {
         'barcode_list': barcode_list,

@@ -29,32 +29,39 @@
         <div class="card mb-4 shadow-sm">
             <div class="card-body">
                 <form method="get" action="{% url 'tracing_barcode_year' %}" class="row g-3">
+
                     <div class="col-md-3">
-                        <label class="form-label fw-bold">Tanggal Awal :</label>
+                        <label class="form-label fw-bold">Tanggal Awal</label>
                         <input type="date" name="start_date" class="form-control"
-                               value="{{ request.GET.start_date }}" onchange="this.form.submit()">
+                            value="{{ start_date }}">
                     </div>
+
                     <div class="col-md-3">
-                        <label class="form-label fw-bold">Tanggal Akhir :</label>
+                        <label class="form-label fw-bold">Tanggal Akhir</label>
                         <input type="date" name="end_date" class="form-control"
-                               value="{{ request.GET.end_date }}" onchange="this.form.submit()">
+                            value="{{ end_date }}">
                     </div>
+
                     <div class="col-md-4">
-                        <label class="form-label fw-bold">Tyre Barcode :</label>
-                        <select name="barcode_year" id="barcode_year" class="form-control"
-                            {% if not request.GET.start_date or not request.GET.end_date %}disabled{% endif %}>
+                        <label class="form-label fw-bold">Tyre Barcode</label>
+                        <select name="barcode" id="barcode_year" class="form-control">
                             <option value="">-- Pilih Barcode --</option>
                             {% for barcode in barcode_list %}
-                                <option value="{{ barcode }}" {% if barcode == selected_barcode %}selected{% endif %}>
+                                <option value="{{ barcode }}"
+                                    {% if barcode == selected_barcode %}selected{% endif %}>
                                     {{ barcode }}
                                 </option>
                             {% endfor %}
                         </select>
                     </div>
+
                     <div class="col-md-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary w-100">Submit</button>
+                        <button type="submit" class="btn btn-primary w-100">
+                            Submit
+                        </button>
                     </div>
                 </form>
+
             </div>
         </div>
 
