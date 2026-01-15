@@ -1729,6 +1729,7 @@ def tracing_barcode(request):
                 'mch_code': trc_entry.MCH_CODE,
                 'WM_CODE': trc_entry.WM_CODE,
                 'WM_NAME': workers.WM_NAME if workers else '',
+                'TRC_TIMESTAMP': trc_entry.TRC_TIMESTAMP,
             }
 
             valid_child_mats = set(
@@ -1820,7 +1821,7 @@ def tracing_barcode(request):
 
 
 
-# ================= TRACING BARCODE ===================
+# ================= TRACING BARCODE YEAR ===================
 def tracing_barcode_year(request):
 
     # ================= GET PARAM FORM =================
