@@ -1915,6 +1915,7 @@ def tracing_barcode_year(request):
                 'PP_DESC': production.PP_DESC if production else '',
                 'WM_CODE': worker.WM_CODE if worker else '',
                 'WM_NAME': worker.WM_NAME if worker else '',
+                
                 'is_invalid_material': False
             }
 
@@ -1987,6 +1988,7 @@ def tracing_barcode_year(request):
                 'mch_code': trc_entry.MCH_CODE,
                 'WM_CODE': trc_entry.WM_CODE,
                 'WM_NAME': workers.WM_NAME if workers else '',
+                'TRC_TIMESTAMP': trc_entry.TRC_TIMESTAMP,
             }
 
             valid_child_mats = set(

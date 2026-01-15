@@ -139,6 +139,13 @@
                                         value="{{ material_detail.WM_CODE }} - {{ material_detail.WM_NAME }}"
                                         readonly>
                                 </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Tanggal Scan :</label>
+                                    <input type="text"
+                                        class="form-control"
+                                        value="{{ material_detail.TRC_TIMESTAMP }}"
+                                        readonly>
+                                </div>
 
                                 <div class="col-md-3">
                                     <button type="button"
@@ -187,7 +194,6 @@
                             data-start="{{ row.baris1.TRC_START_TIME }}"
                             data-end="{{ row.baris1.TRC_END_TIME }}"
                             data-worker="{{ row.baris1.WM_CODE }} - {{ row.baris1.WM_NAME }}">
-
                             ({{ row.baris1.TRC_SO_CODE }} - {{ row.baris1.TRC_CU_EXT_PROGR }})
                             ({{ row.baris1.SFC_DESC }}) -
                             {{ row.baris1.TRC_MAT_SAP_CODE }} -
