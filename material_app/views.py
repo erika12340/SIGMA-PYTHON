@@ -2033,7 +2033,6 @@ def tracing_barcode_year(request):
                 traceability.append({'baris1': baris1, 'baris2': baris2, 'level': 0})
                 traceability.extend(get_child_trace(so, cu, wms_root.TRC_MAT_SAP_CODE, 1))
 
-
     return render(request, "tracing_barcode_year.html", {
         'barcode_list': barcode_list,
         'selected_barcode': selected_barcode,
