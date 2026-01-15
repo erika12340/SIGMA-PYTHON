@@ -186,7 +186,6 @@ class MD_MACHINE_TYPES(models.Model):
 
 
 # ==================== DARI DATABASE PCS_YEAR =============================
-
 # -------------- 11. Model HIS_TRC_BASIC_BARCODE --------------
 class HIS_TRC_BASIC_TABLE(models.Model):
     TRC_BARCODE = models.CharField (max_length=10, primary_key=True)
